@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useMotionValue, useTransform } from "motion/react";
 import { BookCard } from "@/components/BookCard";
 import { MatchReasonsRail } from "@/components/MatchReasonsRail";
+import { SignUpWall } from "@/components/SignUpWall";
 import { swipeBook, getMoreCards } from "@/app/actions";
 import type { BookWithTags } from "@/lib/books";
 import { DAILY_SWIPE_CAP } from "@/lib/constants";
@@ -21,12 +22,14 @@ export function SwipeDeck({
   displayMode = "cover_first",
   likedTagIds,
   currentMoodTagId,
+  isAnonymous = false,
 }: {
   initialDeck: BookWithTags[];
   remainingToday: number;
   displayMode?: DisplayMode;
   likedTagIds: string[];
   currentMoodTagId: string | null;
+  isAnonymous?: boolean;
 }) {
   const [deck, setDeck] = useState(initialDeck);
   const [remaining, setRemaining] = useState(remainingToday);
@@ -68,6 +71,8 @@ export function SwipeDeck({
   }
 
   if (remaining <= 0) {
+    if (isAnonymous) return <SignUpWall matchCount={tbrCount} />;
+
     return (
       <div className="mx-auto flex w-full min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
         <h2 className="font-serif text-2xl text-on-vibe">
@@ -100,7 +105,9 @@ export function SwipeDeck({
   return (
     <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-center gap-6 px-4 py-8 lg:flex-row lg:items-start">
       <div className="flex w-full min-h-[70vh] max-w-sm flex-col items-center justify-center">
-        <p className="mb-3 text-xs text-on-vibe-muted">{remaining} swipes left today</p>
+        <p className="mb-3 text-xs text-on-vibe-muted">
+          {isAnonymous ? `${remaining} preview swipes left` : `${remaining} swipes left today`}
+        </p>
         <div className="relative w-full h-[600px]">
           {deck
             .slice(0, 3)

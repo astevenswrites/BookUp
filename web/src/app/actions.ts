@@ -2,6 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { getOrCreateActor, actorWhere } from "@/lib/actor";
+import { setDemoTheme } from "@/lib/session";
 import { getDeckForPreference } from "@/lib/matching";
 import { getPreferenceForActor } from "@/lib/preferences";
 import { getSwipedBookIds } from "@/lib/limits";
@@ -88,6 +89,15 @@ export async function setThemeOverride(theme: VibeTheme | null) {
   const where =
     actor.kind === "user" ? { userId: actor.userId } : { sessionId: actor.sessionId };
   await prisma.preference.update({ where, data: { themeOverride: theme } });
+  revalidatePath("/", "layout");
+}
+
+// D41 correction: the landing page's pre-quiz mood demo — a plain cookie,
+// not Preference.themeOverride, so picking a color before taking the quiz
+// can't accidentally make `!!preference` true and skip a first-time visitor
+// past the landing page. See lib/session.ts's setDemoTheme for the full story.
+export async function setDemoThemeOverride(theme: VibeTheme) {
+  await setDemoTheme(theme);
   revalidatePath("/", "layout");
 }
 

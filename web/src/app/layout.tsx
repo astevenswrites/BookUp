@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
 import { getActor, hasIdentity } from "@/lib/actor";
+import { getDemoTheme } from "@/lib/session";
 import { getPreferenceForActor, getPreferenceMoodLabels } from "@/lib/preferences";
 import { deriveVibeTheme, DEFAULT_VIBE_THEME, THEME_CONFIG } from "@/lib/theme";
 import { VibeBackground } from "@/components/VibeBackground";
@@ -33,10 +34,11 @@ export const metadata: Metadata = {
 export default async function RootLayout({ children }: LayoutProps<"/">) {
   const actor = await getActor();
   const preference = hasIdentity(actor) ? await getPreferenceForActor(actor) : null;
+  const demoTheme = preference ? null : await getDemoTheme();
   const theme =
     (preference
       ? deriveVibeTheme(getPreferenceMoodLabels(preference), preference.themeOverride)
-      : null) ?? DEFAULT_VIBE_THEME;
+      : demoTheme) ?? DEFAULT_VIBE_THEME;
   const isDarkVibe = THEME_CONFIG[theme].isDark;
 
   return (

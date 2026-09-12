@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { LandingMoodDemo } from "@/components/LandingMoodDemo";
 import { DAILY_SWIPE_CAP } from "@/lib/constants";
+import { getDemoTheme } from "@/lib/session";
+import { DEFAULT_VIBE_THEME } from "@/lib/theme";
 
 const PLANS = [
   {
@@ -47,7 +49,9 @@ const STEPS = [
 // D41: marketing landing page — pricing is static copy only (no billing
 // exists yet, that's Phase 5); "Start the vibe check" is the only real path
 // into the product for a first-time visitor.
-export function Landing() {
+export async function Landing() {
+  const initialTheme = (await getDemoTheme()) ?? DEFAULT_VIBE_THEME;
+
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-20 sm:px-8">
       <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-14">
@@ -86,7 +90,7 @@ export function Landing() {
           </p>
         </div>
 
-        <LandingMoodDemo />
+        <LandingMoodDemo initialTheme={initialTheme} />
       </div>
 
       <div className="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">

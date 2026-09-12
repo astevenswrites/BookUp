@@ -2,13 +2,14 @@ import { THEME_CONFIG } from "@/lib/theme";
 import type { VibeTheme } from "@/generated/prisma/enums";
 
 // Fixed, full-viewport, decorative only — never intercepts clicks, never
-// announced to screen readers. See DECISIONS.md D33 for the research this
-// is based on and the animation safety approach.
+// announced to screen readers. See DECISIONS.md D33 for the research and
+// the animation safety approach.
 //
-// Glow lives at the screen's edges/corners, not the center — the card sits
-// in a calm, uncluttered middle. Colors are shades of one hue family per
-// theme so the breathing motion reads as a single cohesive glow, not a
-// blend of clashing colors (revised per direct feedback on the first version).
+// One smooth radial gradient, transparent at center (where the card sits)
+// fading to the theme color at the edges, with a single unified opacity
+// breathe. A prior version used several independently-blurred, independently
+// -animated blobs, which read as a patchy/mottled texture rather than a
+// clean gradient — simplified to exactly one layer per direct feedback.
 export function VibeBackground({ theme }: { theme: VibeTheme | null }) {
   if (!theme) return null;
 
@@ -17,24 +18,10 @@ export function VibeBackground({ theme }: { theme: VibeTheme | null }) {
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
-    >
-      <div
-        className="vibe-blob-a absolute -left-[15%] -top-[15%] h-[55vmax] w-[55vmax] rounded-full blur-3xl"
-        style={{ background: base, opacity: 0.4 }}
-      />
-      <div
-        className="vibe-blob-b absolute -right-[15%] -top-[10%] h-[50vmax] w-[50vmax] rounded-full blur-3xl"
-        style={{ background: light, opacity: 0.35 }}
-      />
-      <div
-        className="vibe-blob-c absolute -bottom-[20%] -left-[10%] h-[50vmax] w-[50vmax] rounded-full blur-3xl"
-        style={{ background: deep, opacity: 0.35 }}
-      />
-      <div
-        className="vibe-blob-b absolute -bottom-[15%] -right-[15%] h-[50vmax] w-[50vmax] rounded-full blur-3xl"
-        style={{ background: base, opacity: 0.3 }}
-      />
-    </div>
+      className="vibe-glow pointer-events-none fixed inset-0 -z-10"
+      style={{
+        background: `radial-gradient(ellipse at center, transparent 30%, ${light} 65%, ${base} 85%, ${deep} 100%)`,
+      }}
+    />
   );
 }

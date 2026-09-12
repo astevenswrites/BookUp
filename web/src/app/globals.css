@@ -41,29 +41,15 @@ body {
   color: var(--foreground);
 }
 
-/* Ambient "vibe" background (D33) — soft, continuous, low-amplitude motion
-   only. No discrete flashes anywhere near WCAG's 3-per-second threshold.
-   Animation is opt-in via prefers-reduced-motion so it's off by default for
-   anyone who has that preference set. */
-@keyframes vibe-drift-a {
-  0%, 100% { transform: translate(-5%, -5%) scale(1); }
-  50% { transform: translate(6%, 4%) scale(1.12); }
-}
-@keyframes vibe-drift-b {
-  0%, 100% { transform: translate(8%, 2%) scale(1.05); }
-  50% { transform: translate(-4%, -6%) scale(0.95); }
-}
-@keyframes vibe-drift-c {
-  0%, 100% { transform: translate(-2%, 8%) scale(0.98); }
-  50% { transform: translate(5%, -5%) scale(1.08); }
-}
+/* Ambient "vibe" background (D33) — a single smooth gradient, one unified
+   breathing pulse. Earlier version used several independently-animated
+   blurred blobs, which read as a patchy/mottled texture rather than a
+   gradient (direct user feedback) — simplified to exactly one layer. */
 @keyframes vibe-breathe {
-  0%, 100% { opacity: 0.5; }
-  50% { opacity: 0.85; }
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .vibe-blob-a { animation: vibe-drift-a 22s ease-in-out infinite, vibe-breathe 9s ease-in-out infinite; }
-  .vibe-blob-b { animation: vibe-drift-b 26s ease-in-out infinite, vibe-breathe 11s ease-in-out infinite; }
-  .vibe-blob-c { animation: vibe-drift-c 19s ease-in-out infinite, vibe-breathe 13s ease-in-out infinite; }
+  .vibe-glow { animation: vibe-breathe 8s ease-in-out infinite; }
 }

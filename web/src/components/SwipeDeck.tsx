@@ -51,7 +51,7 @@ export function SwipeDeck({
 
   if (remaining <= 0) {
     return (
-      <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
+      <div className="mx-auto flex w-full min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
         <h2 className="font-serif text-2xl text-foreground">
           That&apos;s today&apos;s matches!
         </h2>
@@ -71,7 +71,7 @@ export function SwipeDeck({
 
   if (!topCard) {
     return (
-      <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
+      <div className="mx-auto flex w-full min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
         <h2 className="font-serif text-2xl text-foreground">
           {isFetchingMore ? "Finding more books..." : "You've seen everything for now."}
         </h2>
@@ -80,7 +80,7 @@ export function SwipeDeck({
   }
 
   return (
-    <div className="mx-auto flex min-h-[70vh] max-w-sm flex-col items-center justify-center px-4 py-8">
+    <div className="mx-auto flex w-full min-h-[70vh] max-w-sm flex-col items-center justify-center px-4 py-8">
       <p className="mb-3 text-xs text-muted">{remaining} swipes left today</p>
       <div className="relative w-full h-[600px]">
         {deck

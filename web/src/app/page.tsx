@@ -23,7 +23,7 @@ export default async function Home() {
 
   if (remainingToday <= 0) {
     return (
-      <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
+      <div className="mx-auto flex w-full min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
         <h2 className="font-serif text-2xl text-foreground">
           That&apos;s today&apos;s matches!
         </h2>

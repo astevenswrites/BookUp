@@ -8,7 +8,7 @@ export default async function ReviewPage() {
   const books = await getBooks();
 
   return (
-    <div className="flex-1 bg-background px-4 py-10 sm:px-8">
+    <div className="flex-1 px-4 py-10 sm:px-8">
       <header className="mx-auto mb-8 max-w-6xl">
         <h1 className="font-serif text-3xl text-foreground">
           Book card review

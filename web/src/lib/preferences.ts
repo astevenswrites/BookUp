@@ -10,3 +10,9 @@ export async function getPreferenceForSession(sessionId: string) {
 export type PreferenceWithTags = NonNullable<
   Awaited<ReturnType<typeof getPreferenceForSession>>
 >;
+
+export function getPreferenceMoodLabels(preference: PreferenceWithTags): string[] {
+  return preference.tags
+    .filter(({ tag }) => tag.category === "mood")
+    .map(({ tag }) => tag.label);
+}

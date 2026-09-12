@@ -5,7 +5,7 @@ import { getOrCreateSessionId } from "@/lib/session";
 import { getDeckForPreference } from "@/lib/matching";
 import { getPreferenceForSession } from "@/lib/preferences";
 import { getSwipedBookIds } from "@/lib/limits";
-import { HeatLevel, Pacing, ReadingFrequency, DisplayMode } from "@/generated/prisma/enums";
+import { HeatLevel, Pacing, ReadingFrequency, DisplayMode, VibeTheme } from "@/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
 
 function asEnumOrNull<T extends string>(
@@ -75,6 +75,16 @@ export async function swipeBook(bookId: string, direction: "left" | "right") {
       await prisma.tBREntry.create({ data: { bookId, sessionId } });
     }
   }
+}
+
+// D33: null means "go back to auto-deriving the theme from my quiz moods"
+export async function setThemeOverride(theme: VibeTheme | null) {
+  const sessionId = await getOrCreateSessionId();
+  await prisma.preference.update({
+    where: { sessionId },
+    data: { themeOverride: theme },
+  });
+  revalidatePath("/", "layout");
 }
 
 export async function getMoreCards(excludeBookIds: string[], limit = 20) {

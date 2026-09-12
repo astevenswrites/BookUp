@@ -52,6 +52,13 @@ enum DisplayMode {
   vibe_first
 }
 
+enum VibeTheme {
+  cozy
+  dark
+  whimsical
+  melancholy
+}
+
 model Book {
   id          String   @id @default(cuid())
   title       String
@@ -146,6 +153,7 @@ model Preference {
   readingFrequency  ReadingFrequency?
   favoriteBooksNote String? // D29: freeform cold-start signal, unused by matching until Phase 3
   displayMode       DisplayMode       @default(cover_first) // D31
+  themeOverride     VibeTheme? // D33: null = auto-derive from mood tags below
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 

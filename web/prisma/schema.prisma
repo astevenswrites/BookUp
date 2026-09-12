@@ -76,6 +76,7 @@ model Book {
   tags      BookTag[]
   swipes    Swipe[]
   tbrEntries TBREntry[]
+  dailyPicks DailyPick[]
 }
 
 model Tag {
@@ -107,6 +108,7 @@ model User {
 
   swipes     Swipe[]
   tbrEntries TBREntry[]
+  dailyPicks DailyPick[]
 }
 
 model Swipe {
@@ -154,6 +156,7 @@ model Preference {
   favoriteBooksNote String? // D29: freeform cold-start signal, unused by matching until Phase 3
   displayMode       DisplayMode       @default(cover_first) // D31
   themeOverride     VibeTheme? // D33: null = auto-derive from mood tags below
+  timezone          String? // D35: IANA tz name, set client-side; null = fall back to UTC for the Today's Picks reset
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
 
@@ -162,6 +165,25 @@ model Preference {
   sessionId String? @unique
 
   tags PreferenceTag[]
+}
+
+// D35: 5 curated picks/day, persisted per (actor, local calendar day) so a
+// revisit during the same day shows the same set rather than regenerating.
+model DailyPick {
+  id        String   @id @default(cuid())
+  pickDate  String // YYYY-MM-DD in the actor's own local timezone, not UTC
+  createdAt DateTime @default(now())
+
+  userId    String?
+  sessionId String?
+
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, pickDate, userId, sessionId])
+  @@index([userId, pickDate])
+  @@index([sessionId, pickDate])
 }
 
 model PreferenceTag {

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { submitQuiz } from "@/app/actions";
 import type { TagsByCategory } from "@/lib/tags";
 
@@ -10,7 +11,25 @@ type Step =
   | { kind: "multi"; key: "mood" | "trope" | "genre"; title: string; subtitle: string; options: { id: string; label: string }[] }
   | { kind: "multi-avoid"; key: "content_warning"; title: string; subtitle: string; options: { id: string; label: string }[] };
 
-export function Quiz({ tags }: { tags: TagsByCategory }) {
+type InitialAnswers = {
+  favoriteBooksNote: string | null;
+  displayMode: string;
+  heatLevelMax: string | null;
+  pacing: string | null;
+  readingFrequency: string | null;
+  tagIds: string[];
+};
+
+export function Quiz({
+  tags,
+  initial,
+  redirectTo,
+}: {
+  tags: TagsByCategory;
+  initial?: InitialAnswers;
+  redirectTo?: string;
+}) {
+  const router = useRouter();
   const steps: Step[] = [
     {
       kind: "text",
@@ -94,9 +113,24 @@ export function Quiz({ tags }: { tags: TagsByCategory }) {
   ];
 
   const [stepIndex, setStepIndex] = useState(0);
-  const [multiSelections, setMultiSelections] = useState<Record<string, Set<string>>>({});
-  const [singleSelections, setSingleSelections] = useState<Record<string, string>>({});
-  const [favoriteBooksNote, setFavoriteBooksNote] = useState("");
+  const [multiSelections, setMultiSelections] = useState<Record<string, Set<string>>>(() => {
+    if (!initial) return {};
+    const idsByCategory: Record<string, Set<string>> = { mood: new Set(), trope: new Set(), genre: new Set(), content_warning: new Set() };
+    const initialIds = new Set(initial.tagIds);
+    for (const category of Object.keys(idsByCategory) as (keyof TagsByCategory)[]) {
+      for (const opt of tags[category]) {
+        if (initialIds.has(opt.id)) idsByCategory[category].add(opt.id);
+      }
+    }
+    return idsByCategory;
+  });
+  const [singleSelections, setSingleSelections] = useState<Record<string, string>>(() => ({
+    displayMode: initial?.displayMode ?? "",
+    heatLevelMax: initial?.heatLevelMax ?? "",
+    pacing: initial?.pacing ?? "",
+    readingFrequency: initial?.readingFrequency ?? "",
+  }));
+  const [favoriteBooksNote, setFavoriteBooksNote] = useState(initial?.favoriteBooksNote ?? "");
   const [isPending, startTransition] = useTransition();
 
   const step = steps[stepIndex];
@@ -134,6 +168,7 @@ export function Quiz({ tags }: { tags: TagsByCategory }) {
 
     startTransition(async () => {
       await submitQuiz(formData);
+      if (redirectTo) router.push(redirectTo);
     });
   }
 
@@ -217,7 +252,13 @@ export function Quiz({ tags }: { tags: TagsByCategory }) {
           disabled={!canProceed() || isPending}
           className="rounded-full bg-accent px-6 py-2.5 text-sm font-medium text-accent-foreground disabled:opacity-50"
         >
-          {isPending ? "Finding your matches..." : isLastStep ? "Show me books" : "Next"}
+          {isPending
+            ? "Saving..."
+            : isLastStep
+              ? initial
+                ? "Save changes"
+                : "Show me books"
+              : "Next"}
         </button>
       </div>
     </div>

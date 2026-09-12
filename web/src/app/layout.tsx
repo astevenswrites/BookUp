@@ -7,6 +7,7 @@ import { deriveVibeTheme } from "@/lib/theme";
 import { VibeBackground } from "@/components/VibeBackground";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { AuthStatus } from "@/components/AuthStatus";
+import { TimezoneSync } from "@/components/TimezoneSync";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -44,6 +45,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       <body className="min-h-full flex flex-col">
         <VibeBackground theme={theme} />
         <AuthStatus />
+        <TimezoneSync currentTimezone={preference?.timezone ?? null} />
         {preference && <ThemeSwitcher currentOverride={preference.themeOverride} />}
         {children}
       </body>

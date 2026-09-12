@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { BookCard } from "@/components/BookCard";
+import { TbrEntryCard } from "@/components/TbrEntryCard";
 import { prisma } from "@/lib/prisma";
 import { getActor, actorWhere, hasIdentity } from "@/lib/actor";
+import { groupTags } from "@/lib/bookTags";
 
 export default async function TbrPage() {
   const actor = await getActor();
@@ -13,6 +14,15 @@ export default async function TbrPage() {
         include: { book: { include: { tags: { include: { tag: true } } } } },
       })
     : [];
+
+  // Mood-sorted living shelf (D36/roadmap Phase 2) — grouped by each book's
+  // first mood tag rather than a flat list, so the shelf reads by vibe.
+  const grouped = new Map<string, typeof entries>();
+  for (const entry of entries) {
+    const mood = groupTags(entry.book).mood[0] ?? "Other";
+    grouped.set(mood, [...(grouped.get(mood) ?? []), entry]);
+  }
+  const sections = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b));
 
   return (
     <div className="flex-1 px-4 py-10 sm:px-8">
@@ -30,9 +40,16 @@ export default async function TbrPage() {
           Nothing here yet — swipe right on a few books to build your shelf.
         </p>
       ) : (
-        <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-          {entries.map((entry) => (
-            <BookCard key={entry.id} book={entry.book} />
+        <main className="mx-auto flex max-w-6xl flex-col gap-10">
+          {sections.map(([mood, moodEntries]) => (
+            <section key={mood}>
+              <h2 className="mb-4 font-serif text-xl capitalize text-foreground">{mood}</h2>
+              <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                {moodEntries.map((entry) => (
+                  <TbrEntryCard key={entry.id} entry={entry} />
+                ))}
+              </div>
+            </section>
           ))}
         </main>
       )}

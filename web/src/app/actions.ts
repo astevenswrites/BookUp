@@ -7,7 +7,7 @@ import { getPreferenceForActor } from "@/lib/preferences";
 import { getSwipedBookIds } from "@/lib/limits";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { completeSignIn } from "@/lib/auth";
-import { HeatLevel, Pacing, ReadingFrequency, DisplayMode, VibeTheme } from "@/generated/prisma/enums";
+import { HeatLevel, Pacing, ReadingFrequency, DisplayMode, VibeTheme, TbrStatus } from "@/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { headers } from "next/headers";
@@ -100,6 +100,57 @@ export async function getMoreCards(excludeBookIds: string[], limit = 20) {
   const exclude = [...new Set([...excludeBookIds, ...alreadySwiped])];
 
   return getDeckForPreference(preference, exclude, limit);
+}
+
+// --- TBR shelf management (D36: statuses + the 21-day "still interested?" re-prompt) ---
+
+export async function updateTbrStatus(entryId: string, status: TbrStatus) {
+  const actor = await getOrCreateActor();
+  await prisma.tBREntry.updateMany({
+    where: { id: entryId, ...actorWhere(actor) },
+    data: { status },
+  });
+  revalidatePath("/tbr");
+}
+
+export async function removeTbrEntry(entryId: string) {
+  const actor = await getOrCreateActor();
+  await prisma.tBREntry.deleteMany({ where: { id: entryId, ...actorWhere(actor) } });
+  revalidatePath("/tbr");
+}
+
+// "Still interested?" dismissal — bumps updatedAt so the re-prompt clears
+// for another 21 days without changing the entry's status.
+export async function keepTbrEntry(entryId: string) {
+  const actor = await getOrCreateActor();
+  await prisma.tBREntry.updateMany({
+    where: { id: entryId, ...actorWhere(actor) },
+    data: { updatedAt: new Date() },
+  });
+  revalidatePath("/tbr");
+}
+
+// --- Today's Picks (D35) ---
+
+export async function addPickToShelf(bookId: string) {
+  const actor = await getOrCreateActor();
+  const existing = await prisma.tBREntry.findFirst({ where: { bookId, ...actorWhere(actor) } });
+  if (!existing) {
+    await prisma.tBREntry.create({ data: { bookId, ...actorWhere(actor) } });
+  }
+  revalidatePath("/today");
+  revalidatePath("/tbr");
+}
+
+// Called once client-side per session/device (TimezoneSync) so the Today's
+// Picks reset lines up with the reader's own local midnight, not UTC.
+// updateMany (not update) so this silently no-ops before a Preference
+// exists yet (pre-quiz) instead of throwing.
+export async function setTimezone(timezone: string) {
+  const actor = await getOrCreateActor();
+  const where =
+    actor.kind === "user" ? { userId: actor.userId } : { sessionId: actor.sessionId };
+  await prisma.preference.updateMany({ where, data: { timezone } });
 }
 
 // --- Auth (D34: email/password + Google OAuth) ---

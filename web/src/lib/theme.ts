@@ -45,13 +45,15 @@ export const THEME_CONFIG: Record<VibeTheme, ThemeConfig> = {
   },
 };
 
-// D33 "revised again": settled via the design-canvas exploration on a full
-// edge vignette (transparent center, richly-colored edges) — Option F
-// ("Vignette, richest color") from that canvas. transparent->light->base
-// mirrors that option's tuned stops exactly.
+// D33 follow-up: full-viewport again, but the center is no longer literal
+// `transparent` — that revealed the page's near-white cream background right
+// under the login form/buttons, killing contrast for white UI elements.
+// Center is now a muted tint of the theme's own hue (light color mixed
+// mostly with white) instead of transparent or a flat white, so the whole
+// background reads as "this theme's color," just paler in the middle.
 export function buildVignetteGradient(colors: [string, string, string]): string {
   const [base, light] = colors;
-  return `radial-gradient(ellipse at center, transparent 22%, ${light} 55%, ${base} 95%)`;
+  return `radial-gradient(ellipse at center, color-mix(in srgb, ${light} 35%, white) 0%, ${light} 60%, ${base} 100%)`;
 }
 
 export const THEME_ORDER: VibeTheme[] = [

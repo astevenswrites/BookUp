@@ -14,6 +14,12 @@ const CATEGORY_WEIGHT: Record<string, number> = {
   genre: 1,
 };
 
+// D39: "what do you feel like reading today?" — a strong but not absolute
+// boost (more than double the base mood weight) so the deck visibly skews
+// toward the picked mood without completely overriding the quiz's baseline
+// liked tags or the heat/pacing scoring below.
+const CURRENT_MOOD_BOOST = 6;
+
 const HEAT_ORDER: HeatLevel[] = [
   HeatLevel.none,
   HeatLevel.low,
@@ -25,7 +31,8 @@ function scoreBook(
   book: BookWithTags,
   likedTagIds: Set<string>,
   heatLevelMax: HeatLevel | null,
-  pacing: string | null
+  pacing: string | null,
+  currentMoodTagId: string | null
 ): number {
   let score = 0;
 
@@ -33,6 +40,9 @@ function scoreBook(
     if (tag.category === "content_warning") continue; // hard-filtered elsewhere, D24
     if (likedTagIds.has(tag.id)) {
       score += CATEGORY_WEIGHT[tag.category] ?? 1;
+    }
+    if (currentMoodTagId && tag.id === currentMoodTagId) {
+      score += CURRENT_MOOD_BOOST;
     }
   }
 
@@ -84,7 +94,8 @@ export async function getDeckForPreference(
         book,
         likedTagIds,
         preference.heatLevelMax,
-        preference.pacing
+        preference.pacing,
+        preference.currentMoodTagId
       ),
     }))
     .sort((a, b) => b.score - a.score)

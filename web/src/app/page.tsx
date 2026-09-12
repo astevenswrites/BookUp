@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Quiz } from "@/components/Quiz";
 import { SwipeDeck } from "@/components/SwipeDeck";
+import { MoodQuickSelect } from "@/components/MoodQuickSelect";
 import { getActor, hasIdentity } from "@/lib/actor";
 import { getPreferenceForActor } from "@/lib/preferences";
 import { getTagsByCategory } from "@/lib/tags";
@@ -42,12 +43,17 @@ export default async function Home() {
 
   const excludeBookIds = await getSwipedBookIds(actor);
   const deck = await getDeckForPreference(preference, excludeBookIds, 30);
+  const { mood: moods } = await getTagsByCategory();
 
   return (
-    <SwipeDeck
-      initialDeck={deck}
-      remainingToday={remainingToday}
-      displayMode={preference.displayMode}
-    />
+    <div className="flex flex-1 flex-col pt-16">
+      <MoodQuickSelect moods={moods} currentMoodTagId={preference.currentMoodTagId} />
+      <SwipeDeck
+        key={preference.currentMoodTagId ?? "auto"}
+        initialDeck={deck}
+        remainingToday={remainingToday}
+        displayMode={preference.displayMode}
+      />
+    </div>
   );
 }

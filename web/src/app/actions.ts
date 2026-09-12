@@ -91,6 +91,16 @@ export async function setThemeOverride(theme: VibeTheme | null) {
   revalidatePath("/", "layout");
 }
 
+// D39: "what do you feel like reading today?" — sticky until manually
+// changed/cleared (null), not reset per session.
+export async function setCurrentMood(tagId: string | null) {
+  const actor = await getOrCreateActor();
+  const where =
+    actor.kind === "user" ? { userId: actor.userId } : { sessionId: actor.sessionId };
+  await prisma.preference.update({ where, data: { currentMoodTagId: tagId } });
+  revalidatePath("/");
+}
+
 export async function getMoreCards(excludeBookIds: string[], limit = 20) {
   const actor = await getOrCreateActor();
   const preference = await getPreferenceForActor(actor);

@@ -86,6 +86,7 @@ model Tag {
 
   books       BookTag[]
   preferences PreferenceTag[]
+  currentMoodFor Preference[] @relation("PreferenceCurrentMood")
 
   @@unique([label, category])
 }
@@ -165,6 +166,14 @@ model Preference {
   sessionId String? @unique
 
   tags PreferenceTag[]
+
+  // D39: "what do you feel like reading today?" — a single mood tag that
+  // reweights the deck on top of the quiz's baseline preferences, sticky
+  // until manually changed/cleared (not reset per-session). Independent of
+  // `tags` above — not written into PreferenceTag, so clearing it can't
+  // lose any quiz-time mood selection.
+  currentMoodTagId String?
+  currentMood      Tag?    @relation("PreferenceCurrentMood", fields: [currentMoodTagId], references: [id], onDelete: SetNull)
 }
 
 // D35: 5 curated picks/day, persisted per (actor, local calendar day) so a

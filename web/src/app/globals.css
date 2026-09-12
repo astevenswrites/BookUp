@@ -41,15 +41,19 @@ body {
   color: var(--foreground);
 }
 
-/* Ambient "vibe" background (D33) — a single smooth gradient, one unified
-   breathing pulse. Earlier version used several independently-animated
-   blurred blobs, which read as a patchy/mottled texture rather than a
-   gradient (direct user feedback) — simplified to exactly one layer. */
-@keyframes vibe-breathe {
-  0%, 100% { opacity: 0.7; }
-  50% { opacity: 1; }
+/* Ambient "vibe" background (D33) — a small, low-intensity glow centered on
+   the card, not a full-viewport wash. Two rounds of feedback: (1) several
+   independently-animated blobs read as patchy, not a gradient; (2) even a
+   single full-viewport gradient left "too much white in the middle" and
+   wasn't subtle. Now: one soft, heavily-blurred, low-opacity glow sized to
+   the card's neighborhood, with gentle low-amplitude breathing. */
+.vibe-glow {
+  opacity: 0.22; /* static fallback for prefers-reduced-motion, and the base look */
 }
-
+@keyframes vibe-breathe {
+  0%, 100% { opacity: 0.16; }
+  50% { opacity: 0.3; }
+}
 @media (prefers-reduced-motion: no-preference) {
   .vibe-glow { animation: vibe-breathe 8s ease-in-out infinite; }
 }

@@ -183,6 +183,12 @@ Running record of decisions made at each step, tied back to [research/market-res
   - Applied globally via the root layout (quiz, swipe, TBR, review) for a cohesive feel, not just the swipe screen where the complaint originated.
 - **Why this scope, not more:** Per-current-card dynamic re-theming (background changes with every swipe, matching that specific book's mood) would be a much bigger lift — smooth cross-fade transitions on every swipe, re-render cost — and overlaps with Phase 2's planned mood-based re-matching feature. Tying the theme to the user's overall quiz profile (set once, changeable via the override button) delivers the actual ask — less empty/generic-feeling space, personalized, user-controllable — without that added complexity. Revisit per-card theming if the static version feels flat once real users see it.
 
+- **Revised twice after seeing it live:**
+  1. The first build used 4 independently-blurred, independently-animated corner blobs per the "aurora" research technique — in practice this read as a patchy, mottled texture (visible uneven blotches), not a gradient, because the blobs never quite blended into one continuous field.
+  2. Replaced with a single full-viewport radial gradient (transparent center → theme color at the edges), one unified breathe — smoother, but still "too much white in the middle" and not the subtle, restrained feel asked for.
+  3. **Final shape:** one small, heavily-blurred, low-opacity (~0.16–0.3) circle centered on the card's neighborhood (`80vmin` diameter, `110px` blur) rather than a full-viewport effect — a quiet glow immediately around the card, with the rest of the viewport staying neutral. Breathing amplitude narrowed accordingly (16%→30% opacity) so it reads as ambient, not a colored wash.
+  - **Lesson for future visual/ambient-effect work:** for this kind of subjective aesthetic tuning, iterating blind against research-derived defaults and screenshots took three round trips: describe a UI change in code, ship it, and wait for feedback. A visual design tool (e.g., a design/mockup pass) could let the user react to several concrete options before anything is wired into the app, which would likely converge faster for future purely-visual decisions than this same code-first loop.
+
 ---
 
 *(Later phases append their own sections here as we build them.)*

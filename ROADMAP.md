@@ -11,8 +11,9 @@ Occupy the gap no existing product fills: BookyCall's emotional swipe framing + 
 - **Platform order**: responsive web app now, native apps later (Phase 7+), consistent with the original ask.
 - **Stack**: Next.js (React) frontend + TypeScript, a Postgres database, a lightweight backend (Next.js API routes or a small Node/Express service) — this keeps one codebase that can later feed a React Native app with shared types/logic. Open to swapping if you have a stack preference.
 - **Book data**: build and test against **synthetic/placeholder books** through Phase 0–1 rather than real metadata. Real covers and jacket-copy blurbs are copyrighted, and APIs like Google Books/Open Library are meant for linking back to their own listings, not for republishing content in a commercial UI — that's a licensing decision (fair-use thumbnails + attribution vs. a formal data agreement vs. user/editorial-generated art) worth making deliberately, not backing into while iterating on UI. See "Real catalog sourcing" under Ongoing Threads below.
-- **Auth**: email + OAuth (Google/Apple) via a managed provider (e.g., Auth.js/Clerk) rather than building auth from scratch.
-- **Hosting**: Vercel (frontend) + a managed Postgres (e.g., Neon/Supabase) — cheap to start, scales later.
+- **Auth**: Supabase Auth (email + OAuth) rather than a separate provider like Auth.js/Clerk — see below.
+- **Hosting**: Vercel (frontend), kept deliberately separate from the Cloudflare-hosted author website — see DECISIONS.md D15.
+- **Database/Auth provider**: a new, dedicated **Supabase project** (Postgres + Auth bundled) under the same Supabase account already used for the author site's beta reader portal — a separate project, not shared tables. See DECISIONS.md D16/D17 for why, and the connection-pooling gotcha to get right at deploy time.
 - **Name**: placeholder "the app" for now — worth deciding before Phase 1 ships anything public-facing, but doesn't block engineering.
 
 These are defaults chosen to minimize cost/complexity for a solo-founder-style build. Say the word if you want a different stack, data source, or hosting choice before Phase 1 starts.

@@ -76,6 +76,19 @@ Running record of decisions made at each step, tied back to [research/market-res
 - **Choice:** Added `Book.hookLine` (short, punchy, card-face text) alongside the existing `Book.blurb` (longer, shown in the tap-to-expand detail view). Migrated now, before any real editorial content exists.
 - **Why decide now:** This is exactly the kind of gap that's cheap to fix in Phase 0 (one migration, regenerate synthetic seed data) and expensive later (would mean writing a second line of editorial copy for every real book already catalogued, or an awkward one-time NLP-extraction pass to backfill it from existing blurbs).
 
+### D15. Hosting: Vercel for this app, kept separate from the Cloudflare-hosted author site
+- **Choice:** Deploy this app to Vercel on its own (subdomain or separate domain), not onto the same Cloudflare setup as the existing author website.
+- **Why:** Different product, different concerns. Next.js 16 is very recent, and Cloudflare's OpenNext adapter for Next.js tends to lag Vercel's native (Vercel is Next.js's own company) support by a version or two — deploying separately avoids that adapter-compatibility risk and keeps the two sites from being coupled operationally (a bad deploy or config change on one can't take down the other).
+
+### D16. Production database/auth: a new, dedicated Supabase project — not the existing beta-reader-portal one
+- **Choice:** Create a separate Supabase project under the same account already used for the author site's beta reader portal, rather than adding tables to that existing project.
+- **Why:** Supabase bundles Postgres + Auth (GoTrue), which conveniently covers two separate stack assumptions from ROADMAP.md at once (managed Postgres, and Phase 2's auth provider — Auth.js/Clerk is no longer needed as a separate piece). But the beta-reader-portal's users and this app's readers are unrelated identities; sharing a project would couple two products' data models, migrations, and auth contexts for no benefit. Same account, isolated project — no data ever crosses between them.
+
+### D17. Two different Postgres connection strings needed: pooled (runtime) vs. direct (migrations)
+- **Research link:** none — pure infrastructure gotcha, flagged now so it isn't discovered mid-deploy.
+- **Choice:** When wiring up the new Supabase project, use Supabase's **connection pooler** URL (port 6543, PgBouncer) for `DATABASE_URL` at runtime, and the **direct connection** URL (port 5432) specifically for running `prisma migrate deploy`.
+- **Why decide now:** Vercel runs this app as serverless functions, which can each open their own Postgres connection — without pooling, a moderate amount of traffic can exhaust Supabase's direct connection limit. Prisma Migrate, on the other hand, needs the direct connection (the pooler doesn't support all the session-level operations migrations require). Getting this wrong doesn't show up in local dev (single long-lived `prisma dev` connection) — it shows up as intermittent "too many connections" errors in production, which is a much worse time to discover the distinction.
+
 ---
 
 *(Later phases append their own sections here as we build them.)*

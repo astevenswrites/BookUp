@@ -1,12 +1,16 @@
 "use server";
 
 import { prisma } from "@/lib/prisma";
-import { getOrCreateSessionId } from "@/lib/session";
+import { getOrCreateActor, actorWhere } from "@/lib/actor";
 import { getDeckForPreference } from "@/lib/matching";
-import { getPreferenceForSession } from "@/lib/preferences";
+import { getPreferenceForActor } from "@/lib/preferences";
 import { getSwipedBookIds } from "@/lib/limits";
+import { createServerSupabaseClient } from "@/lib/supabase/server";
+import { completeSignIn } from "@/lib/auth";
 import { HeatLevel, Pacing, ReadingFrequency, DisplayMode, VibeTheme } from "@/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { headers } from "next/headers";
 
 function asEnumOrNull<T extends string>(
   value: FormDataEntryValue | null,
@@ -17,7 +21,7 @@ function asEnumOrNull<T extends string>(
 }
 
 export async function submitQuiz(formData: FormData) {
-  const sessionId = await getOrCreateSessionId();
+  const actor = await getOrCreateActor();
 
   const heatLevelMax = asEnumOrNull(
     formData.get("heatLevelMax"),
@@ -38,18 +42,19 @@ export async function submitQuiz(formData: FormData) {
       : null;
   const tagIds = formData.getAll("tagIds").filter((v): v is string => typeof v === "string");
 
-  const preference = await prisma.preference.upsert({
-    where: { sessionId },
-    update: { heatLevelMax, pacing, readingFrequency, displayMode, favoriteBooksNote },
-    create: {
-      sessionId,
-      heatLevelMax,
-      pacing,
-      readingFrequency,
-      displayMode,
-      favoriteBooksNote,
-    },
-  });
+  const data = { heatLevelMax, pacing, readingFrequency, displayMode, favoriteBooksNote };
+  const preference =
+    actor.kind === "user"
+      ? await prisma.preference.upsert({
+          where: { userId: actor.userId },
+          update: data,
+          create: { userId: actor.userId, ...data },
+        })
+      : await prisma.preference.upsert({
+          where: { sessionId: actor.sessionId },
+          update: data,
+          create: { sessionId: actor.sessionId, ...data },
+        });
 
   await prisma.preferenceTag.deleteMany({ where: { preferenceId: preference.id } });
   if (tagIds.length) {
@@ -63,37 +68,86 @@ export async function submitQuiz(formData: FormData) {
 }
 
 export async function swipeBook(bookId: string, direction: "left" | "right") {
-  const sessionId = await getOrCreateSessionId();
+  const actor = await getOrCreateActor();
 
-  await prisma.swipe.create({ data: { bookId, direction, sessionId } });
+  await prisma.swipe.create({ data: { bookId, direction, ...actorWhere(actor) } });
 
   if (direction === "right") {
     const existing = await prisma.tBREntry.findFirst({
-      where: { bookId, sessionId, userId: null },
+      where: { bookId, ...actorWhere(actor) },
     });
     if (!existing) {
-      await prisma.tBREntry.create({ data: { bookId, sessionId } });
+      await prisma.tBREntry.create({ data: { bookId, ...actorWhere(actor) } });
     }
   }
 }
 
 // D33: null means "go back to auto-deriving the theme from my quiz moods"
 export async function setThemeOverride(theme: VibeTheme | null) {
-  const sessionId = await getOrCreateSessionId();
-  await prisma.preference.update({
-    where: { sessionId },
-    data: { themeOverride: theme },
-  });
+  const actor = await getOrCreateActor();
+  const where =
+    actor.kind === "user" ? { userId: actor.userId } : { sessionId: actor.sessionId };
+  await prisma.preference.update({ where, data: { themeOverride: theme } });
   revalidatePath("/", "layout");
 }
 
 export async function getMoreCards(excludeBookIds: string[], limit = 20) {
-  const sessionId = await getOrCreateSessionId();
-  const preference = await getPreferenceForSession(sessionId);
+  const actor = await getOrCreateActor();
+  const preference = await getPreferenceForActor(actor);
   if (!preference) return [];
 
-  const alreadySwiped = await getSwipedBookIds(sessionId);
+  const alreadySwiped = await getSwipedBookIds(actor);
   const exclude = [...new Set([...excludeBookIds, ...alreadySwiped])];
 
   return getDeckForPreference(preference, exclude, limit);
+}
+
+// --- Auth (D34: email/password + Google OAuth) ---
+
+function authErrorRedirect(message: string): never {
+  redirect(`/login?error=${encodeURIComponent(message)}`);
+}
+
+export async function signUpWithPassword(formData: FormData) {
+  const email = String(formData.get("email") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const supabase = await createServerSupabaseClient();
+  const origin = (await headers()).get("origin");
+
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { emailRedirectTo: `${origin}/auth/callback` },
+  });
+  if (error) authErrorRedirect(error.message);
+
+  if (!data.session) {
+    // Email confirmation is required by the Supabase project's auth
+    // settings — no session yet, nothing to merge until they confirm.
+    redirect("/login?check_email=1");
+  }
+
+  await completeSignIn(data.user!);
+  revalidatePath("/", "layout");
+  redirect("/");
+}
+
+export async function signInWithPassword(formData: FormData) {
+  const email = String(formData.get("email") ?? "");
+  const password = String(formData.get("password") ?? "");
+  const supabase = await createServerSupabaseClient();
+
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) authErrorRedirect(error.message);
+
+  await completeSignIn(data.user);
+  revalidatePath("/", "layout");
+  redirect("/");
+}
+
+export async function signOut() {
+  const supabase = await createServerSupabaseClient();
+  await supabase.auth.signOut();
+  revalidatePath("/", "layout");
+  redirect("/");
 }

@@ -1,14 +1,14 @@
 import Link from "next/link";
 import { BookCard } from "@/components/BookCard";
 import { prisma } from "@/lib/prisma";
-import { getSessionId } from "@/lib/session";
+import { getActor, actorWhere, hasIdentity } from "@/lib/actor";
 
 export default async function TbrPage() {
-  const sessionId = await getSessionId();
+  const actor = await getActor();
 
-  const entries = sessionId
+  const entries = hasIdentity(actor)
     ? await prisma.tBREntry.findMany({
-        where: { sessionId },
+        where: actorWhere(actor),
         orderBy: { addedAt: "desc" },
         include: { book: { include: { tags: { include: { tag: true } } } } },
       })

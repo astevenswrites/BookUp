@@ -1,11 +1,12 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Fraunces } from "next/font/google";
 import "./globals.css";
-import { getSessionId } from "@/lib/session";
-import { getPreferenceForSession, getPreferenceMoodLabels } from "@/lib/preferences";
+import { getActor, hasIdentity } from "@/lib/actor";
+import { getPreferenceForActor, getPreferenceMoodLabels } from "@/lib/preferences";
 import { deriveVibeTheme } from "@/lib/theme";
 import { VibeBackground } from "@/components/VibeBackground";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
+import { AuthStatus } from "@/components/AuthStatus";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -29,8 +30,8 @@ export const metadata: Metadata = {
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {
-  const sessionId = await getSessionId();
-  const preference = sessionId ? await getPreferenceForSession(sessionId) : null;
+  const actor = await getActor();
+  const preference = hasIdentity(actor) ? await getPreferenceForActor(actor) : null;
   const theme = preference
     ? deriveVibeTheme(getPreferenceMoodLabels(preference), preference.themeOverride)
     : null;
@@ -42,6 +43,7 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
     >
       <body className="min-h-full flex flex-col">
         <VibeBackground theme={theme} />
+        <AuthStatus />
         {preference && <ThemeSwitcher currentOverride={preference.themeOverride} />}
         {children}
       </body>

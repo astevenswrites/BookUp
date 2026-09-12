@@ -193,4 +193,35 @@ Running record of decisions made at each step, tied back to [research/market-res
 
 ---
 
+## Phase 2 — Accounts, Persistence & TBR Management
+
+### D34. Auth providers: email + Google only at launch
+- **User ask:** picked from three options (email-only, email+Google, email+Google+Apple) when starting Phase 2.
+- **Choice:** Supabase Auth with email/password + Google OAuth. Apple Sign-In deferred — it requires an Apple Developer account and extra native-adjacent setup that isn't justified before there's real usage data on which platforms users arrive from.
+- **How to apply:** Supabase project auth settings enable email + Google only; the sign-in UI should be built so adding a provider later (Apple, etc.) is additive, not a rework.
+
+### D35. "Today's Picks": 5 books/day, resets at the user's local midnight
+- **User ask:** picked from three sizing/timing options.
+- **Choice:** 5 curated picks per day (scarcity/urgency mechanic per Bumble/Tinder research already cited in ROADMAP Phase 2), refreshing at the user's own local midnight rather than a fixed UTC cutoff — the reset should feel like "a new day," not an arbitrary server-clock event.
+- **How to apply:** the picks-refresh check needs the client's timezone (or a per-user stored timezone) to compute "local midnight," not just `new Date()` on the server. Store/derive timezone at the point picks are generated or requested, not assumed as UTC.
+
+### D36. TBR re-prompt cadence: 21 days untouched
+- **User ask:** picked a custom value between the offered 14-day and 30-day options.
+- **Choice:** a `to_read` TBREntry that hasn't been touched (status unchanged, not re-viewed) in 21 days triggers a "still interested in this?" re-prompt on the shelf view.
+- **How to apply:** needs a way to track "last touched" per TBREntry (or use `updatedAt` as approximation, since it's already tracked). This is Phase 2 scope as an in-app banner/badge only — no push/email notification channel exists until Phase 4, so don't build delivery infrastructure for it yet.
+
+### D37. Auth architecture: `User.id` = Supabase auth UID, `Actor` abstraction, merge-on-first-login
+- **Implementation, not a product decision** (D34 already made the provider call) — recorded here because it touches shared plumbing every later phase builds on.
+- **`User.id` is the Supabase `auth.users.id` (uuid) directly**, set explicitly on upsert rather than Prisma-generated (`schema.prisma` dropped `@default(cuid())`). Keeps our `public.User` row and Supabase's own auth record from ever drifting apart. No migration was needed — `@default(cuid())` was client-side only, never a DB-level default.
+- **`lib/actor.ts`** replaces the old sessionId-only pattern everywhere (actions.ts, layout/page/tbr, lib/preferences.ts, lib/limits.ts). `Actor = { kind: "user"; userId } | { kind: "session"; sessionId }` — a `kind` discriminant, not truthiness checks on a `string | null` field, because TS won't reliably narrow a union on the latter (hit real `tsc` errors trying it the naive way). `getActor()` is read-only (Server Components); `getOrCreateActor()` may set the anonymous cookie (Server Actions/Route Handlers only) — same read/mutate split as the pre-existing `session.ts`.
+- **`lib/mergeAnonymousSession.ts`** folds anonymous swipes/TBR/preferences into the account on first login (`lib/auth.ts`'s `completeSignIn`, called from both the password sign-in/up actions and the OAuth callback route). TBREntry merge dedupes on `bookId` (unique constraint is `[bookId, userId, sessionId]`, so two rows can't just have their `userId` set without collision-checking); Preference merge keeps the account's existing quiz answers if the account already has one, discarding the anonymous session's.
+- **Next.js 16 renamed `middleware.ts` to `proxy.ts`** (function renamed `middleware` → `proxy`) — caught via a stale background-task log showing the deprecation warning, confirmed against `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`. Used for Supabase's session-cookie refresh, which Server Components can't do themselves.
+- **Known open items, not yet done:**
+  - Google OAuth provider isn't enabled in the Supabase dashboard yet — needs the user to set it up themselves (Google Cloud OAuth client + pasting the client ID/secret into Supabase's Authentication → Providers → Google), since that involves entering secrets into their own accounts.
+  - Supabase's Redirect URLs allow-list needs `http://localhost:3000/auth/callback` and the eventual production `.../auth/callback` added (Authentication → URL Configuration), or the email-confirmation and OAuth callback links will be rejected.
+  - Vercel doesn't have `NEXT_PUBLIC_SUPABASE_URL`/`NEXT_PUBLIC_SUPABASE_ANON_KEY` set yet — **do not deploy this to production until those are added**, or the live site will throw on every request that touches auth.
+  - Full sign-in + merge flow verified only up through sign-up/error-handling in the browser; live confirmation-email testing hit Supabase's default shared-SMTP rate limit (a handful of emails/hour, expected on a project without custom SMTP configured) before sign-in could be exercised end-to-end. Code reviewed and typechecks; needs one real pass once the limit clears or custom SMTP is set up.
+
+---
+
 *(Later phases append their own sections here as we build them.)*

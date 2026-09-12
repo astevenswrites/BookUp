@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { Quiz } from "@/components/Quiz";
 import { SwipeDeck } from "@/components/SwipeDeck";
-import { getSessionId } from "@/lib/session";
-import { getPreferenceForSession } from "@/lib/preferences";
+import { getActor, hasIdentity } from "@/lib/actor";
+import { getPreferenceForActor } from "@/lib/preferences";
 import { getTagsByCategory } from "@/lib/tags";
 import { getDeckForPreference } from "@/lib/matching";
 import { DAILY_SWIPE_CAP, getSwipedBookIds, getTodaySwipeCount } from "@/lib/limits";
@@ -10,15 +10,15 @@ import { DAILY_SWIPE_CAP, getSwipedBookIds, getTodaySwipeCount } from "@/lib/lim
 // The real product loop (D27): quiz for new sessions, swipe deck once a
 // Preference exists. See DECISIONS.md D22-D28 for the decisions behind this.
 export default async function Home() {
-  const sessionId = await getSessionId();
-  const preference = sessionId ? await getPreferenceForSession(sessionId) : null;
+  const actor = await getActor();
+  const preference = hasIdentity(actor) ? await getPreferenceForActor(actor) : null;
 
-  if (!preference) {
+  if (!preference || !hasIdentity(actor)) {
     const tags = await getTagsByCategory();
     return <Quiz tags={tags} />;
   }
 
-  const swipedToday = await getTodaySwipeCount(sessionId!);
+  const swipedToday = await getTodaySwipeCount(actor);
   const remainingToday = DAILY_SWIPE_CAP - swipedToday;
 
   if (remainingToday <= 0) {
@@ -40,7 +40,7 @@ export default async function Home() {
     );
   }
 
-  const excludeBookIds = await getSwipedBookIds(sessionId!);
+  const excludeBookIds = await getSwipedBookIds(actor);
   const deck = await getDeckForPreference(preference, excludeBookIds, 30);
 
   return (

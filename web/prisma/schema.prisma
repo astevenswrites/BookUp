@@ -100,7 +100,7 @@ model BookTag {
 }
 
 model User {
-  id        String   @id @default(cuid())
+  id        String   @id // D34: Supabase auth.users.id (uuid) — set explicitly on upsert, never generated here
   email     String   @unique
   name      String?
   createdAt DateTime @default(now())

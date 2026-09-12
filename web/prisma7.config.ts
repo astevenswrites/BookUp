@@ -10,6 +10,8 @@ export default defineConfig({
     seed: "tsx prisma/seed.ts",
   },
   datasource: {
-    url: process.env["DATABASE_URL"],
+    // Migrations/introspection need the DIRECT connection, not the pooler — see DECISIONS.md D17.
+    // Locally these are the same value; in production DIRECT_URL bypasses Supabase's pooler.
+    url: process.env["DIRECT_URL"] ?? process.env["DATABASE_URL"],
   },
 });

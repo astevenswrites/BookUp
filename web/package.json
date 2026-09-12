@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "postinstall": "prisma generate"
   },
   "dependencies": {
     "@prisma/adapter-pg": "^7.10.0",
@@ -34,8 +35,6 @@
     "@prisma/engines@7.10.0": true,
     "esbuild@0.28.2": true,
     "prisma@7.10.0": true,
-    "unrs-resolver@1.12.2": true,
-    "better-sqlite3@12.11.1": true,
-    "better-sqlite3@13.0.3": true
+    "unrs-resolver@1.12.2": true
   }
 }

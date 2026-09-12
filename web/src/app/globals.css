@@ -8,7 +8,10 @@
   --card-border: #e7ded1;
   --accent: #5b2a86;
   --accent-foreground: #ffffff;
-  --muted: #6b6270;
+  /* Darkened from #6b6270 — the lighter value washed out against the vibe
+     background's paler center (D33), where secondary text (subtitles, "or"
+     dividers) needs more contrast/"pop" than a card-white background demands. */
+  --muted: #443d4d;
   --tag-genre: #efe6da;
   --tag-genre-foreground: #4a3f33;
   --tag-trope: #f3e6f6;

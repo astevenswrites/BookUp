@@ -28,11 +28,17 @@
      background that's dark almost everywhere, not just at the edges. */
   --on-vibe-fg: var(--foreground);
   --on-vibe-muted: var(--muted);
+  /* Underlined links directly on the vibe background (not inside a solid
+     bg-accent button). Defaults to --accent; the plain purple read as a
+     jarring blue-ish clash against the dark theme's warm wine-red, so
+     .vibe-dark warms it to gold instead of just lightening the same hue. */
+  --on-vibe-link: var(--accent);
 }
 
 body.vibe-dark {
   --on-vibe-fg: #f7eef2;
   --on-vibe-muted: #d9c3cb;
+  --on-vibe-link: #e8b568;
 }
 
 @theme inline {
@@ -45,6 +51,7 @@ body.vibe-dark {
   --color-muted: var(--muted);
   --color-on-vibe: var(--on-vibe-fg);
   --color-on-vibe-muted: var(--on-vibe-muted);
+  --color-on-vibe-link: var(--on-vibe-link);
   --color-tag-genre: var(--tag-genre);
   --color-tag-genre-foreground: var(--tag-genre-foreground);
   --color-tag-trope: var(--tag-trope);

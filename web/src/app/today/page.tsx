@@ -55,7 +55,7 @@ export default async function TodaysPicksPage() {
         <p className="mt-1 text-sm text-on-vibe-muted">
           {picks.length} hand-matched book{picks.length === 1 ? "" : "s"} — a fresh set tomorrow.
         </p>
-        <Link href="/" className="mt-2 inline-block text-sm text-accent underline">
+        <Link href="/" className="mt-2 inline-block text-sm text-on-vibe-link underline">
           Back to swiping
         </Link>
       </header>

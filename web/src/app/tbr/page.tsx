@@ -31,7 +31,7 @@ export default async function TbrPage() {
         <p className="mt-1 text-sm text-on-vibe-muted">
           {entries.length} book{entries.length === 1 ? "" : "s"} you&apos;ve matched with.
         </p>
-        <Link href="/" className="mt-2 inline-block text-sm text-accent underline">
+        <Link href="/" className="mt-2 inline-block text-sm text-on-vibe-link underline">
           Back to swiping
         </Link>
       </header>

@@ -68,7 +68,7 @@ export default async function LoginPage({
         </div>
       </form>
 
-      <Link href="/" className="mt-8 text-center text-sm text-accent underline">
+      <Link href="/" className="mt-8 text-center text-sm text-on-vibe-link underline">
         Keep browsing without an account
       </Link>
     </div>

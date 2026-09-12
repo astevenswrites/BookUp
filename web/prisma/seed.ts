@@ -284,6 +284,11 @@ async function main() {
         },
       },
     });
+
+    if ((i + 1) % 25 === 0 || i + 1 === BOOK_COUNT) {
+      const pct = (((i + 1) / BOOK_COUNT) * 100).toFixed(0);
+      console.log(`  ${i + 1} / ${BOOK_COUNT} (${pct}%)`);
+    }
   }
 
   console.log("Done.");

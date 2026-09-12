@@ -89,6 +89,11 @@ Running record of decisions made at each step, tied back to [research/market-res
 - **Choice:** When wiring up the new Supabase project, use Supabase's **connection pooler** URL (port 6543, PgBouncer) for `DATABASE_URL` at runtime, and the **direct connection** URL (port 5432) specifically for running `prisma migrate deploy`.
 - **Why decide now:** Vercel runs this app as serverless functions, which can each open their own Postgres connection — without pooling, a moderate amount of traffic can exhaust Supabase's direct connection limit. Prisma Migrate, on the other hand, needs the direct connection (the pooler doesn't support all the session-level operations migrations require). Getting this wrong doesn't show up in local dev (single long-lived `prisma dev` connection) — it shows up as intermittent "too many connections" errors in production, which is a much worse time to discover the distinction.
 
+### D18. Migrations use Supabase's Session Pooler, not the literal "direct connection" host
+- **Choice:** `DIRECT_URL` (used by `prisma migrate deploy`) points at Supabase's pooler host on port 5432 (**Session mode**), not the `db.<project-ref>.supabase.co:5432` host that Supabase's dashboard also lists as the "direct connection."
+- **Why:** Confirmed by hitting it directly — Supabase's literal direct-connection host is IPv6-only by default on newer projects, and connection attempts from this network (and likely Vercel's build environment too) fail outright (`P1001: Can't reach database server`) rather than falling back to IPv4. The Session Pooler is IPv4-reachable and still supports the session-level SQL operations migrations need (unlike the Transaction Pooler on port 6543, which is runtime-only — see D17). So in practice there are three Supabase connection strings, not two: **Session Pooler (5432)** for migrations, **Transaction Pooler (6543, `?pgbouncer=true`)** for app runtime, and the literal direct host is not used at all in this deployment.
+- **How to apply:** Both `DATABASE_URL` and `DIRECT_URL` in Vercel's env vars should use the `<region>.pooler.supabase.com` host (from D17/.env.example) — never the `db.<ref>.supabase.co` host, even though Supabase's own dashboard presents that as the default "direct connection" option.
+
 ---
 
 *(Later phases append their own sections here as we build them.)*

@@ -2,10 +2,11 @@
 // into whichever database DATABASE_URL points at. Deterministic — the same
 // fixture (and matching public/covers/*.svg files) is used in every environment.
 // See DECISIONS.md D19 for why this is split from prisma/generate-catalog.ts,
-// and its "accepted tradeoff" note on why clearing Book rows here is safe only
-// before Phase 1 ships real anonymous swipe data.
+// and D20 for why loading is batched — this is the pattern the eventual real
+// catalog importer should follow too, not the per-row loop it replaced.
 
 import "dotenv/config";
+import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
 import {
@@ -21,6 +22,16 @@ const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
 
 const FIXTURE_PATH = join(__dirname, "seed-data", "catalog.json");
+
+// Stays well under Postgres's ~65535 bound-parameter limit per statement even
+// for the widest table here (Book, ~11 columns) — see DECISIONS.md D20.
+const BATCH_SIZE = 2000;
+
+function chunk<T>(items: T[], size: number): T[][] {
+  const out: T[][] = [];
+  for (let i = 0; i < items.length; i += size) out.push(items.slice(i, i + size));
+  return out;
+}
 
 async function main() {
   const books: CatalogBook[] = JSON.parse(readFileSync(FIXTURE_PATH, "utf-8"));
@@ -50,20 +61,36 @@ async function main() {
     })),
   ];
 
-  const tagIdByKey = new Map<string, string>();
-  for (const def of tagDefs) {
-    const tag = await prisma.tag.upsert({
-      where: { label_category: { label: def.label, category: def.category } },
-      update: {},
-      create: def,
-    });
-    tagIdByKey.set(`${def.category}:${def.label}`, tag.id);
-  }
+  await prisma.tag.createMany({ data: tagDefs, skipDuplicates: true });
+  const allTags = await prisma.tag.findMany();
+  const tagIdByKey = new Map(allTags.map((t) => [`${t.category}:${t.label}`, t.id]));
 
   console.log(`Loading ${books.length} placeholder books...`);
-  for (let i = 0; i < books.length; i++) {
-    const book = books[i];
-    const allTagKeys = [
+
+  const bookIds = books.map(() => randomUUID());
+  const bookRows = books.map((book, i) => ({
+    id: bookIds[i],
+    title: book.title,
+    author: book.author,
+    hookLine: book.hookLine,
+    blurb: book.blurb,
+    compTitle: book.compTitle,
+    coverUrl: book.coverUrl,
+    heatLevel: HeatLevel[book.heatLevel],
+    pacing: Pacing[book.pacing],
+    pageCount: book.pageCount,
+    publishedYear: book.publishedYear,
+  }));
+
+  const bookBatches = chunk(bookRows, BATCH_SIZE);
+  for (let b = 0; b < bookBatches.length; b++) {
+    await prisma.book.createMany({ data: bookBatches[b] });
+    console.log(`  books: batch ${b + 1} / ${bookBatches.length}`);
+  }
+
+  const bookTagRows: { bookId: string; tagId: string }[] = [];
+  books.forEach((book, i) => {
+    const keys = [
       { category: TagCategory.genre, label: book.genre },
       ...book.tropes.map((t) => ({ category: TagCategory.trope, label: t })),
       ...book.moods.map((m) => ({ category: TagCategory.mood, label: m })),
@@ -72,34 +99,18 @@ async function main() {
         label: w,
       })),
     ];
-
-    await prisma.book.create({
-      data: {
-        title: book.title,
-        author: book.author,
-        hookLine: book.hookLine,
-        blurb: book.blurb,
-        compTitle: book.compTitle,
-        coverUrl: book.coverUrl,
-        heatLevel: HeatLevel[book.heatLevel],
-        pacing: Pacing[book.pacing],
-        pageCount: book.pageCount,
-        publishedYear: book.publishedYear,
-        tags: {
-          create: allTagKeys.map(({ category, label }) => ({
-            tag: { connect: { id: tagIdByKey.get(`${category}:${label}`)! } },
-          })),
-        },
-      },
-    });
-
-    if ((i + 1) % 25 === 0 || i + 1 === books.length) {
-      const pct = (((i + 1) / books.length) * 100).toFixed(0);
-      console.log(`  ${i + 1} / ${books.length} (${pct}%)`);
+    for (const { category, label } of keys) {
+      bookTagRows.push({ bookId: bookIds[i], tagId: tagIdByKey.get(`${category}:${label}`)! });
     }
+  });
+
+  const tagBatches = chunk(bookTagRows, BATCH_SIZE);
+  for (let b = 0; b < tagBatches.length; b++) {
+    await prisma.bookTag.createMany({ data: tagBatches[b] });
+    console.log(`  tag associations: batch ${b + 1} / ${tagBatches.length}`);
   }
 
-  console.log("Done.");
+  console.log(`Done. Loaded ${bookRows.length} books, ${bookTagRows.length} tag associations.`);
 }
 
 main()

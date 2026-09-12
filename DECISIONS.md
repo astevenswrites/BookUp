@@ -48,6 +48,34 @@ Running record of decisions made at each step, tied back to [research/market-res
 - **Why:** `better-sqlite3` requires a native compile step (`node-gyp`) that needs Visual Studio Build Tools with the C++ workload — not installed on this machine, and a heavy multi-GB install to add just for a dev-only database. `prisma dev` needs no native toolchain and, critically, means local dev runs against the *same* database engine as production (Postgres) — SQLite's lack of native enums and scalar list (`String[]`) support was already a known limitation we'd have had to work around (see D2) and then re-verify against real Postgres before shipping. Removes an entire category of "worked in dev, broke in prod" risk.
 - **Alternative considered:** Install Visual Studio Build Tools to compile `better-sqlite3` — rejected as disproportionate setup cost for a dev-only concern when a same-engine alternative exists with no install step.
 
+### D9. Book card enforces the discovery-signal hierarchy structurally, not just via page CSS
+- **Research link:** Pillar 3.1's Discovery Signal Hierarchy table — cover art (~73–74% of perceived value) dominant, mood/trope tags immediately below it, one evocative line, comp title, genre as a secondary tag, rating/match-% small at the bottom, page count off-card entirely.
+- **Choice:** `BookCard` is built as ordered, distinctly-styled slots matching that exact hierarchy (full-bleed cover → title/author → mood+trope tag stack → hook line → comp title → secondary genre chip → tap-to-expand detail), rather than a generic "card with some fields" component styled ad hoc per page. Heat level and pacing are deliberately *not* shown on the card face — the research places them as onboarding/filter dimensions (Pillar 3.2), not among the card-face discovery signals in the Pillar 3.1 hierarchy table, so they live in the detail expand instead. Similarly, no match-quality/rating indicator is shown yet, since Phase 0 has no matching algorithm — faking a number here would be worse than omitting it; add it in Phase 3 once it means something.
+- **Why decide now:** This is the single component every later phase touches (swipe mechanics in Phase 1, "Super Match" badges in Phase 3, premium filter highlighting in Phase 5). Getting the visual weighting structurally correct now means later phases add to the card, they don't re-architect it.
+
+### D10. Content warnings are tap-to-reveal from the first version of the card, not added later
+- **Research link:** Pillar 3.2 — ~14% of readers actively avoid content warnings (spoiler concern) while ~37% specifically want them; the research's explicit design implication is "accessible via one tap, not displayed by default on the card face."
+- **Choice:** Content warnings render behind a small expand control (a `'use client'` component) from day one, even though Phase 0 has no other interactivity.
+- **Why:** Changing "always-visible text" to "hidden-by-default interactive reveal" later is a UX-perception change as much as a code change — easier to establish the right default now than to retrofit it after users have gotten used to something else.
+
+### D11. Card is one responsive component, not separate desktop/mobile variants
+- **Research link:** the product thesis itself — responsive web now, native apps later — and nothing in the research suggests the swipe-card paradigm should look structurally different by device, just scaled.
+- **Choice:** Single `BookCard` component using responsive Tailwind classes, not two components or a device-detection branch.
+- **Why:** Avoids duplicating card logic (and duplicating every future change to it) across two implementations.
+
+### D12. Phase 0 displays cards in a review grid, not the literal swipe stack
+- **Choice:** The Phase 0 homepage renders seeded books in a responsive grid for visual review, not the one-at-a-time overlapping stack. Swipe/stack mechanics are still scoped to Phase 1 per the roadmap — no gesture library added yet.
+- **Why:** Phase 0's job is to validate the card design across many books and breakpoints at once, which a grid does better than a single-card view; building swipe/drag interaction now would be scope creep ahead of Phase 1.
+
+### D13. Color palette and title typeface are explicitly placeholder pending branding
+- **Choice:** A warm, neutral "bookish" palette (parchment background, deep plum/ink accents) and a serif display font for titles — chosen for aesthetic plausibility only, not tied to any research finding.
+- **Why flagged:** ROADMAP.md's "Naming/branding" thread is still open. This is the one design decision in this step that isn't research-derived and should be expected to change once a name/brand direction is picked — noted so it isn't mistaken for a considered brand decision later.
+
+### D14. `Book` needs a separate `hookLine` field distinct from `blurb`
+- **Research link:** Pillar 3.1 treats "a single evocative sentence" as its own primary card-face element, distinct from the full blurb/synopsis (which the research and the Hinge-prompt analogy in Pillar 2.1 treat more like detail-view content revealed on further interest, not the initial hook).
+- **Choice:** Added `Book.hookLine` (short, punchy, card-face text) alongside the existing `Book.blurb` (longer, shown in the tap-to-expand detail view). Migrated now, before any real editorial content exists.
+- **Why decide now:** This is exactly the kind of gap that's cheap to fix in Phase 0 (one migration, regenerate synthetic seed data) and expensive later (would mean writing a second line of editorial copy for every real book already catalogued, or an awkward one-time NLP-extraction pass to backfill it from existing blurbs).
+
 ---
 
 *(Later phases append their own sections here as we build them.)*

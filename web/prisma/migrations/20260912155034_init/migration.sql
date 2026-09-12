@@ -18,6 +18,7 @@ CREATE TABLE "Book" (
     "id" TEXT NOT NULL,
     "title" TEXT NOT NULL,
     "author" TEXT NOT NULL,
+    "hookLine" TEXT NOT NULL,
     "blurb" TEXT NOT NULL,
     "compTitle" TEXT,
     "coverUrl" TEXT NOT NULL,

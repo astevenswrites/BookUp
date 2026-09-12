@@ -45,7 +45,8 @@ model Book {
   id          String   @id @default(cuid())
   title       String
   author      String
-  blurb       String
+  hookLine    String // D14: short evocative card-face sentence, distinct from the full blurb
+  blurb       String // longer synopsis, shown in the tap-to-expand detail view
   compTitle   String? // D7: free-text "if you liked X..." hook, not a structured relation yet
   coverUrl    String // D6: always a URL/path, placeholder SVG for now
   heatLevel   HeatLevel // D2: scalar, not a tag

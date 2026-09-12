@@ -129,12 +129,23 @@ function generateTitle(): string {
   return pickOne(patterns)();
 }
 
-function generateBlurb(trope: string, mood: string, genre: string): string {
-  const sentenceCount = faker.number.int({ min: 1, max: 4 });
-  const lede = faker.lorem.paragraph({ min: 1, max: sentenceCount });
-  const flavor = `A ${mood} ${genre.toLowerCase()} novel built on ${trope}.`;
-  // deliberately inconsistent ordering/length so cards aren't uniform
-  return faker.datatype.boolean() ? `${flavor} ${lede}` : `${lede} ${flavor}`;
+const HOOK_LINE_TEMPLATES = [
+  (t: string, m: string) => `A ${m} ${t} story that sneaks up on you.`,
+  (t: string, m: string) => `${titleCaseWord(m)}, ${t}, and a twist you won't see coming.`,
+  (t: string, m: string) => `This ${m} ${t} tale will wreck you in the best way.`,
+  (t: string, m: string) => `Equal parts ${m} and unforgettable.`,
+  (t: string, m: string) => `For readers who want ${t} with a ${m} edge.`,
+];
+
+function generateHookLine(trope: string, mood: string): string {
+  return pickOne(HOOK_LINE_TEMPLATES)(trope, mood);
+}
+
+function generateBlurb(): string {
+  // Full synopsis for the tap-to-expand detail view — deliberately variable length
+  // so the UI isn't designed around uniformly-sized text (see DECISIONS.md D14).
+  const sentenceCount = faker.number.int({ min: 2, max: 6 });
+  return faker.lorem.paragraph({ min: 2, max: sentenceCount });
 }
 
 function wrapSvgText(text: string, maxCharsPerLine: number): string[] {
@@ -255,7 +266,8 @@ async function main() {
       data: {
         title,
         author,
-        blurb: generateBlurb(primaryTrope, primaryMood, genre),
+        hookLine: generateHookLine(primaryTrope, primaryMood),
+        blurb: generateBlurb(),
         compTitle:
           faker.datatype.boolean({ probability: 0.6 })
             ? `If you loved ${generateTitle()}, swipe right.`

@@ -1,26 +1,42 @@
 @import "tailwindcss";
 
+/* Placeholder palette pending branding — see DECISIONS.md D13 */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #faf6f0;
+  --foreground: #241b2f;
+  --card: #ffffff;
+  --card-border: #e7ded1;
+  --accent: #5b2a86;
+  --accent-foreground: #ffffff;
+  --muted: #6b6270;
+  --tag-genre: #efe6da;
+  --tag-genre-foreground: #4a3f33;
+  --tag-trope: #f3e6f6;
+  --tag-trope-foreground: #5b2a86;
+  --tag-mood: #e6eef3;
+  --tag-mood-foreground: #234a63;
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-border: var(--card-border);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-muted: var(--muted);
+  --color-tag-genre: var(--tag-genre);
+  --color-tag-genre-foreground: var(--tag-genre-foreground);
+  --color-tag-trope: var(--tag-trope);
+  --color-tag-trope-foreground: var(--tag-trope-foreground);
+  --color-tag-mood: var(--tag-mood);
+  --color-tag-mood-foreground: var(--tag-mood-foreground);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-serif: var(--font-book-serif);
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
 }

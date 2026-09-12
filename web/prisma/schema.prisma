@@ -1,0 +1,127 @@
+// See ../../DECISIONS.md (Phase 0 section) for why each field/shape was chosen.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+enum HeatLevel {
+  none
+  low
+  medium
+  high
+}
+
+enum Pacing {
+  slow_burn
+  medium
+  fast_paced
+}
+
+enum TagCategory {
+  genre
+  trope
+  mood
+  content_warning
+}
+
+enum SwipeDirection {
+  left
+  right
+}
+
+enum TbrStatus {
+  to_read
+  reading
+  finished
+  dnf
+}
+
+model Book {
+  id          String   @id @default(cuid())
+  title       String
+  author      String
+  blurb       String
+  compTitle   String? // D7: free-text "if you liked X..." hook, not a structured relation yet
+  coverUrl    String // D6: always a URL/path, placeholder SVG for now
+  heatLevel   HeatLevel // D2: scalar, not a tag
+  pacing      Pacing    // D2: scalar, not a tag
+  pageCount   Int
+  publishedYear Int
+  createdAt   DateTime @default(now())
+
+  tags      BookTag[]
+  swipes    Swipe[]
+  tbrEntries TBREntry[]
+}
+
+model Tag {
+  id       String      @id @default(cuid())
+  label    String
+  category TagCategory // D1
+
+  books BookTag[]
+
+  @@unique([label, category])
+}
+
+model BookTag {
+  bookId String
+  tagId  String
+
+  book Book @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  tag  Tag  @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([bookId, tagId])
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+
+  swipes     Swipe[]
+  tbrEntries TBREntry[]
+}
+
+model Swipe {
+  id        String         @id @default(cuid())
+  direction SwipeDirection
+  createdAt DateTime       @default(now())
+
+  // D3: anonymous-first — either userId or sessionId is set, never both null
+  userId    String?
+  sessionId String?
+
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([sessionId])
+  @@index([bookId])
+}
+
+model TBREntry {
+  id        String    @id @default(cuid())
+  status    TbrStatus @default(to_read) // D4
+  addedAt   DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  // D3: anonymous-first, same pattern as Swipe
+  userId    String?
+  sessionId String?
+
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, userId, sessionId])
+  @@index([userId])
+  @@index([sessionId])
+}

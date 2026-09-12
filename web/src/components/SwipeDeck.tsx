@@ -1,12 +1,14 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
 import { motion, useMotionValue, useTransform } from "motion/react";
 import { BookCard } from "@/components/BookCard";
+import { MatchReasonsRail } from "@/components/MatchReasonsRail";
 import { swipeBook, getMoreCards } from "@/app/actions";
 import type { BookWithTags } from "@/lib/books";
 import { DAILY_SWIPE_CAP } from "@/lib/constants";
+import { getMatchReasons } from "@/lib/matchReasons";
 import type { DisplayMode } from "@/generated/prisma/enums";
 
 // Buttons are the primary control; drag is progressive enhancement — D26.
@@ -17,10 +19,14 @@ export function SwipeDeck({
   initialDeck,
   remainingToday,
   displayMode = "cover_first",
+  likedTagIds,
+  currentMoodTagId,
 }: {
   initialDeck: BookWithTags[];
   remainingToday: number;
   displayMode?: DisplayMode;
+  likedTagIds: string[];
+  currentMoodTagId: string | null;
 }) {
   const [deck, setDeck] = useState(initialDeck);
   const [remaining, setRemaining] = useState(remainingToday);
@@ -30,6 +36,18 @@ export function SwipeDeck({
   const [, startTransition] = useTransition();
 
   const topCard = deck[0];
+  const likedTagIdSet = useMemo(() => new Set(likedTagIds), [likedTagIds]);
+  const matchReasons = useMemo(
+    () => (topCard ? getMatchReasons(topCard, likedTagIdSet, currentMoodTagId) : []),
+    [topCard, likedTagIdSet, currentMoodTagId]
+  );
+  const topCardMoodLabels = useMemo(
+    () =>
+      topCard
+        ? topCard.tags.filter(({ tag }) => tag.category === "mood").map(({ tag }) => tag.label)
+        : [],
+    [topCard]
+  );
 
   function commitSwipe(bookId: string, direction: "left" | "right") {
     setDeck((prev) => prev.slice(1));
@@ -80,45 +98,49 @@ export function SwipeDeck({
   }
 
   return (
-    <div className="mx-auto flex w-full min-h-[70vh] max-w-sm flex-col items-center justify-center px-4 py-8">
-      <p className="mb-3 text-xs text-on-vibe-muted">{remaining} swipes left today</p>
-      <div className="relative w-full h-[600px]">
-        {deck
-          .slice(0, 3)
-          .reverse()
-          .map((book, i, arr) => {
-            const isTop = i === arr.length - 1;
-            return (
-              <SwipeCard
-                key={book.id}
-                book={book}
-                isTop={isTop}
-                stackDepth={arr.length - 1 - i}
-                displayMode={displayMode}
-                onSwipe={(direction) => commitSwipe(book.id, direction)}
-              />
-            );
-          })}
+    <div className="mx-auto flex w-full max-w-5xl flex-col items-center justify-center gap-6 px-4 py-8 lg:flex-row lg:items-start">
+      <div className="flex w-full min-h-[70vh] max-w-sm flex-col items-center justify-center">
+        <p className="mb-3 text-xs text-on-vibe-muted">{remaining} swipes left today</p>
+        <div className="relative w-full h-[600px]">
+          {deck
+            .slice(0, 3)
+            .reverse()
+            .map((book, i, arr) => {
+              const isTop = i === arr.length - 1;
+              return (
+                <SwipeCard
+                  key={book.id}
+                  book={book}
+                  isTop={isTop}
+                  stackDepth={arr.length - 1 - i}
+                  displayMode={displayMode}
+                  onSwipe={(direction) => commitSwipe(book.id, direction)}
+                />
+              );
+            })}
+        </div>
+
+        <div className="mt-6 flex gap-4">
+          <button
+            type="button"
+            onClick={() => commitSwipe(topCard.id, "left")}
+            aria-label="Pass"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-card-border bg-card text-2xl text-foreground/60 shadow-sm hover:border-foreground/30"
+          >
+            ✕
+          </button>
+          <button
+            type="button"
+            onClick={() => commitSwipe(topCard.id, "right")}
+            aria-label="Like"
+            className="flex h-14 w-14 items-center justify-center rounded-full border border-accent bg-accent text-2xl text-accent-foreground shadow-sm"
+          >
+            ♥
+          </button>
+        </div>
       </div>
 
-      <div className="mt-6 flex gap-4">
-        <button
-          type="button"
-          onClick={() => commitSwipe(topCard.id, "left")}
-          aria-label="Pass"
-          className="flex h-14 w-14 items-center justify-center rounded-full border border-card-border bg-card text-2xl text-foreground/60 shadow-sm hover:border-foreground/30"
-        >
-          ✕
-        </button>
-        <button
-          type="button"
-          onClick={() => commitSwipe(topCard.id, "right")}
-          aria-label="Like"
-          className="flex h-14 w-14 items-center justify-center rounded-full border border-accent bg-accent text-2xl text-accent-foreground shadow-sm"
-        >
-          ♥
-        </button>
-      </div>
+      <MatchReasonsRail reasons={matchReasons} moodLabels={topCardMoodLabels} />
     </div>
   );
 }

@@ -26,8 +26,8 @@ const bookSerif = Fraunces({
 });
 
 export const metadata: Metadata = {
-  title: "Book Dating App (placeholder name)",
-  description: "Swipe your way to your next great read.",
+  title: "BookUp",
+  description: "Hook up with your next great read.",
 };
 
 export default async function RootLayout({ children }: LayoutProps<"/">) {

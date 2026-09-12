@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Quiz } from "@/components/Quiz";
+import { Landing } from "@/components/Landing";
 import { SwipeDeck } from "@/components/SwipeDeck";
 import { MoodQuickSelect } from "@/components/MoodQuickSelect";
 import { getActor, hasIdentity } from "@/lib/actor";
@@ -8,15 +8,15 @@ import { getTagsByCategory } from "@/lib/tags";
 import { getDeckForPreference } from "@/lib/matching";
 import { DAILY_SWIPE_CAP, getSwipedBookIds, getTodaySwipeCount } from "@/lib/limits";
 
-// The real product loop (D27): quiz for new sessions, swipe deck once a
-// Preference exists. See DECISIONS.md D22-D28 for the decisions behind this.
+// D41: `/` is the marketing landing page for a first-time/no-preference
+// visitor; the quiz moved to /quiz. Once a Preference exists, `/` is the
+// real product loop (D27) — swipe deck. See DECISIONS.md D22-D28/D41.
 export default async function Home() {
   const actor = await getActor();
   const preference = hasIdentity(actor) ? await getPreferenceForActor(actor) : null;
 
   if (!preference || !hasIdentity(actor)) {
-    const tags = await getTagsByCategory();
-    return <Quiz tags={tags} />;
+    return <Landing />;
   }
 
   const swipedToday = await getTodaySwipeCount(actor);
@@ -44,6 +44,9 @@ export default async function Home() {
   const excludeBookIds = await getSwipedBookIds(actor);
   const deck = await getDeckForPreference(preference, excludeBookIds, 30);
   const { mood: moods } = await getTagsByCategory();
+  const likedTagIds = preference.tags
+    .filter(({ tag }) => tag.category !== "content_warning")
+    .map(({ tagId }) => tagId);
 
   return (
     <div className="flex flex-1 flex-col pt-16">
@@ -53,6 +56,8 @@ export default async function Home() {
         initialDeck={deck}
         remainingToday={remainingToday}
         displayMode={preference.displayMode}
+        likedTagIds={likedTagIds}
+        currentMoodTagId={preference.currentMoodTagId}
       />
     </div>
   );

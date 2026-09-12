@@ -6,19 +6,7 @@ import { prisma } from "@/lib/prisma";
 import { HeatLevel } from "@/generated/prisma/enums";
 import type { BookWithTags } from "@/lib/books";
 import type { PreferenceWithTags } from "@/lib/preferences";
-
-// Mood/trope weighted above genre — mirrors the Pillar 3.1 discovery hierarchy (D9, D25).
-const CATEGORY_WEIGHT: Record<string, number> = {
-  mood: 3,
-  trope: 3,
-  genre: 1,
-};
-
-// D39: "what do you feel like reading today?" — a strong but not absolute
-// boost (more than double the base mood weight) so the deck visibly skews
-// toward the picked mood without completely overriding the quiz's baseline
-// liked tags or the heat/pacing scoring below.
-const CURRENT_MOOD_BOOST = 6;
+import { CATEGORY_WEIGHT, CURRENT_MOOD_BOOST } from "@/lib/matchReasons";
 
 const HEAT_ORDER: HeatLevel[] = [
   HeatLevel.none,

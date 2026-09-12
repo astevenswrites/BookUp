@@ -24,10 +24,10 @@ export default async function Home() {
   if (remainingToday <= 0) {
     return (
       <div className="mx-auto flex w-full min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
-        <h2 className="font-serif text-2xl text-foreground">
+        <h2 className="font-serif text-2xl text-on-vibe">
           That&apos;s today&apos;s matches!
         </h2>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 text-sm text-on-vibe-muted">
           Come back tomorrow for {DAILY_SWIPE_CAP} more.
         </p>
         <Link

@@ -14,8 +14,8 @@ export default async function TodaysPicksPage() {
   if (!hasIdentity(actor) || actor.kind !== "user") {
     return (
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-4 text-center">
-        <h1 className="font-serif text-2xl text-foreground">Today&apos;s Picks is for accounts</h1>
-        <p className="mt-2 text-sm text-muted">
+        <h1 className="font-serif text-2xl text-on-vibe">Today&apos;s Picks is for accounts</h1>
+        <p className="mt-2 text-sm text-on-vibe-muted">
           Sign in to get a fresh, curated set of {TODAYS_PICKS_COUNT} books every day.
         </p>
         <Link
@@ -32,8 +32,8 @@ export default async function TodaysPicksPage() {
   if (!preference) {
     return (
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-4 text-center">
-        <h1 className="font-serif text-2xl text-foreground">Take the quiz first</h1>
-        <p className="mt-2 text-sm text-muted">
+        <h1 className="font-serif text-2xl text-on-vibe">Take the quiz first</h1>
+        <p className="mt-2 text-sm text-on-vibe-muted">
           We need to know your vibe before we can curate picks.
         </p>
         <Link
@@ -51,8 +51,8 @@ export default async function TodaysPicksPage() {
   return (
     <div className="flex-1 px-4 py-10 sm:px-8">
       <header className="mx-auto mb-8 max-w-6xl">
-        <h1 className="font-serif text-3xl text-foreground">Today&apos;s picks</h1>
-        <p className="mt-1 text-sm text-muted">
+        <h1 className="font-serif text-3xl text-on-vibe">Today&apos;s picks</h1>
+        <p className="mt-1 text-sm text-on-vibe-muted">
           {picks.length} hand-matched book{picks.length === 1 ? "" : "s"} — a fresh set tomorrow.
         </p>
         <Link href="/" className="mt-2 inline-block text-sm text-accent underline">
@@ -60,7 +60,7 @@ export default async function TodaysPicksPage() {
         </Link>
       </header>
       {picks.length === 0 ? (
-        <p className="mx-auto max-w-6xl text-sm text-muted">
+        <p className="mx-auto max-w-6xl text-sm text-on-vibe-muted">
           You&apos;ve already seen everything that matches well right now — check back after
           swiping a bit more.
         </p>

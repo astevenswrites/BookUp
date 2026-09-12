@@ -18,6 +18,21 @@
   --tag-trope-foreground: #5b2a86;
   --tag-mood: #e6eef3;
   --tag-mood-foreground: #234a63;
+
+  /* Text sitting directly on the vibe background (D33) — page headers,
+     subtitles, empty-state copy — as opposed to text inside a white card,
+     which always uses --foreground/--muted unconditionally since the card's
+     own white background never changes. Defaults match --foreground/--muted;
+     .vibe-dark on <body> (set when the active vibe theme is dark-toned, e.g.
+     VibeTheme.dark) flips these to light so text stays readable against a
+     background that's dark almost everywhere, not just at the edges. */
+  --on-vibe-fg: var(--foreground);
+  --on-vibe-muted: var(--muted);
+}
+
+body.vibe-dark {
+  --on-vibe-fg: #f7eef2;
+  --on-vibe-muted: #d9c3cb;
 }
 
 @theme inline {
@@ -28,6 +43,8 @@
   --color-accent: var(--accent);
   --color-accent-foreground: var(--accent-foreground);
   --color-muted: var(--muted);
+  --color-on-vibe: var(--on-vibe-fg);
+  --color-on-vibe-muted: var(--on-vibe-muted);
   --color-tag-genre: var(--tag-genre);
   --color-tag-genre-foreground: var(--tag-genre-foreground);
   --color-tag-trope: var(--tag-trope);

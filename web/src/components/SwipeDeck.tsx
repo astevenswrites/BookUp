@@ -52,10 +52,10 @@ export function SwipeDeck({
   if (remaining <= 0) {
     return (
       <div className="mx-auto flex w-full min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
-        <h2 className="font-serif text-2xl text-foreground">
+        <h2 className="font-serif text-2xl text-on-vibe">
           That&apos;s today&apos;s matches!
         </h2>
-        <p className="mt-2 text-sm text-muted">
+        <p className="mt-2 text-sm text-on-vibe-muted">
           You added {tbrCount > 0 ? tbrCount : "some"} book{tbrCount === 1 ? "" : "s"} to your
           shelf. Come back tomorrow for {DAILY_SWIPE_CAP} more.
         </p>
@@ -72,7 +72,7 @@ export function SwipeDeck({
   if (!topCard) {
     return (
       <div className="mx-auto flex w-full min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
-        <h2 className="font-serif text-2xl text-foreground">
+        <h2 className="font-serif text-2xl text-on-vibe">
           {isFetchingMore ? "Finding more books..." : "You've seen everything for now."}
         </h2>
       </div>
@@ -81,7 +81,7 @@ export function SwipeDeck({
 
   return (
     <div className="mx-auto flex w-full min-h-[70vh] max-w-sm flex-col items-center justify-center px-4 py-8">
-      <p className="mb-3 text-xs text-muted">{remaining} swipes left today</p>
+      <p className="mb-3 text-xs text-on-vibe-muted">{remaining} swipes left today</p>
       <div className="relative w-full h-[600px]">
         {deck
           .slice(0, 3)

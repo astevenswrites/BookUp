@@ -10,10 +10,10 @@ export default async function ReviewPage() {
   return (
     <div className="flex-1 px-4 py-10 sm:px-8">
       <header className="mx-auto mb-8 max-w-6xl">
-        <h1 className="font-serif text-3xl text-foreground">
+        <h1 className="font-serif text-3xl text-on-vibe">
           Book card review
         </h1>
-        <p className="mt-1 text-sm text-muted">
+        <p className="mt-1 text-sm text-on-vibe-muted">
           {books.length} synthetic placeholder books, for reviewing the card
           design across variety. Internal design QA only — the real product
           loop is at{" "}

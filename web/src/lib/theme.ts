@@ -24,24 +24,35 @@ export type ThemeConfig = {
   // murky, busy blend rather than a cohesive glow (user feedback).
   colors: [string, string, string];
   label: string;
+  // True when every shade in `colors` is dark enough that the app's default
+  // dark-ink text (--foreground/--muted) stops being readable against most
+  // of the gradient, not just its edges — unlike cozy/whimsical/melancholy,
+  // whose "light" shade is genuinely light. Drives the .vibe-dark body class
+  // (see globals.css) that flips text sitting directly on the background to
+  // a light color. Text inside white cards is unaffected either way.
+  isDark: boolean;
 };
 
 export const THEME_CONFIG: Record<VibeTheme, ThemeConfig> = {
   cozy: {
     colors: ["#e8b568", "#f4d9a0", "#c97a3d"],
     label: "Cozy",
+    isDark: false,
   },
   dark: {
     colors: ["#5e0b15", "#7a1420", "#2b0a10"],
     label: "Dark",
+    isDark: true,
   },
   whimsical: {
     colors: ["#c9a7eb", "#e6d4f5", "#a97fd4"],
     label: "Whimsical",
+    isDark: false,
   },
   melancholy: {
     colors: ["#5c6b73", "#7d8ca3", "#46525a"],
     label: "Melancholy",
+    isDark: false,
   },
 };
 

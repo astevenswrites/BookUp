@@ -24,8 +24,8 @@ export default async function ProfilePage({
   if (!hasIdentity(actor)) {
     return (
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-4 text-center">
-        <h1 className="font-serif text-2xl text-foreground">No profile yet</h1>
-        <p className="mt-2 text-sm text-muted">Take the quiz to get started.</p>
+        <h1 className="font-serif text-2xl text-on-vibe">No profile yet</h1>
+        <p className="mt-2 text-sm text-on-vibe-muted">Take the quiz to get started.</p>
         <Link
           href="/"
           className="mt-6 rounded-full bg-accent px-6 py-2.5 text-sm font-medium text-accent-foreground"
@@ -40,8 +40,8 @@ export default async function ProfilePage({
   if (!preference) {
     return (
       <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-4 text-center">
-        <h1 className="font-serif text-2xl text-foreground">No profile yet</h1>
-        <p className="mt-2 text-sm text-muted">Take the quiz to get started.</p>
+        <h1 className="font-serif text-2xl text-on-vibe">No profile yet</h1>
+        <p className="mt-2 text-sm text-on-vibe-muted">Take the quiz to get started.</p>
         <Link
           href="/"
           className="mt-6 rounded-full bg-accent px-6 py-2.5 text-sm font-medium text-accent-foreground"
@@ -87,8 +87,8 @@ export default async function ProfilePage({
     <div className="flex-1 px-4 py-10 sm:px-8">
       <div className="mx-auto flex max-w-2xl flex-col gap-8">
         <header>
-          <h1 className="font-serif text-3xl text-foreground">Your profile</h1>
-          {user?.email && <p className="mt-1 text-sm text-muted">{user.email}</p>}
+          <h1 className="font-serif text-3xl text-on-vibe">Your profile</h1>
+          {user?.email && <p className="mt-1 text-sm text-on-vibe-muted">{user.email}</p>}
           <Link href="/" className="mt-2 inline-block text-sm text-accent underline">
             Back to swiping
           </Link>

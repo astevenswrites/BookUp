@@ -11,8 +11,8 @@ export default async function LoginPage({
 
   return (
     <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-4 py-10">
-      <h1 className="font-serif text-3xl text-foreground">Save your shelf</h1>
-      <p className="mt-1 text-sm text-muted">
+      <h1 className="font-serif text-3xl text-on-vibe">Save your shelf</h1>
+      <p className="mt-1 text-sm text-on-vibe-muted">
         Sign in to keep your matches across devices. Anything you&apos;ve already swiped
         or saved comes with you.
       </p>
@@ -30,7 +30,7 @@ export default async function LoginPage({
         <GoogleSignInButton />
       </div>
 
-      <div className="my-6 flex items-center gap-3 text-xs text-muted">
+      <div className="my-6 flex items-center gap-3 text-xs text-on-vibe-muted">
         <div className="h-px flex-1 bg-card-border" />
         or
         <div className="h-px flex-1 bg-card-border" />
@@ -61,7 +61,7 @@ export default async function LoginPage({
           </button>
           <button
             formAction={signUpWithPassword}
-            className="flex-1 rounded-full border border-card-border px-6 py-2.5 text-sm font-medium text-foreground hover:border-accent"
+            className="flex-1 rounded-full border border-card-border bg-card/70 px-6 py-2.5 text-sm font-medium text-foreground hover:border-accent"
           >
             Sign up
           </button>

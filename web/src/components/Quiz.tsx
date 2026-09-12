@@ -188,8 +188,8 @@ export function Quiz({
         ))}
       </div>
 
-      <h1 className="font-serif text-2xl text-foreground">{step.title}</h1>
-      <p className="mt-1 text-sm text-muted">{step.subtitle}</p>
+      <h1 className="font-serif text-2xl text-on-vibe">{step.title}</h1>
+      <p className="mt-1 text-sm text-on-vibe-muted">{step.subtitle}</p>
 
       {step.kind === "text" ? (
         <textarea
@@ -242,7 +242,7 @@ export function Quiz({
           type="button"
           onClick={() => setStepIndex((i) => Math.max(0, i - 1))}
           disabled={stepIndex === 0}
-          className="text-sm text-muted disabled:opacity-0"
+          className="text-sm text-on-vibe-muted disabled:opacity-0"
         >
           Back
         </button>

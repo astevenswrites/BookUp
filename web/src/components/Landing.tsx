@@ -52,13 +52,13 @@ export function Landing() {
     <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-20 sm:px-8">
       <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.15fr_0.85fr] lg:gap-14">
         <div>
-          <p className="mb-4 text-xs font-medium uppercase tracking-[0.14em] text-accent">
+          <p className="mb-4 text-xs font-medium uppercase tracking-[0.14em] text-on-vibe-accent">
             A dating app, but for books
           </p>
           <h1 className="font-serif text-5xl font-semibold leading-[1.02] tracking-tight text-on-vibe sm:text-6xl">
             Hook Up with BookUp
           </h1>
-          <p className="mt-4 font-serif text-xl italic text-accent sm:text-2xl">
+          <p className="mt-4 font-serif text-xl italic text-on-vibe-accent sm:text-2xl">
             Get paired with your ideal book match!
           </p>
           <p className="mt-5 max-w-prose text-base leading-relaxed text-on-vibe-muted sm:text-lg">

@@ -74,7 +74,16 @@ export const THEME_ORDER: VibeTheme[] = [
   VibeTheme.melancholy,
 ];
 
-// null return = no strong signal, caller should fall back to the neutral default look
+// D33 second correction: applied whenever deriveVibeTheme has no signal to
+// go on (no account/session yet — login, pre-quiz — or a Preference with no
+// mood tags picked). Originally these cases showed no glow at all ("don't
+// guess"), but once the rest of the app leaned into the glow as its visual
+// identity, a flat background everywhere else read as broken, not neutral.
+// Matches LandingMoodDemo's own default so the very first thing a visitor
+// sees is consistent with what the quiz result would look like.
+export const DEFAULT_VIBE_THEME: VibeTheme = VibeTheme.cozy;
+
+// null return = no strong signal; callers apply DEFAULT_VIBE_THEME on null.
 export function deriveVibeTheme(
   moodLabels: string[],
   override: VibeTheme | null

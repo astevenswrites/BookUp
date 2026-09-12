@@ -89,7 +89,7 @@ export default async function ProfilePage({
         <header>
           <h1 className="font-serif text-3xl text-on-vibe">Your profile</h1>
           {user?.email && <p className="mt-1 text-sm text-on-vibe-muted">{user.email}</p>}
-          <Link href="/" className="mt-2 inline-block text-sm text-on-vibe-link underline">
+          <Link href="/" className="mt-2 inline-block text-sm text-on-vibe-accent underline">
             Back to swiping
           </Link>
         </header>

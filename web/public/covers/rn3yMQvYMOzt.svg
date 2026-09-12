@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
+  <rect width="400" height="600" fill="#22223b" />
+  <rect x="20" y="20" width="360" height="560" fill="none" stroke="#c9ada7" stroke-width="2" opacity="0.5" />
+  <text x="30" y="220" font-family="Georgia, serif" font-size="28" fill="#c9ada7" font-weight="bold"><tspan x="30" dy="0">Bell of Farm</tspan></text>
+  <text x="30" y="560" font-family="Georgia, serif" font-size="16" fill="#c9ada7" opacity="0.85">Mr. Gaetano Harris</text>
+</svg>

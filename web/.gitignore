@@ -43,8 +43,6 @@ next-env.d.ts
 
 /src/generated/prisma
 
-# generated placeholder cover art (regenerate via `prisma db seed`)
-/public/covers
 
 # prisma skills got installed 3x as symlinks (.agents/.claude/.windsurf all point to the
 # same content); Windows git can't store symlinks so each resolves to a full copy — keep

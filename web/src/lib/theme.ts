@@ -45,6 +45,15 @@ export const THEME_CONFIG: Record<VibeTheme, ThemeConfig> = {
   },
 };
 
+// D33 "revised again": settled via the design-canvas exploration on a full
+// edge vignette (transparent center, richly-colored edges) — Option F
+// ("Vignette, richest color") from that canvas. transparent->light->base
+// mirrors that option's tuned stops exactly.
+export function buildVignetteGradient(colors: [string, string, string]): string {
+  const [base, light] = colors;
+  return `radial-gradient(ellipse at center, transparent 22%, ${light} 55%, ${base} 95%)`;
+}
+
 export const THEME_ORDER: VibeTheme[] = [
   VibeTheme.cozy,
   VibeTheme.dark,

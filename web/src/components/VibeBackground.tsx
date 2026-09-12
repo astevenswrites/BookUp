@@ -1,25 +1,19 @@
-import { THEME_CONFIG } from "@/lib/theme";
+import { THEME_CONFIG, buildVignetteGradient } from "@/lib/theme";
 import type { VibeTheme } from "@/generated/prisma/enums";
 
 // Fixed, full-viewport, decorative only — never intercepts clicks, never
-// announced to screen readers. See DECISIONS.md D33 for the research and
-// the animation safety approach, and its "revised" notes for why this ended
-// up as a small, subtle, card-centered glow rather than a full-viewport
-// effect (two rounds of direct feedback landed here).
+// announced to screen readers. See DECISIONS.md D33 for the research, the
+// animation safety approach, and the iteration history — this final shape
+// (a full-edge vignette, richly colored) came out of a design-canvas
+// exploration where the user picked "Option F" directly.
 export function VibeBackground({ theme }: { theme: VibeTheme | null }) {
   if (!theme) return null;
-
-  const [base] = THEME_CONFIG[theme].colors;
 
   return (
     <div
       aria-hidden
-      className="pointer-events-none fixed inset-0 -z-10 flex items-center justify-center overflow-hidden"
-    >
-      <div
-        className="vibe-glow h-[80vmin] w-[80vmin] rounded-full blur-[110px]"
-        style={{ background: base }}
-      />
-    </div>
+      className="vibe-glow pointer-events-none fixed inset-0 -z-10"
+      style={{ background: buildVignetteGradient(THEME_CONFIG[theme].colors) }}
+    />
   );
 }

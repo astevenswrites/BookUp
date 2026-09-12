@@ -113,4 +113,63 @@ Running record of decisions made at each step, tied back to [research/market-res
 
 ---
 
+## Phase 1 — Core Swipe & Discovery Loop
+
+### D22. Anonymous session identity is created lazily on first mutation, not via middleware
+- **Research link:** Phase 1's anonymous-first requirement — a stranger swipes before any signup friction.
+- **Choice:** No middleware/proxy layer. A `sessionId` cookie (httpOnly, random UUID, ~1yr expiry) is generated and set inside the quiz-submission Server Action, alongside creating the `Preference` row. Pages check for the cookie; its absence means "show the quiz."
+- **Why:** Next.js Server Components can't set cookies during a GET-render — only Server Actions/Route Handlers can. Since the flow always starts with the quiz before any swipe, there's no need for a session to exist before the user's first mutation. Avoids standing up global middleware for something the first write already covers.
+
+### D23. `Preference` mirrors `Book`'s tag/scalar split (D1/D2), reusing the same `Tag` vocabulary
+- **Research link:** Pillar 3.2 — onboarding should capture genre, tropes, heat level, pacing, and mood.
+- **Choice:** `Preference` has scalar `heatLevelMax` (`HeatLevel?`) and `pacing` (`Pacing?`) fields, plus a `PreferenceTag` join table reusing the *exact same* `Tag` rows books use (genre/trope/mood tags = "liked"; content_warning tags = "avoid entirely" — see D24). One `Preference` per session or user, same nullable anonymous-first pattern as `Swipe`/`TBREntry` (D3).
+- **Why:** Reusing `Tag` rows instead of a parallel preference-specific vocabulary means matching is a plain set-overlap between `BookTag` and `PreferenceTag` — no risk of "cozy" on a book and "cozy" on a preference silently drifting into different strings.
+
+### D24. Content-warning preferences are a hard filter, not a down-rank
+- **Research link:** Pillar 3.2 — readers wanting warnings for things like sexual assault are describing a safety/comfort boundary, not a soft taste preference.
+- **Choice:** Books carrying a content-warning tag the reader marked to avoid are excluded from their deck entirely — never surfaced, not just scored lower.
+- **Why:** Treating a safety boundary as "less likely to show" instead of "never shown" is exactly the kind of thing that erodes trust the first time it leaks through. Default conservative.
+
+### D25. Matching v1 is a deterministic weighted tag-overlap score, no ML
+- **Research link:** Pillar 3.4 — content-based filtering is explicitly the cold-start solution before enough data exists for collaborative filtering (Phase 3).
+- **Choice:** Score = weighted count of overlapping tags between a `Book` and a `Preference`, weighted by category to mirror the Pillar 3.1 discovery hierarchy (mood/trope weighted above genre), plus a small bonus for heat-level/pacing proximity. Implemented in `lib/matching.ts`, documented as the explicit baseline Phase 3's real algorithm needs to beat.
+- **Why:** Matches ROADMAP's Phase 1 scope exactly ("no ML yet — deterministic scoring is fine") while staying research-derived rather than arbitrary.
+
+### D26. Swipe interaction ships with tap buttons as primary control, drag gesture as enhancement
+- **Research link:** Pillar 2.1/2.2 — the swipe paradigm's value is the psychology (variable reward, low cognitive load), not the drag gesture specifically; real dating apps pair gesture with button fallbacks.
+- **Choice:** Explicit like/pass buttons (keyboard-accessible, works on any input device) ship first; a drag-to-swipe gesture (via `motion`) layers on top as progressive enhancement.
+- **Why:** De-risks the core loop — if drag-gesture edge cases misbehave, the app still fully works via buttons rather than the whole interaction being gated on perfect gesture code.
+
+### D27. The swipe route replaces the Phase 0 review grid at `/`; the grid moves to `/review`
+- **Choice:** `/` now serves the real product loop (quiz → deck). The Phase 0 static review grid (D12) moves to `/review` for ongoing design QA, no longer linked from the product itself.
+- **Why:** Phase 0's grid was explicitly temporary tooling; Phase 1 is when the real homepage takes over.
+
+### D28. Free/anonymous daily swipe cap set at 35, above the research's suggested range — by explicit product-philosophy call
+- **Research link:** Pillar 2.3's free-tier table suggests 10–20/day, but this was surfaced to the user as a decision point rather than assumed.
+- **Choice:** 35 swipes/day per session (not 20), counted from `Swipe` rows created since UTC midnight.
+- **Why (user's stated philosophy, not just research):** "the app should be accessible and functional for free users with no real quality of life limitations. The point is to encourage reading, but we do have to have some limitations and ways to monetize without feeling too limiting." This is a durable product stance, not a one-off number pick — it should govern **every future Phase 5 monetization decision**: free-tier restrictions should never feel like the product is being deliberately hobbled to force upgrades; premium should sell itself on enhancement (deeper filters, unlimited depth, early access), not on relieving an artificially harsh limitation. Revisit the exact number with real usage data, but keep this principle.
+
+### D29. Onboarding quiz includes a free-text "name a book or two you loved" cold-start step
+- **Research link:** Pillar 3.2/3.4 — naming loved books (or importing a reading history) is called out as the single highest-value cold-start signal, higher than any structured quiz question.
+- **Choice:** Added a free-text step to the quiz. The answer is stored (`Preference.favoriteBooksNote`) but **not yet used by matching** — Phase 1's deterministic scorer (D25) has no mechanism to act on freeform text.
+- **Why store it now if unused:** Capturing it from day one means every session going forward has this signal already banked for whenever Phase 3 adds real content-based/NLP matching against it — the alternative is asking existing users to backfill it later, which most won't do.
+
+### D30. Swipe feedback stamps use book-dating language, not literal "LIKE"/"PASS"
+- **User call:** "follow Tinder design for now, but definitely want something... with our own unique twist."
+- **Choice:** Kept Tinder's exact visual grammar (colored stamp that fades in during drag) but changed the wording to **"TO READ"** (right) / **"PASS"** (left) — "TO READS" ties directly to the TBR shelf terminology used everywhere else in the app, rather than a generic dating-app "LIKE."
+- **Why:** A meaningful twist beats a cosmetic reskin — reusing the exact interaction grammar (proven, recognizable) while making the words specific to what's actually happening in a book app (added to your shelf, not "liked").
+
+### D31. Display mode: cover-first (default) vs. vibe-first/"blind date" mode — chosen at quiz time, tap-to-reveal cover
+- **User call:** "I also want a non-visual version for readers who purely want to pick based on vibes, with the option to see the cover later."
+- **Choice:** Added `Preference.displayMode` (`cover_first` | `vibe_first`, enum). Asked as a quiz step. In `vibe_first` mode, `BookCard`/`SwipeCard` hide the cover behind a tap-to-reveal overlay (reusing the exact tap-to-reveal pattern already established for content warnings, D10) instead of showing it full-bleed; hook line, tags, and comp title become the primary visual content instead.
+- **Why this framing, not something else:** This isn't from the dating-app research directly — it's a genuinely new idea that fits the "dating" metaphor itself (a blind date: you connect on vibe/personality before appearance). Implementing it as a tap-to-reveal (not a separate page, not a delayed post-swipe reveal) means it reuses an interaction pattern the app already has, rather than inventing new UI grammar for a single mode.
+- **Scope note:** This is a per-session/account setting chosen once at quiz time for Phase 1, not a live in-session toggle — revisit if users want to switch modes mid-session without retaking the quiz.
+
+### D32. `lib/` files that mix a Prisma-backed function with a pure helper must be split
+- **Discovered via:** `SwipeDeck.tsx` (a Client Component, since it needs drag/click interactivity) rendering `BookCard`, which imported `groupTags` from `lib/books.ts` — a file that also exports the Prisma-backed `getBooks`. Importing *anything* at runtime from that file pulled Prisma/`pg` into the client bundle, which fails outright (`pg` needs Node built-ins like `net`/`tls`/`dns` that don't exist in a browser).
+- **Choice:** Pure, dependency-free helpers (`groupTags`) now live in their own file (`lib/bookTags.ts`) with no Prisma import, separate from the file holding the DB-backed function (`lib/books.ts`). Same pattern already existed for `DAILY_SWIPE_CAP` (`lib/constants.ts` vs `lib/limits.ts`).
+- **How to apply going forward:** Whenever a Server Component's data-fetching module (`lib/books.ts`, `lib/preferences.ts`, etc.) also has a pure utility function that a Client Component might want, split the pure function into its own file *before* a client component needs it — not after hitting the bundler error. `import type` for types is always safe (erased at compile time); it's runtime imports (functions, constants) from a Prisma-adjacent file that leak the whole module graph into the client bundle.
+
+---
+
 *(Later phases append their own sections here as we build them.)*

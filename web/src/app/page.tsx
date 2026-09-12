@@ -1,26 +1,53 @@
-import { BookCard } from "@/components/BookCard";
-import { getBooks } from "@/lib/books";
+import Link from "next/link";
+import { Quiz } from "@/components/Quiz";
+import { SwipeDeck } from "@/components/SwipeDeck";
+import { getSessionId } from "@/lib/session";
+import { getPreferenceForSession } from "@/lib/preferences";
+import { getTagsByCategory } from "@/lib/tags";
+import { getDeckForPreference } from "@/lib/matching";
+import { DAILY_SWIPE_CAP, getSwipedBookIds, getTodaySwipeCount } from "@/lib/limits";
 
-// Phase 0 review grid — not the swipe stack (that's Phase 1). See DECISIONS.md D12.
+// The real product loop (D27): quiz for new sessions, swipe deck once a
+// Preference exists. See DECISIONS.md D22-D28 for the decisions behind this.
 export default async function Home() {
-  const books = await getBooks();
+  const sessionId = await getSessionId();
+  const preference = sessionId ? await getPreferenceForSession(sessionId) : null;
+
+  if (!preference) {
+    const tags = await getTagsByCategory();
+    return <Quiz tags={tags} />;
+  }
+
+  const swipedToday = await getTodaySwipeCount(sessionId!);
+  const remainingToday = DAILY_SWIPE_CAP - swipedToday;
+
+  if (remainingToday <= 0) {
+    return (
+      <div className="mx-auto flex min-h-[60vh] max-w-md flex-col items-center justify-center px-4 text-center">
+        <h2 className="font-serif text-2xl text-foreground">
+          That&apos;s today&apos;s matches!
+        </h2>
+        <p className="mt-2 text-sm text-muted">
+          Come back tomorrow for {DAILY_SWIPE_CAP} more.
+        </p>
+        <Link
+          href="/tbr"
+          className="mt-6 rounded-full bg-accent px-6 py-2.5 text-sm font-medium text-accent-foreground"
+        >
+          View your shelf
+        </Link>
+      </div>
+    );
+  }
+
+  const excludeBookIds = await getSwipedBookIds(sessionId!);
+  const deck = await getDeckForPreference(preference, excludeBookIds, 30);
 
   return (
-    <div className="flex-1 bg-background px-4 py-10 sm:px-8">
-      <header className="mx-auto mb-8 max-w-6xl">
-        <h1 className="font-serif text-3xl text-foreground">
-          Book card review — Phase 0
-        </h1>
-        <p className="mt-1 text-sm text-muted">
-          {books.length} synthetic placeholder books, for reviewing the card
-          design across variety before swipe mechanics land in Phase 1.
-        </p>
-      </header>
-      <main className="mx-auto grid max-w-6xl grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-        {books.map((book) => (
-          <BookCard key={book.id} book={book} />
-        ))}
-      </main>
-    </div>
+    <SwipeDeck
+      initialDeck={deck}
+      remainingToday={remainingToday}
+      displayMode={preference.displayMode}
+    />
   );
 }

@@ -41,6 +41,17 @@ enum TbrStatus {
   dnf
 }
 
+enum ReadingFrequency {
+  casual
+  regular
+  voracious
+}
+
+enum DisplayMode {
+  cover_first
+  vibe_first
+}
+
 model Book {
   id          String   @id @default(cuid())
   title       String
@@ -65,7 +76,8 @@ model Tag {
   label    String
   category TagCategory // D1
 
-  books BookTag[]
+  books       BookTag[]
+  preferences PreferenceTag[]
 
   @@unique([label, category])
 }
@@ -125,4 +137,31 @@ model TBREntry {
   @@unique([bookId, userId, sessionId])
   @@index([userId])
   @@index([sessionId])
+}
+
+model Preference {
+  id               String            @id @default(cuid())
+  heatLevelMax      HeatLevel? // D23: scalar, mirrors Book.heatLevel
+  pacing            Pacing? // D23: scalar, mirrors Book.pacing
+  readingFrequency  ReadingFrequency?
+  favoriteBooksNote String? // D29: freeform cold-start signal, unused by matching until Phase 3
+  displayMode       DisplayMode       @default(cover_first) // D31
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  // D3-style anonymous-first pattern; D22 — sessionId is set lazily on first quiz submit
+  userId    String? @unique
+  sessionId String? @unique
+
+  tags PreferenceTag[]
+}
+
+model PreferenceTag {
+  preferenceId String
+  tagId        String
+
+  preference Preference @relation(fields: [preferenceId], references: [id], onDelete: Cascade)
+  tag        Tag        @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([preferenceId, tagId])
 }

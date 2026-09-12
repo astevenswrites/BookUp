@@ -1,23 +1,35 @@
 import { BookDetails } from "@/components/BookDetails";
+import { CoverReveal } from "@/components/CoverReveal";
 import type { BookWithTags } from "@/lib/books";
-import { groupTags } from "@/lib/books";
+import { groupTags } from "@/lib/bookTags";
+import type { DisplayMode } from "@/generated/prisma/enums";
 
 // Slot order mirrors the research's discovery-signal hierarchy exactly —
 // see DECISIONS.md D9. Do not reorder without checking that doc first.
-export function BookCard({ book }: { book: BookWithTags }) {
+export function BookCard({
+  book,
+  displayMode = "cover_first",
+}: {
+  book: BookWithTags;
+  displayMode?: DisplayMode;
+}) {
   const tags = groupTags(book);
   const highlightTags = [...tags.mood, ...tags.trope].slice(0, 4);
 
   return (
     <article className="flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-card-border bg-card shadow-sm">
-      {/* 1. Cover — dominant, full-bleed */}
+      {/* 1. Cover — dominant, full-bleed (or tap-to-reveal in vibe-first mode, D31) */}
       <div className="relative aspect-[2/3] w-full bg-foreground/5">
-        {/* eslint-disable-next-line @next/next/no-img-element -- local generated SVG placeholder, see DECISIONS.md D6 */}
-        <img
-          src={book.coverUrl}
-          alt={`Cover of ${book.title}`}
-          className="h-full w-full object-cover"
-        />
+        {displayMode === "vibe_first" ? (
+          <CoverReveal src={book.coverUrl} alt={`Cover of ${book.title}`} />
+        ) : (
+          // eslint-disable-next-line @next/next/no-img-element -- local generated SVG placeholder, see DECISIONS.md D6
+          <img
+            src={book.coverUrl}
+            alt={`Cover of ${book.title}`}
+            className="h-full w-full object-cover"
+          />
+        )}
       </div>
 
       <div className="flex flex-1 flex-col p-4">

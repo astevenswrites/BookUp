@@ -19,30 +19,28 @@ const MOOD_TO_FAMILY: Record<string, VibeTheme> = {
 };
 
 export type ThemeConfig = {
-  pattern: "soft-blobs" | "sharp-bands";
+  // Three shades of the SAME hue family (base, lighter, deeper) — not three
+  // unrelated colors. Mixing distinct hues at the edges was reading as a
+  // murky, busy blend rather than a cohesive glow (user feedback).
   colors: [string, string, string];
   label: string;
 };
 
 export const THEME_CONFIG: Record<VibeTheme, ThemeConfig> = {
   cozy: {
-    pattern: "soft-blobs",
-    colors: ["#e8b568", "#d97757", "#f4c95d"],
+    colors: ["#e8b568", "#f4d9a0", "#c97a3d"],
     label: "Cozy",
   },
   dark: {
-    pattern: "sharp-bands",
-    colors: ["#2b1b3d", "#5e0b15", "#14213d"],
+    colors: ["#5e0b15", "#7a1420", "#2b0a10"],
     label: "Dark",
   },
   whimsical: {
-    pattern: "soft-blobs",
-    colors: ["#c9a7eb", "#f2a6c1", "#a7d8eb"],
+    colors: ["#c9a7eb", "#e6d4f5", "#a97fd4"],
     label: "Whimsical",
   },
   melancholy: {
-    pattern: "soft-blobs",
-    colors: ["#5c6b73", "#7d8ca3", "#9a8fa8"],
+    colors: ["#5c6b73", "#7d8ca3", "#46525a"],
     label: "Melancholy",
   },
 };

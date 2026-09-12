@@ -4,48 +4,37 @@ import type { VibeTheme } from "@/generated/prisma/enums";
 // Fixed, full-viewport, decorative only — never intercepts clicks, never
 // announced to screen readers. See DECISIONS.md D33 for the research this
 // is based on and the animation safety approach.
+//
+// Glow lives at the screen's edges/corners, not the center — the card sits
+// in a calm, uncluttered middle. Colors are shades of one hue family per
+// theme so the breathing motion reads as a single cohesive glow, not a
+// blend of clashing colors (revised per direct feedback on the first version).
 export function VibeBackground({ theme }: { theme: VibeTheme | null }) {
   if (!theme) return null;
 
-  const config = THEME_CONFIG[theme];
-  const [a, b, c] = config.colors;
+  const [base, light, deep] = THEME_CONFIG[theme].colors;
 
   return (
     <div
       aria-hidden
       className="pointer-events-none fixed inset-0 -z-10 overflow-hidden"
     >
-      {config.pattern === "soft-blobs" ? (
-        <>
-          <div
-            className="vibe-blob-a absolute -left-1/4 -top-1/4 h-[70vmax] w-[70vmax] rounded-full blur-3xl"
-            style={{ background: a, opacity: 0.5 }}
-          />
-          <div
-            className="vibe-blob-b absolute -right-1/4 top-1/3 h-[60vmax] w-[60vmax] rounded-full blur-3xl"
-            style={{ background: b, opacity: 0.45 }}
-          />
-          <div
-            className="vibe-blob-c absolute bottom-[-20%] left-1/4 h-[55vmax] w-[55vmax] rounded-full blur-3xl"
-            style={{ background: c, opacity: 0.4 }}
-          />
-        </>
-      ) : (
-        <>
-          <div
-            className="vibe-blob-a absolute -left-1/3 top-0 h-[140vmax] w-[45vmax] origin-top-left rotate-12 blur-xl"
-            style={{ background: a, opacity: 0.5 }}
-          />
-          <div
-            className="vibe-blob-b absolute right-[-10%] top-[-10%] h-[130vmax] w-[35vmax] origin-top-right -rotate-12 blur-xl"
-            style={{ background: b, opacity: 0.4 }}
-          />
-          <div
-            className="vibe-blob-c absolute bottom-[-30%] left-1/3 h-[120vmax] w-[30vmax] rotate-6 blur-xl"
-            style={{ background: c, opacity: 0.35 }}
-          />
-        </>
-      )}
+      <div
+        className="vibe-blob-a absolute -left-[15%] -top-[15%] h-[55vmax] w-[55vmax] rounded-full blur-3xl"
+        style={{ background: base, opacity: 0.4 }}
+      />
+      <div
+        className="vibe-blob-b absolute -right-[15%] -top-[10%] h-[50vmax] w-[50vmax] rounded-full blur-3xl"
+        style={{ background: light, opacity: 0.35 }}
+      />
+      <div
+        className="vibe-blob-c absolute -bottom-[20%] -left-[10%] h-[50vmax] w-[50vmax] rounded-full blur-3xl"
+        style={{ background: deep, opacity: 0.35 }}
+      />
+      <div
+        className="vibe-blob-b absolute -bottom-[15%] -right-[15%] h-[50vmax] w-[50vmax] rounded-full blur-3xl"
+        style={{ background: base, opacity: 0.3 }}
+      />
     </div>
   );
 }

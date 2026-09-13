@@ -265,6 +265,12 @@ Running record of decisions made at each step, tied back to [research/market-res
 - **Why this doesn't need new persistence/merge logic:** the preview swipes are ordinary `Swipe`/`TBREntry` rows against the same anonymous `sessionId` this app has used since D3 — the existing merge-on-first-login flow (D37) already carries them into the account the moment the reader signs up. Nothing new to build there, only the cap check and the wall itself.
 - **Two enforcement points, deliberately kept in sync:** `page.tsx` checks the *server-side* lifetime count on every full page load (covers a fresh visit landing straight on the wall); `SwipeDeck.tsx`'s existing `remaining <= 0` branch checks it *client-side* mid-session (covers using up the last preview swipe without a page reload) — same as the pre-existing `DAILY_SWIPE_CAP` pattern already had two check points, just gated on `isAnonymous` to pick which message/wall to show. Verified both paths live: swiping down to 0 client-side shows the wall immediately without a reload, and a fresh page load at 0 shows the same wall with the accurate lifetime match count from the database (not just the client's local session counter).
 
+### D43. Homepage QR code on the landing page, generated server-side
+- **User ask:** a QR code at the bottom of the landing page linking to the homepage, for sharing in person (demos, meetups).
+- **Choice:** `qrcode` npm package, generating an inline SVG string server-side in a new `HomepageQRCode` Server Component (`await QRCode.toString(url, { type: "svg", ... })`, embedded via `dangerouslySetInnerHTML` — safe here since the input is a URL we construct, not user data). No client JS, no external QR-image API/host to depend on or go down.
+- **URL is derived from the request itself** (`headers().get("host")`, same pattern already used in `signUpWithPassword`'s `emailRedirectTo`) rather than hardcoded to the production domain — so it correctly points at `localhost` during dev and the real Vercel domain in production without needing an env var or a code change if the domain ever changes.
+- **Dark-on-white regardless of the active vibe theme** — sits in its own white card rather than adopting `text-on-vibe` styling, since QR scanners need reliable contrast more than the code needs to match the ambient glow.
+
 ---
 
 *(Later phases append their own sections here as we build them.)*

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { LandingMoodDemo } from "@/components/LandingMoodDemo";
+import { HomepageQRCode } from "@/components/HomepageQRCode";
 import { DAILY_SWIPE_CAP } from "@/lib/constants";
 import { getDemoTheme } from "@/lib/session";
 import { DEFAULT_VIBE_THEME } from "@/lib/theme";
@@ -143,6 +144,8 @@ export async function Landing() {
           </div>
         ))}
       </div>
+
+      <HomepageQRCode />
     </div>
   );
 }

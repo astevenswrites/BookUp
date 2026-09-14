@@ -1,6 +1,0 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="400" height="600" viewBox="0 0 400 600">
-  <rect width="400" height="600" fill="#4a4e69" />
-  <rect x="20" y="20" width="360" height="560" fill="none" stroke="#f2e9e4" stroke-width="2" opacity="0.5" />
-  <text x="30" y="220" font-family="Georgia, serif" font-size="28" fill="#f2e9e4" font-weight="bold"><tspan x="30" dy="0">The Last</tspan><tspan x="30" dy="34">Marksman</tspan></text>
-  <text x="30" y="560" font-family="Georgia, serif" font-size="16" fill="#f2e9e4" opacity="0.85">Mr. Ariel Cummerata DVM</text>
-</svg>

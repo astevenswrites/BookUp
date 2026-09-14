@@ -9,7 +9,7 @@
 // from this file.
 
 import { faker } from "@faker-js/faker";
-import { mkdirSync, writeFileSync } from "node:fs";
+import { mkdirSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 
 const BOOK_COUNT = 350;
@@ -31,28 +31,141 @@ const GENRES = [
   "Romantasy",
 ];
 
-const TROPES = [
-  "enemies-to-lovers",
-  "found family",
-  "forced proximity",
-  "grumpy/sunshine",
-  "second chance",
-  "chosen one",
-  "fake dating",
-  "morally grey protagonist",
-  "only one bed",
-  "secret identity",
-  "road trip",
-  "mentor and student",
-  "revenge",
-  "redemption arc",
-  "love triangle",
-  "instalove",
-  "friends-to-lovers",
-  "royal intrigue",
-  "small town",
-  "workplace romance",
-];
+// Trope pools are genre-scoped (D44) — picking tropes from one global list
+// meant every genre's books got romance tropes ("only one bed" on a horror
+// novel), which both looked wrong and starved non-romance genres of any
+// tropes a reader could actually recognize their taste in. A handful of
+// tropes genuinely span genres (found family, chosen one, etc.) and are
+// listed in more than one pool deliberately, not merged into one "universal"
+// bucket — most tropes here are still genre-specific on purpose.
+const GENRE_TROPES: Record<string, string[]> = {
+  Romance: [
+    "enemies-to-lovers",
+    "forced proximity",
+    "grumpy/sunshine",
+    "second chance",
+    "fake dating",
+    "only one bed",
+    "love triangle",
+    "instalove",
+    "friends-to-lovers",
+    "workplace romance",
+    "small town",
+  ],
+  Romantasy: [
+    "enemies-to-lovers",
+    "forced proximity",
+    "fated mates",
+    "chosen one",
+    "royal intrigue",
+    "morally grey protagonist",
+    "found family",
+    "prophecy",
+    "grumpy/sunshine",
+    "second chance",
+  ],
+  Fantasy: [
+    "chosen one",
+    "found family",
+    "mentor and student",
+    "magic school",
+    "epic quest",
+    "prophecy",
+    "portal fantasy",
+    "hidden royal heritage",
+    "ancient evil awakens",
+    "morally grey protagonist",
+    "royal intrigue",
+    "band of misfits",
+  ],
+  "Sci-Fi": [
+    "first contact",
+    "ai uprising",
+    "generation ship",
+    "time loop",
+    "dystopian rebellion",
+    "space opera politics",
+    "clone/identity crisis",
+    "hard science puzzle",
+    "found family",
+    "morally grey protagonist",
+    "last human on earth",
+  ],
+  Horror: [
+    "haunted house",
+    "final girl",
+    "unreliable narrator",
+    "body horror",
+    "cosmic horror",
+    "cursed object",
+    "isolated setting",
+    "slow-burn dread",
+    "possession",
+    "small town",
+  ],
+  Mystery: [
+    "whodunit",
+    "locked room",
+    "amateur sleuth",
+    "cold case",
+    "unreliable narrator",
+    "twist ending",
+    "secret identity",
+    "small town",
+  ],
+  Thriller: [
+    "cat and mouse",
+    "twist ending",
+    "revenge",
+    "unreliable narrator",
+    "conspiracy",
+    "race against time",
+    "secret identity",
+    "morally grey protagonist",
+  ],
+  "Literary Fiction": [
+    "coming of age",
+    "multigenerational saga",
+    "quiet devastation",
+    "unreliable narrator",
+    "redemption arc",
+    "small town",
+  ],
+  Contemporary: [
+    "found family",
+    "small town",
+    "coming of age",
+    "second chance",
+    "workplace drama",
+    "friends-to-lovers",
+    "road trip",
+  ],
+  "Historical Fiction": [
+    "dual timeline",
+    "based on true events",
+    "war-era setting",
+    "forbidden love",
+    "royal intrigue",
+    "found family",
+  ],
+  "Young Adult": [
+    "coming of age",
+    "found family",
+    "first love",
+    "chosen one",
+    "friend-group dynamics",
+    "secret identity",
+    "road trip",
+  ],
+  "Cozy Mystery": [
+    "amateur sleuth",
+    "small town",
+    "found family",
+    "whodunit",
+    "quirky ensemble cast",
+    "secret identity",
+  ],
+};
 
 const MOODS = [
   "cozy",
@@ -67,6 +180,10 @@ const MOODS = [
   "melancholy",
   "heartwarming",
   "unsettling",
+  "eerie",
+  "epic",
+  "wondrous",
+  "gritty",
 ];
 
 const CONTENT_WARNINGS = [
@@ -217,6 +334,14 @@ function writeMissingCoverAsset() {
 function main() {
   mkdirSync(COVERS_DIR, { recursive: true });
   mkdirSync(join(__dirname, "seed-data"), { recursive: true });
+
+  // Every previous run's cover files are orphaned the moment catalog.json is
+  // overwritten (new random filenames each time) — clear them first so
+  // re-running this script doesn't silently double the tracked SVG count.
+  for (const f of readdirSync(COVERS_DIR)) {
+    if (f.endsWith(".svg")) rmSync(join(COVERS_DIR, f));
+  }
+
   writeMissingCoverAsset();
 
   const books: CatalogBook[] = [];
@@ -224,7 +349,8 @@ function main() {
   console.log(`Generating ${BOOK_COUNT} placeholder books...`);
   for (let i = 0; i < BOOK_COUNT; i++) {
     const genre = pickOne(GENRES);
-    const tropes = pick(TROPES, faker.number.int({ min: 1, max: 3 }));
+    const tropePool = GENRE_TROPES[genre];
+    const tropes = pick(tropePool, Math.min(tropePool.length, faker.number.int({ min: 1, max: 3 })));
     const moods = pick(MOODS, faker.number.int({ min: 1, max: 3 }));
     // ~40% of books have zero content warnings, matching real-world tagging gaps
     const contentWarnings =

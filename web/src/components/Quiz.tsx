@@ -3,13 +3,13 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { submitQuiz } from "@/app/actions";
-import type { TagsByCategory } from "@/lib/tags";
+import type { TagOption, TagsByCategory } from "@/lib/tags";
 
 type Step =
   | { kind: "text"; key: "favoriteBooksNote"; title: string; subtitle: string; placeholder: string }
   | { kind: "single"; key: "displayMode" | "heatLevelMax" | "pacing" | "readingFrequency"; title: string; subtitle: string; options: { value: string; label: string }[] }
-  | { kind: "multi"; key: "mood" | "trope" | "genre"; title: string; subtitle: string; options: { id: string; label: string }[] }
-  | { kind: "multi-avoid"; key: "content_warning"; title: string; subtitle: string; options: { id: string; label: string }[] };
+  | { kind: "multi"; key: "mood" | "trope" | "genre"; title: string; subtitle: string; options: TagOption[]; filterByGenre?: boolean }
+  | { kind: "multi-avoid"; key: "content_warning"; title: string; subtitle: string; options: TagOption[] };
 
 type InitialAnswers = {
   favoriteBooksNote: string | null;
@@ -39,6 +39,13 @@ export function Quiz({
       placeholder: "e.g. The Secret History, A Court of Thorns and Roses...",
     },
     {
+      kind: "multi",
+      key: "genre",
+      title: "Favorite genres?",
+      subtitle: "Choose a few — this helps us show you the right tropes and vibes next.",
+      options: tags.genre,
+    },
+    {
       kind: "single",
       key: "displayMode",
       title: "How do you want to discover books?",
@@ -54,6 +61,7 @@ export function Quiz({
       title: "What kind of feeling are you chasing?",
       subtitle: "Pick as many as sound good for a rainy Sunday.",
       options: tags.mood,
+      filterByGenre: true,
     },
     {
       kind: "multi",
@@ -61,13 +69,7 @@ export function Quiz({
       title: "Any tropes you can't resist?",
       subtitle: "Select the ones that make you swipe right immediately.",
       options: tags.trope,
-    },
-    {
-      kind: "multi",
-      key: "genre",
-      title: "Favorite genres?",
-      subtitle: "Choose a few — this just gets things started.",
-      options: tags.genre,
+      filterByGenre: true,
     },
     {
       kind: "single",
@@ -131,10 +133,35 @@ export function Quiz({
     readingFrequency: initial?.readingFrequency ?? "",
   }));
   const [favoriteBooksNote, setFavoriteBooksNote] = useState(initial?.favoriteBooksNote ?? "");
+  const [expandedSteps, setExpandedSteps] = useState<Set<string>>(new Set());
   const [isPending, startTransition] = useTransition();
 
   const step = steps[stepIndex];
   const isLastStep = stepIndex === steps.length - 1;
+
+  const selectedGenreLabels = new Set(
+    tags.genre.filter((g) => multiSelections.genre?.has(g.id)).map((g) => g.label)
+  );
+
+  // D44: once a genre is picked, lead with the tropes/moods that actually
+  // show up on books in that genre — but never hide options behind a filter
+  // that would zero them out (no genre picked yet, or a genre with no
+  // catalog matches yet) and always let the reader expand to everything.
+  function getVisibleOptions(s: Extract<Step, { kind: "multi" | "multi-avoid" }>): TagOption[] {
+    if (s.kind !== "multi" || !s.filterByGenre) return s.options;
+    if (expandedSteps.has(s.key) || selectedGenreLabels.size === 0) return s.options;
+    const filtered = s.options.filter((opt) =>
+      opt.relevantGenres?.some((g) => selectedGenreLabels.has(g))
+    );
+    return filtered.length > 0 ? filtered : s.options;
+  }
+
+  const visibleOptions = step.kind === "multi" || step.kind === "multi-avoid" ? getVisibleOptions(step) : [];
+  const hasMoreToShow =
+    step.kind === "multi" &&
+    step.filterByGenre &&
+    !expandedSteps.has(step.key) &&
+    visibleOptions.length < step.options.length;
 
   function toggleMulti(key: string, id: string) {
     setMultiSelections((prev) => {
@@ -217,7 +244,7 @@ export function Quiz({
                   {opt.label}
                 </button>
               ))
-            : step.options.map((opt) => {
+            : visibleOptions.map((opt) => {
                 const selected = multiSelections[step.key]?.has(opt.id) ?? false;
                 return (
                   <button
@@ -235,6 +262,16 @@ export function Quiz({
                 );
               })}
         </div>
+      )}
+
+      {hasMoreToShow && (
+        <button
+          type="button"
+          onClick={() => setExpandedSteps((prev) => new Set(prev).add(step.key))}
+          className="mt-4 self-start text-sm font-medium text-accent underline underline-offset-2"
+        >
+          Show all {step.options.length} — including other genres
+        </button>
       )}
 
       <div className="mt-10 flex items-center justify-between">

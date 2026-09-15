@@ -1,3 +1,6 @@
+"use client";
+
+import { motion, useMotionValue, useTransform, type MotionValue } from "motion/react";
 import { BookDetails } from "@/components/BookDetails";
 import { CoverReveal } from "@/components/CoverReveal";
 import type { BookWithTags } from "@/lib/books";
@@ -10,13 +13,33 @@ export function BookCard({
   book,
   displayMode = "cover_first",
   onDetailsOpen,
+  sheen,
 }: {
   book: BookWithTags;
   displayMode?: DisplayMode;
   onDetailsOpen?: () => void;
+  // D52 (README-v2 §2, "cover sheen"): a soft highlight that tracks the
+  // pointer across the artwork while dragging, like light on a dust
+  // jacket — only ever passed by SwipeDeck's top card. `"use client"`
+  // above costs a little bundle weight on the couple of Server Component
+  // pages (Trending, the design-QA review grid) that render BookCard
+  // without ever passing this, which is an acceptable trade for keeping
+  // the sheen's positioning logic co-located with the cover it lights.
+  sheen?: { x: MotionValue<number>; y: MotionValue<number> };
 }) {
   const tags = groupTags(book);
   const highlightTags = [...tags.mood, ...tags.trope].slice(0, 4);
+  // `sheen` can toggle from undefined to defined for the SAME card instance
+  // (a background stack card rising to isTop as the deck advances), so
+  // useTransform must always run on stable inputs — fallback motion values
+  // keep the hook order fixed regardless of whether `sheen` is passed; the
+  // wrapper below only ever renders when `sheen` is actually present.
+  const fallbackSheenX = useMotionValue(50);
+  const fallbackSheenY = useMotionValue(30);
+  const sheenBackground = useTransform(
+    [sheen?.x ?? fallbackSheenX, sheen?.y ?? fallbackSheenY],
+    ([sx, sy]) => `radial-gradient(circle at ${sx}% ${sy}%, rgba(255,255,255,0.4), transparent 45%)`
+  );
 
   return (
     <article className="flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-card-border bg-card shadow-sm">
@@ -30,6 +53,13 @@ export function BookCard({
             src={book.coverUrl}
             alt={`Cover of ${book.title}`}
             className="h-full w-full object-cover"
+          />
+        )}
+        {sheen && (
+          <motion.div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{ background: sheenBackground }}
           />
         )}
       </div>

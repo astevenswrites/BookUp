@@ -100,6 +100,31 @@ export async function swipeBook(
   }
 }
 
+// D52: a safety net for the raised swipe-force thresholds — undoes the
+// single most recent swipe on a book, not a general history/redo system.
+// Deletes the Swipe row itself, and (for a right-swipe) the TBREntry it
+// created — but only if that entry is still sitting untouched at `to_read`.
+// If the reader has since done anything with it (started reading, marked
+// finished/DNF), that's real progress an accidental-swipe undo must never
+// silently erase, so it's left alone and only the swipe record is undone.
+export async function undoLastSwipe(bookId: string) {
+  const actor = await getOrCreateActor();
+
+  const lastSwipe = await prisma.swipe.findFirst({
+    where: { bookId, ...actorWhere(actor) },
+    orderBy: { createdAt: "desc" },
+  });
+  if (!lastSwipe) return;
+
+  await prisma.swipe.delete({ where: { id: lastSwipe.id } });
+
+  if (lastSwipe.direction === "right") {
+    await prisma.tBREntry.deleteMany({
+      where: { bookId, status: TbrStatus.to_read, ...actorWhere(actor) },
+    });
+  }
+}
+
 // D33: null means "go back to auto-deriving the theme from my quiz moods"
 export async function setThemeOverride(theme: VibeTheme | null) {
   const actor = await getOrCreateActor();

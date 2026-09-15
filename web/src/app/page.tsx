@@ -16,6 +16,7 @@ import {
   getTotalSwipeCount,
 } from "@/lib/limits";
 
+
 // D41: `/` is the marketing landing page for a first-time/no-preference
 // visitor; the quiz moved to /quiz. Once a Preference exists, `/` is the
 // real product loop (D27) — swipe deck. See DECISIONS.md D22-D28/D41.
@@ -69,6 +70,7 @@ export default async function Home() {
     30
   );
   const { mood: moods } = await getTagsByCategory();
+  const initialTbrCount = await getTbrCount(actor);
 
   return (
     <div className="flex flex-1 flex-col pt-16">
@@ -82,6 +84,7 @@ export default async function Home() {
         collaborativeBoosts={collaborativeBoosts}
         currentMoodTagId={preference.currentMoodTagId}
         isAnonymous={actor.kind === "session"}
+        initialTbrCount={initialTbrCount}
       />
     </div>
   );

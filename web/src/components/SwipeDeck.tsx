@@ -1,10 +1,11 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useTransition } from "react";
+import { useEffect, useImperativeHandle, useMemo, useRef, useState, useTransition, type Ref } from "react";
 import Link from "next/link";
 import { motion, useMotionValue, useTransform } from "motion/react";
 import { BookCard } from "@/components/BookCard";
 import { SwipeCommitVeil, pickVeilVariant } from "@/components/SwipeCommitVeil";
+import { TbrBookshelf } from "@/components/TbrBookshelf";
 import { MatchReasonsRail } from "@/components/MatchReasonsRail";
 import { MatchReasonsMobile } from "@/components/MatchReasonsMobile";
 import { SignUpWall } from "@/components/SignUpWall";
@@ -14,7 +15,12 @@ import { DAILY_SWIPE_CAP } from "@/lib/constants";
 import { getMatchReasons } from "@/lib/matchReasons";
 import type { DisplayMode } from "@/generated/prisma/enums";
 
-// Buttons are the primary control; drag is progressive enhancement — D26.
+// D54: drag is now the ONLY control — D26's tap-button fallback is gone,
+// per the user's own suggestion (raised during the D52 pause): no Pass/Like
+// buttons, light visual cues on the card itself instead. To not lose D26's
+// original "works on any input device" rationale entirely, ArrowLeft/
+// ArrowRight are a (non-visual) keyboard equivalent — see the keydown
+// effect below — so this isn't a strictly pointer-only interaction.
 // D52 (README-v2 §2, "card physics") raised both thresholds above the
 // design spec's own 110/500 — both directions should take a deliberate
 // motion, not a hair-trigger. Left (pass/discard) deliberately takes MORE
@@ -52,6 +58,7 @@ export function SwipeDeck({
   collaborativeBoosts: initialCollaborativeBoosts,
   currentMoodTagId,
   isAnonymous = false,
+  initialTbrCount = 0,
 }: {
   initialDeck: BookWithTags[];
   remainingToday: number;
@@ -60,12 +67,13 @@ export function SwipeDeck({
   collaborativeBoosts: Record<string, number>;
   currentMoodTagId: string | null;
   isAnonymous?: boolean;
+  initialTbrCount?: number;
 }) {
   const [deck, setDeck] = useState(initialDeck);
   const [remaining, setRemaining] = useState(remainingToday);
   const [seenIds, setSeenIds] = useState<string[]>(initialDeck.map((b) => b.id));
   const [isFetchingMore, startFetchMore] = useTransition();
-  const [tbrCount, setTbrCount] = useState(0);
+  const [tbrCount, setTbrCount] = useState(initialTbrCount);
   const [, startTransition] = useTransition();
 
   // D45/D46: refreshed after every refill (see commitSwipe) so the "why
@@ -101,6 +109,25 @@ export function SwipeDeck({
     cardShownAt.current = Date.now();
     viewedDetailsForTop.current = false;
   }, [topCard?.id]);
+
+  // D54: keyboard equivalent for the now-buttonless swipe — `topCardRef`
+  // always points at whichever SwipeCard instance is currently mounted, so
+  // there's no stale-direction risk from a previous card (see SwipeCard's
+  // own `commit` handle for why this is a ref call, not lifted state).
+  const topCardRef = useRef<SwipeCardHandle>(null);
+  useEffect(() => {
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.repeat || !topCard) return;
+      const active = document.activeElement as HTMLElement | null;
+      if (active && (active.tagName === "INPUT" || active.tagName === "TEXTAREA" || active.isContentEditable)) {
+        return;
+      }
+      if (e.key === "ArrowLeft") topCardRef.current?.commit("left");
+      else if (e.key === "ArrowRight") topCardRef.current?.commit("right");
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [topCard]);
 
   const tagWeightMap = useMemo(() => new Map(Object.entries(tagWeights)), [tagWeights]);
   const matchReasons = useMemo(
@@ -203,6 +230,7 @@ export function SwipeDeck({
         <div className="relative w-full">
           <StackEdges count={Math.min(MAX_STACK_EDGES, deck.length - 1)} />
           <SwipeCard
+            ref={topCardRef}
             key={topCard.id}
             book={topCard}
             displayMode={displayMode}
@@ -213,23 +241,11 @@ export function SwipeDeck({
           />
         </div>
 
-        <div className="mt-6 flex gap-4">
-          <button
-            type="button"
-            onClick={() => commitSwipe(topCard, "left")}
-            aria-label="Pass"
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-card-border bg-card text-2xl text-foreground/60 shadow-sm hover:border-foreground/30"
-          >
-            ✕
-          </button>
-          <button
-            type="button"
-            onClick={() => commitSwipe(topCard, "right")}
-            aria-label="Like"
-            className="flex h-14 w-14 items-center justify-center rounded-full border border-accent bg-accent text-2xl text-accent-foreground shadow-sm"
-          >
-            ♥
-          </button>
+        <div className="mt-6 flex flex-col items-center gap-4">
+          <p className="text-xs text-on-vibe-muted">
+            <span aria-hidden>←</span> drag to pass · drag to like <span aria-hidden>→</span>
+          </p>
+          <TbrBookshelf count={tbrCount} />
         </div>
 
         {lastSwiped && (
@@ -280,16 +296,20 @@ function StackEdges({ count }: { count: number }) {
   );
 }
 
+type SwipeCardHandle = { commit: (direction: "left" | "right") => void };
+
 function SwipeCard({
   book,
   displayMode,
   onSwipe,
   onDetailsOpen,
+  ref,
 }: {
   book: BookWithTags;
   displayMode: DisplayMode;
   onSwipe: (direction: "left" | "right") => void;
   onDetailsOpen?: () => void;
+  ref?: Ref<SwipeCardHandle>;
 }) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-12, 12]);
@@ -342,6 +362,19 @@ function SwipeCard({
   // (the previous behavior).
   const [exitDirection, setExitDirection] = useState<"left" | "right" | null>(null);
   const hasFiredSwipeRef = useRef(false);
+
+  // D54: the keyboard equivalent for drag-only swiping calls this directly
+  // (not via a lifted prop) — a fresh SwipeCard instance is mounted per
+  // card via `key={book.id}`, so `exitDirection` here always starts `null`
+  // for whatever card is actually on top; there's no stale-direction value
+  // to inherit from whatever the previous card last committed.
+  useImperativeHandle(
+    ref,
+    () => ({
+      commit: (direction) => setExitDirection((prev) => prev ?? direction),
+    }),
+    []
+  );
 
   useEffect(() => {
     if (!exitDirection) return;

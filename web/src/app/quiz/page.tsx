@@ -11,8 +11,11 @@ export default async function QuizPage() {
   const actor = await getActor();
   const preference = hasIdentity(actor) ? await getPreferenceForActor(actor) : null;
 
-  // Already has a preference — nothing to do here, back to the dashboard.
-  if (preference) redirect("/");
+  // Already has a preference — nothing to do here. D62: `/` shows Landing
+  // for anyone not signed in, so an anonymous session bounces to `/swipe`
+  // (their deck) instead of a marketing page; a real account goes to the
+  // dashboard at `/`.
+  if (preference) redirect(actor.kind === "user" ? "/" : "/swipe");
 
   const tags = await getTagsByCategory();
   // D61: straight into the deck on completion, not the dashboard — finishing

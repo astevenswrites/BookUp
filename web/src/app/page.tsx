@@ -1,29 +1,43 @@
-import { redirect } from "next/navigation";
+import Link from "next/link";
 import { Landing } from "@/components/Landing";
 import { Home } from "@/components/Home";
-import { getActor, hasIdentity } from "@/lib/actor";
+import { getActor } from "@/lib/actor";
 import { getPreferenceForActor } from "@/lib/preferences";
 import { getTagsByCategory } from "@/lib/tags";
 import { DAILY_SWIPE_CAP, getTbrCount, getTodaySwipeCount } from "@/lib/limits";
 
-// D61: `/` is the signed-in home dashboard — shelf, profile, blind date,
-// trending, the mood picker, and a "Start swiping" link into `/swipe`
-// (which used to live here — see DECISIONS.md D61 for why it moved). A
-// first-time/no-preference visitor still sees the marketing Landing page.
-// An anonymous session that's already taken the quiz skips this dashboard
-// entirely and goes straight to `/swipe` — the whole point of the preview
-// funnel (D42) is getting them into real matching fast, not a menu of
-// features an account-less session can't fully use anyway.
+// D62: `/` depends only on sign-in status now, not on whether a preference
+// exists — a real account always gets the dashboard (or, if signed up but
+// hasn't taken the quiz yet, a simple prompt to do so), and anyone not
+// signed in always sees the marketing Landing page, even an anonymous
+// session mid-preview with its own preference already set. That anonymous
+// preview flow still reaches `/swipe` directly, via the quiz's own
+// post-submit redirect (D61) — it just never routes back through `/`
+// itself, so clicking "Home" mid-preview intentionally shows Landing, not
+// the deck.
 export default async function HomePage() {
   const actor = await getActor();
-  const preference = hasIdentity(actor) ? await getPreferenceForActor(actor) : null;
 
-  if (!preference || !hasIdentity(actor)) {
+  if (actor.kind !== "user") {
     return <Landing />;
   }
 
-  if (actor.kind === "session") {
-    redirect("/swipe");
+  const preference = await getPreferenceForActor(actor);
+  if (!preference) {
+    return (
+      <div className="mx-auto flex w-full max-w-md flex-1 flex-col items-center justify-center px-4 text-center">
+        <h1 className="font-serif text-2xl text-on-vibe">Welcome back</h1>
+        <p className="mt-2 text-sm text-on-vibe-muted">
+          Take the quiz to get your first matches.
+        </p>
+        <Link
+          href="/quiz"
+          className="mt-6 rounded-full bg-accent px-6 py-2.5 text-sm font-medium text-accent-foreground"
+        >
+          Take the quiz
+        </Link>
+      </div>
+    );
   }
 
   const { mood: moods } = await getTagsByCategory();

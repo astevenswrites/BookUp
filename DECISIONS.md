@@ -466,4 +466,17 @@ sections get their own D-numbers as they land.
 
 ---
 
+### D62. Correction to D61: `/` routing keys off sign-in status, not preference
+- **Why:** D61 had an anonymous session with a preference redirect from `/` straight to `/swipe`, skipping the new dashboard. Caught immediately by the user clicking "Home" and landing on the deck instead of anywhere resembling home. The actual intent: **not signed in → always the marketing Landing page at `/`, no exceptions; a real account → always the dashboard** (or a simple "take the quiz" prompt if they've signed up but haven't answered it yet). Whether an anonymous session happens to have a preference already (mid-preview) no longer matters to what `/` shows.
+- **Choice:** `page.tsx` now branches on `actor.kind !== "user"` (→ `Landing`) first, rather than `!preference || !hasIdentity(actor)`. A signed-in account with no preference yet gets a minimal "take the quiz" prompt instead of either Landing or the full dashboard, matching the existing pattern on `/profile`/`/today` for the same edge case.
+- **Follow-on fix:** `/quiz`'s "already answered, nothing to do here" redirect used to always go to `/`. Since `/` now shows Landing for anyone not signed in, that would have sent an anonymous visitor who stumbles back onto `/quiz` to a marketing page instead of back to their deck — changed to branch the same way (`user` → `/`, anonymous → `/swipe`).
+- **Consequence, called out on purpose:** an anonymous visitor mid-preview who clicks "Home" now intentionally sees the Landing page, not their deck — there's no route back to `/swipe` from `/` for them except retaking the quiz flow. This matches what was asked for, not an oversight.
+
+### D63. Anonymous preview dead-end now auto-redirects home
+- **Why:** once `SignUpWall` (D42) is showing — an anonymous session has used its full preview and has nowhere left to go except Sign up/Log in — it used to just sit there with no way out besides those two links. The user asked for it to funnel back to the landing page on its own after a short delay if they don't act, rather than parking them indefinitely on a dead-end screen.
+- **Choice:** `SignUpWall` became a client component with an 8-second countdown (`useEffect` + `setTimeout`, `router.push("/")` once it hits zero), with the seconds-remaining shown in the UI itself ("Taking you back home in Ns...") so the redirect doesn't feel like a bug when it fires. It already renders from two places — server-rendered directly in `/swipe/page.tsx` when the cap was already spent before the page loaded, and client-side inside `SwipeDeck` when the cap is hit mid-session — converting the shared component itself to a client component covers both call sites with one change, no duplicated timer logic.
+- **Verified live:** exhausted the preview cap in-browser, confirmed the countdown text ticks down and the page actually navigates to `/` (the Landing page, per D62) once it reaches zero.
+
+---
+
 *(Later phases append their own sections here as we build them.)*

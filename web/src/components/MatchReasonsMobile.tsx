@@ -26,9 +26,10 @@ export function MatchReasonsMobile({
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Why this one"
-        // bottom-20 (not bottom-6) so this clears the fixed ThemeSwitcher
-        // pill ("🎨 Auto" etc.) sitting at bottom-4 right-4 in the same corner.
-        className="fixed bottom-20 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full border border-accent bg-card text-xl font-serif text-accent shadow-lg"
+        // D60: top of the right-edge floating stack — bottom-36, above both
+        // TbrShelfBadge (bottom-20) and the ThemeSwitcher pill (bottom-4) in
+        // the same corner.
+        className="fixed bottom-36 right-4 z-30 flex h-14 w-14 items-center justify-center rounded-full border border-accent bg-card text-xl font-serif text-accent shadow-lg"
       >
         ?
       </button>

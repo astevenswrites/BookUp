@@ -448,4 +448,10 @@ sections get their own D-numbers as they land.
 
 ---
 
+### D60. Mobile polish: nav pill wrapping fixed, floating badge order swapped
+- **Nav pills wrapping mid-word:** `AuthStatus`'s row (`fixed left-4 top-4`, only `left` set, no explicit width) had no `flex-wrap`, so on a narrow screen its shrink-to-fit width got capped at the viewport edge and the flex items **shrank** (default `flex-shrink: 1`) instead of moving to a new line — shrinking a pill below its label's natural width just wrapped the *text* inside it, producing uneven two-line pills ("Blind date", "Sign in"). Fixed with `right-4` (giving the row an explicit width to wrap within), `flex-wrap` on the container, and `whitespace-nowrap` on each pill so wrapping happens at the pill level, not inside one.
+- **Floating badge order:** swapped `MatchReasonsMobile`'s "?" button to `bottom-36` (top of the right-edge stack) and `TbrShelfBadge` to `bottom-20` (below it) — "why this one" now sits above the shelf count, per request; the `ThemeSwitcher` pill stays at `bottom-4` underneath both, unchanged.
+
+---
+
 *(Later phases append their own sections here as we build them.)*

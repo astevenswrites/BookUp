@@ -72,9 +72,9 @@ export function TbrShelfBadge({ count }: { count: number }) {
       href="/tbr"
       aria-label={`${count} book${count === 1 ? "" : "s"} on your shelf — view your shelf`}
       title="View your shelf"
-      // bottom-36 stacks above MatchReasonsMobile's "?" (bottom-20) and the
-      // ThemeSwitcher pill (bottom-4) in the same right-edge column.
-      className="fixed bottom-36 right-4 z-30 flex h-14 w-14 flex-col items-center justify-center gap-1 rounded-full border border-card-border bg-card shadow-lg lg:hidden"
+      // D60: bottom-20 — below MatchReasonsMobile's "?" (bottom-36), above
+      // the ThemeSwitcher pill (bottom-4), in the same right-edge column.
+      className="fixed bottom-20 right-4 z-30 flex h-14 w-14 flex-col items-center justify-center gap-1 rounded-full border border-card-border bg-card shadow-lg lg:hidden"
     >
       <span className="flex items-end gap-[2px]" aria-hidden>
         {SPINE_COLORS.slice(0, 3).map((color, i) => (

@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Reference-only design handoff bundle (design_handoff_bookup_ui/) — its
+    // support.js is a design-tool-generated prototype script, not app code.
+    "design_handoff_bookup_ui/**",
   ]),
 ]);
 

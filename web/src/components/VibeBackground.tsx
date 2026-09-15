@@ -4,11 +4,11 @@ import { useEffect, useRef } from "react";
 import { THEME_CONFIG, GROUND_TINT_OPACITY, getGroundTintColor } from "@/lib/theme";
 import type { VibeTheme } from "@/generated/prisma/enums";
 
-// D50 ("Reading Room" pass, README-v2 §1/§1b): four stacked layers, bottom
+// D51 ("Reading Room" pass, README-v2 §1/§1b): four stacked layers, bottom
 // to top — tint (opaque, carries color to the corners), far light, near
 // light, dust — replacing the single radial-gradient vignette that could
 // never truly reach a box's corners with color (the gradient *is* the
-// color; corners are always farthest from center). See DECISIONS.md D50.
+// color; corners are always farthest from center). See DECISIONS.md D51.
 // Fixed, full-viewport, decorative only — never intercepts clicks, never
 // announced to screen readers.
 export function VibeBackground({ theme }: { theme: VibeTheme | null }) {

@@ -50,7 +50,7 @@ export const THEME_CONFIG: Record<VibeTheme, ThemeConfig> = {
     isDark: false,
   },
   melancholy: {
-    // D50 design pass: melancholy now flips to dark mode too (see
+    // D51 design pass: melancholy now flips to dark mode too (see
     // buildGroundTint / the [data-mode] token set below) — a slate-blue
     // ground this deep needs light ink, the same problem dark's wine-red
     // ground had.
@@ -60,7 +60,7 @@ export const THEME_CONFIG: Record<VibeTheme, ThemeConfig> = {
   },
 };
 
-// D50 ("Reading Room" pass): the ground is now a flat OPAQUE fill — the
+// D51 ("Reading Room" pass): the ground is now a flat OPAQUE fill — the
 // previous single radial gradient (however its stops were tuned) could
 // never truly reach the corners with color, since the gradient itself
 // *is* the color and a box's corners are always farthest from center.
@@ -80,12 +80,12 @@ export function getGroundTintColor(theme: VibeTheme): string {
   return isDark ? colors[2] : colors[1];
 }
 
-// D50 §1b: with an opaque ground, fixed ink can't survive contact with a
+// D51 §1b: with an opaque ground, fixed ink can't survive contact with a
 // genuinely dark surface. `dark` and `melancholy` are both "dark mode" by
 // `isDark`, but they need *different* ink hues (warm rose vs. cool
 // periwinkle) — accent purple disappears into both, for different reasons
 // — so this is keyed by theme, not collapsed to a light/dark boolean.
-// Cards and their contents are deliberately NOT part of this system (D50:
+// Cards and their contents are deliberately NOT part of this system (D51:
 // "cards are cream surfaces sitting on the ground, not part of it") — they
 // keep using --foreground/--muted unconditionally, same as before.
 export type InkTokens = {

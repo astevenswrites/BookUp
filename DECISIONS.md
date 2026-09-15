@@ -332,7 +332,7 @@ landing/onboarding/shelf, an editorial layer, and sound — meant to be built on
 session, per the handoff's own build order. This entry covers section 1 only; later
 sections get their own D-numbers as they land.
 
-### D50. Opaque vibe ground + dual light/dark mode ink tokens (handoff §1 + §1b)
+### D51. Opaque vibe ground + dual light/dark mode ink tokens (handoff §1 + §1b)
 - **Why now:** the previous single radial-gradient vignette (D33 and its follow-ups) could
   never truly reach a box's corners with color — the gradient *is* the color, and a
   rectangle's corners are always farthest from center — so color visibly faded to

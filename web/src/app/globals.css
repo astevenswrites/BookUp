@@ -19,7 +19,7 @@
   --tag-mood: #e6eef3;
   --tag-mood-foreground: #234a63;
 
-  /* D50 ("Reading Room" pass, README-v2 §1b): dual light/dark mode ink
+  /* D51 ("Reading Room" pass, README-v2 §1b): dual light/dark mode ink
      tokens for anything sitting directly on the vibe ground — headings,
      body copy, eyebrows/meta, rules, the quiz progress track, chips,
      secondary buttons, the shelf's empty state. Cards and their contents
@@ -75,7 +75,7 @@ body {
   /* Text sitting directly on the vibe background (D33) — page headers,
      subtitles, empty-state copy — as opposed to text inside a white card,
      which always uses --foreground/--muted unconditionally since the card's
-     own white background never changes. Sourced from the ink tokens (D50)
+     own white background never changes. Sourced from the ink tokens (D51)
      rather than a single vibe-dark boolean, so dark and melancholy each get
      their own correct hue. Deliberately declared HERE, not at :root: a
      custom property's `var()` reference resolves using the value visible
@@ -90,9 +90,9 @@ body {
   --on-vibe-accent: var(--ink-accent);
 }
 
-/* Ambient "vibe" ground (D33, restructured D50) — four stacked layers,
+/* Ambient "vibe" ground (D33, restructured D51) — four stacked layers,
    bottom to top: opaque tint (this IS the color reaching the corners —
-   see DECISIONS.md D50 for why the old single-gradient approach never
+   see DECISIONS.md D51 for why the old single-gradient approach never
    could), far light, near light, dust. All four cross-fade together on a
    theme change since every layer transitions `background`/`opacity`. */
 .vibe-tint {
@@ -176,7 +176,7 @@ body {
   }
 }
 
-/* D50: this is also the answer to "more contrast" — an opaque ground at
+/* D51: this is also the answer to "more contrast" — an opaque ground at
    full strength with the light pools suppressed reads as a flat, high-
    contrast color field rather than a softly lit room. */
 @media (prefers-contrast: more) {

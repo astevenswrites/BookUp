@@ -387,4 +387,11 @@ sections get their own D-numbers as they land.
 
 ---
 
+### D53. Stack-depth cue: content-free "edge" slivers instead of duplicate real cards
+- **Why:** D52's stack visual (the next 1-2 real cards rendered behind the top one, scaled and offset, capped to `h-[420px] overflow-hidden` to stop background content from bleeding past the top card's bottom edge and swallowing Pass/Like clicks) worked, but only ever showed 1-2 layers — going further would mean rendering more full `BookCard`s (cover image and all) purely to show a sliver of them, which is wasteful, and re-opens the exact overlap-with-buttons risk D52 had to fix, just with more layers to get wrong.
+- **Choice:** replaced the 2 background `BookCard` instances with `StackEdges` — up to 5 plain, `pointer-events-none`, content-free `<div>`s using the card's own border/background tokens, absolutely positioned `bottom: -(depth * 5px)` beneath the (single, real, fully-interactive) top card, each a little more transparent than the last. `pointer-events-none` means they can never intercept a click regardless of z-index or how far they overhang into the button row below — the failure mode D52 hit is structurally impossible here, not just avoided by careful sizing. Count is `min(5, deck.length - 1)`, so the last card in the deck correctly shows no stack behind it. `SwipeCard` itself dropped its now-dead `isTop`/`stackDepth` branches (drag, tilt, sheen, exit animation) since it's only ever rendered once now, for the top card.
+- **Verified live:** stack edges render below the card content and above the Pass/Like buttons at every card; clicking Like/Pass with the edges rendered still advances the deck and decrements the swipe counter correctly (confirmed via screenshot, not just code review).
+
+---
+
 *(Later phases append their own sections here as we build them.)*

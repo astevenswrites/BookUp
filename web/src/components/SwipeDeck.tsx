@@ -30,6 +30,12 @@ const LEFT_OFFSET_THRESHOLD = 175;
 const RIGHT_VELOCITY_THRESHOLD = 600;
 const LEFT_VELOCITY_THRESHOLD = 850;
 const LOW_DECK_REFILL_AT = 3;
+// D53: purely decorative "there's more behind this" cue — thin, content-free
+// slivers peeking out below the top card, not full duplicate cards (see
+// StackEdges below for why that's the safer way to show depth).
+const MAX_STACK_EDGES = 5;
+const STACK_EDGE_HEIGHT = 12;
+const STACK_EDGE_GAP = 5;
 const EXIT_DISTANCE = 760;
 // Fire the actual swipe (removing the card from state) once the fly-off
 // animation is this close to finished, not when it fully completes — by
@@ -195,23 +201,16 @@ export function SwipeDeck({
           {isAnonymous ? `${remaining} preview swipes left` : `${remaining} swipes left today`}
         </p>
         <div className="relative w-full">
-          {deck
-            .slice(0, 3)
-            .reverse()
-            .map((book, i, arr) => {
-              const isTop = i === arr.length - 1;
-              return (
-                <SwipeCard
-                  key={book.id}
-                  book={book}
-                  isTop={isTop}
-                  stackDepth={arr.length - 1 - i}
-                  displayMode={displayMode}
-                  onSwipe={(direction) => commitSwipe(book, direction)}
-                  onDetailsOpen={isTop ? () => { viewedDetailsForTop.current = true; } : undefined}
-                />
-              );
-            })}
+          <StackEdges count={Math.min(MAX_STACK_EDGES, deck.length - 1)} />
+          <SwipeCard
+            key={topCard.id}
+            book={topCard}
+            displayMode={displayMode}
+            onSwipe={(direction) => commitSwipe(topCard, direction)}
+            onDetailsOpen={() => {
+              viewedDetailsForTop.current = true;
+            }}
+          />
         </div>
 
         <div className="mt-6 flex gap-4">
@@ -250,17 +249,44 @@ export function SwipeDeck({
   );
 }
 
+// D53: replaces the old "render the next 2 real cards behind the top one,
+// scaled/offset, capped + clipped" stack visual (D52). That approach could
+// only ever show 1-2 layers before the cost (full BookCard + cover image
+// per layer) and risk (clipped background content bleeding past the card
+// edge into the button row — the exact bug D52 fixed) got out of hand.
+// These are plain, content-free, pointer-events-none slivers — there's
+// nothing in them to bleed or intercept a click, so showing 5 is free.
+function StackEdges({ count }: { count: number }) {
+  if (count <= 0) return null;
+  return (
+    <>
+      {Array.from({ length: count }).map((_, i) => {
+        const depth = i + 1;
+        return (
+          <div
+            key={depth}
+            aria-hidden
+            className="pointer-events-none absolute inset-x-0 rounded-b-2xl border border-card-border bg-card"
+            style={{
+              bottom: -(depth * STACK_EDGE_GAP),
+              height: STACK_EDGE_HEIGHT,
+              zIndex: MAX_STACK_EDGES - depth,
+              opacity: 1 - depth * 0.15,
+            }}
+          />
+        );
+      })}
+    </>
+  );
+}
+
 function SwipeCard({
   book,
-  isTop,
-  stackDepth,
   displayMode,
   onSwipe,
   onDetailsOpen,
 }: {
   book: BookWithTags;
-  isTop: boolean;
-  stackDepth: number;
   displayMode: DisplayMode;
   onSwipe: (direction: "left" | "right") => void;
   onDetailsOpen?: () => void;
@@ -334,39 +360,23 @@ function SwipeCard({
   return (
     <motion.div
       ref={cardRef}
-      // The top card sits in normal document flow (position: relative) so it
-      // establishes its own natural height — the whole card, including an
-      // expanded "More details" section, is always fully visible with no
-      // internal scrollbar; the page scrolls if it needs to, not a clipped
-      // pane. The two peek-behind stack cards are position: absolute, purely
-      // for the layered-stack visual, and additionally capped with a fixed
-      // height + overflow-hidden: they render the exact same BookCard as the
-      // top card, and if their content happens to run even slightly taller
-      // (or, worse, still has a stale "More details" expansion from before
-      // it was demoted from top), that overhang would bleed past the top
-      // card's bottom edge with a real z-index (9/10) above the Pass/Like
-      // buttons' implicit 0 — silently swallowing clicks meant for those
-      // buttons. Caught live: clicks on Pass/Like stopped doing anything
-      // once a background card had previously had its details expanded.
-      // (overflow-hidden can't go on the shared container instead — that
-      // would clip the top card's own horizontal fly-off/drag animation.)
-      className={
-        isTop
-          ? "relative w-full rounded-2xl"
-          : "absolute inset-x-0 top-0 h-[420px] w-full overflow-hidden rounded-2xl"
-      }
+      // Normal document flow (position: relative) so this establishes its
+      // own natural height — the whole card, including an expanded "More
+      // details" section, is always fully visible with no internal
+      // scrollbar; the page scrolls if it needs to, not a clipped pane.
+      // (D53: the deck's "there's more behind this" cue is now the
+      // content-free StackEdges slivers rendered alongside this card, not
+      // additional real cards — see StackEdges above for why.)
+      className="relative w-full rounded-2xl"
       style={{
-        x: isTop ? x : 0,
-        rotate: isTop ? rotate : 0,
-        rotateX: isTop ? rotateXMv : 0,
-        rotateY: isTop ? rotateYMv : 0,
+        x,
+        rotate,
+        rotateX: rotateXMv,
+        rotateY: rotateYMv,
         transformPerspective: 1400,
         transformOrigin: "50% 88%",
-        scale: 1 - stackDepth * 0.04,
-        top: isTop ? undefined : stackDepth * 8,
-        zIndex: 10 - stackDepth,
       }}
-      drag={isTop && !exitDirection ? "x" : false}
+      drag={!exitDirection && "x"}
       dragConstraints={{ left: 0, right: 0 }}
       dragElastic={0.9}
       // Low-bounce on purpose (README-v2 §2) — a book card reads as light;
@@ -387,23 +397,17 @@ function SwipeCard({
       animate={
         exitDirection
           ? { x: exitDirection === "right" ? EXIT_DISTANCE : -EXIT_DISTANCE }
-          : isTop
-            ? { x: 0, rotateX: 0, rotateY: 0 }
-            : undefined
+          : { x: 0, rotateX: 0, rotateY: 0 }
       }
       transition={exitDirection ? { duration: 0.32, ease: "easeOut" } : undefined}
     >
-      {isTop && (
-        <>
-          <SwipeCommitVeil direction="right" variant={rightVariant} progress={rightProgress} />
-          <SwipeCommitVeil direction="left" variant={leftVariant} progress={leftProgress} />
-        </>
-      )}
+      <SwipeCommitVeil direction="right" variant={rightVariant} progress={rightProgress} />
+      <SwipeCommitVeil direction="left" variant={leftVariant} progress={leftProgress} />
       <BookCard
         book={book}
         displayMode={displayMode}
         onDetailsOpen={onDetailsOpen}
-        sheen={isTop ? { x: sheenX, y: sheenY } : undefined}
+        sheen={{ x: sheenX, y: sheenY }}
       />
     </motion.div>
   );

@@ -11,6 +11,12 @@ export async function AuthStatus() {
   return (
     <div className="fixed left-4 top-4 z-10 flex items-center gap-2 text-xs">
       <Link
+        href="/"
+        className="rounded-full border border-card-border bg-card/90 px-3 py-1.5 font-medium text-foreground/70 shadow-sm backdrop-blur-sm hover:border-accent"
+      >
+        Home
+      </Link>
+      <Link
         href="/profile"
         className="rounded-full border border-card-border bg-card/90 px-3 py-1.5 font-medium text-foreground/70 shadow-sm backdrop-blur-sm hover:border-accent"
       >

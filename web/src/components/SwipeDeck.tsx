@@ -5,6 +5,7 @@ import Link from "next/link";
 import { motion, useMotionValue, useTransform } from "motion/react";
 import { BookCard } from "@/components/BookCard";
 import { MatchReasonsRail } from "@/components/MatchReasonsRail";
+import { MatchReasonsMobile } from "@/components/MatchReasonsMobile";
 import { SignUpWall } from "@/components/SignUpWall";
 import { swipeBook, getMoreCards } from "@/app/actions";
 import type { BookWithTags } from "@/lib/books";
@@ -181,6 +182,7 @@ export function SwipeDeck({
       </div>
 
       <MatchReasonsRail reasons={matchReasons} moodLabels={topCardMoodLabels} />
+      <MatchReasonsMobile reasons={matchReasons} moodLabels={topCardMoodLabels} />
     </div>
   );
 }

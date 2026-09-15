@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#faf6f0;color:#241b2f;font-family:"Geist",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#5b2a86;text-decoration:none}a:hover{color:#7a3fb0}
+@keyframes bu-light{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(20px,-24px,0) scale(1.06)}}
+@keyframes bu-dust{0%{transform:translate3d(0,0,0)}100%{transform:translate3d(-40px,-60px,0)}}
+@keyframes bu-in{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+@keyframes bu-word{from{opacity:0;transform:translateY(0.4em)}to{opacity:1;transform:none}}
+@keyframes bu-caret{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes bu-bar{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;position:relative;overflow:hidden" onPointerMove="{{ trackRoom }}">
+
+  <div aria-hidden="true" style="position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none">
+    <div style="{{ tint }}"></div>
+    <div style="{{ lightFar }}"></div>
+    <div style="{{ lightNear }}"></div>
+    <div style="{{ dust }}"></div>
+  </div>
+
+  <div style="position:relative;z-index:3;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:16px 30px">
+    <span style="{{ brandStyle }}">BookUp</span>
+    <div style="display:flex;gap:3px;margin-left:12px;flex-wrap:wrap">
+      <button type="button" onClick="{{ goLanding }}" style="{{ tabLanding }}">Landing</button>
+      <button type="button" onClick="{{ goQuiz }}" style="{{ tabQuiz }}">Onboarding</button>
+      <button type="button" onClick="{{ goBrowse }}" style="{{ tabBrowse }}">Browse</button>
+      <button type="button" onClick="{{ goShelf }}" style="{{ tabShelf }}">Shelf</button>
+    </div>
+    <button type="button" onClick="{{ toggleSound }}" style="{{ soundBtn }}" style-hover="background:rgba(91,42,134,.12)">{{ soundLabel }}</button>
+  </div>
+
+  <div style="position:relative;z-index:2;padding:0 30px 64px">
+
+    <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+      <div style="max-width:1140px;margin:0 auto">
+        <div style="{{ heroGrid }}">
+          <div>
+            <p style="{{ heroKicker }}">A dating app, but for books</p>
+            <h1 style="{{ heroH1 }}">Hook Up with BookUp</h1>
+            <p style="{{ heroTag }}">Get paired with your ideal book match!</p>
+            <p style="{{ heroSub }}">Tell us the mood you're chasing, the tropes you'd swipe right on, and the things you'd rather not read about. We'll shuffle up books that match the feeling — and the whole room will start to look like it.</p>
+            <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:30px">
+              <button type="button" onClick="{{ goQuiz }}" style="background:#5b2a86;color:#fff;border:none;font:500 15px 'Geist',sans-serif;padding:14px 26px;border-radius:999px;cursor:pointer;white-space:nowrap;box-shadow:0 8px 24px rgba(91,42,134,.26);transition:transform .18s cubic-bezier(.2,.9,.3,1)" style-hover="transform:translateY(-3px)">Start the vibe check</button>
+              <button type="button" onClick="{{ goBrowse }}" style="{{ secondaryBtn }}" style-hover="transform:translateY(-3px)">Peek at the deck</button>
+            </div>
+            <p style="{{ heroFoot }}">Free account, 35 swipes a day. Go premium when 35 stops being enough.</p>
+          </div>
+
+          <div style="background:rgba(255,255,255,.7);border:1px solid #ece4d8;border-radius:22px;padding:22px;backdrop-filter:blur(8px);box-shadow:0 14px 44px rgba(36,27,47,.1)">
+            <p style="font:500 10px 'Geist',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 5px">Try it right here</p>
+            <p style="font-family:'Fraunces',Georgia,serif;font-size:20px;line-height:1.28;margin:0 0 18px">Pick a feeling. Watch the room change.</p>
+            <div style="display:flex;flex-wrap:wrap;gap:8px">
+              <sc-for list="{{ demoMoods }}" as="m" hint-placeholder-count="4">
+                <button type="button" onClick="{{ m.pick }}" style="{{ m.style }}" style-hover="transform:translateY(-2px)">{{ m.label }}</button>
+              </sc-for>
+            </div>
+            <p style="font:italic 400 15px/1.5 'Fraunces',serif;color:#3c3547;margin:18px 0 0;text-wrap:pretty">{{ demoCaption }}</p>
+          </div>
+        </div>
+
+        <div style="{{ planGrid }}">
+          <sc-for list="{{ plans }}" as="p" hint-placeholder-count="2">
+            <div style="{{ p.style }}">
+              <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px">
+                <span style="font-family:'Fraunces',Georgia,serif;font-size:21px;font-weight:600">{{ p.name }}</span>
+                <span style="{{ p.tagStyle }}">{{ p.note }}</span>
+              </div>
+              <p style="font-family:'Fraunces',Georgia,serif;font-size:33px;font-weight:600;margin:0 0 18px;letter-spacing:-.02em">{{ p.price }}</p>
+              <sc-for list="{{ p.features }}" as="f" hint-placeholder-count="3">
+                <div style="display:flex;gap:10px;align-items:flex-start;margin-bottom:10px">
+                  <span style="width:5px;height:5px;border-radius:999px;background:#5b2a86;flex:none;margin-top:7px"></span>
+                  <span style="font:400 14px/1.5 'Geist',sans-serif;color:#4a4353;text-wrap:pretty">{{ f }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="{{ stepGrid }}">
+          <sc-for list="{{ landingSteps }}" as="s" hint-placeholder-count="3">
+            <div style="{{ ruleStyle }}">
+              <p style="{{ sectionNum }}">{{ s.num }}</p>
+              <p style="{{ sectionTitle }}">{{ s.title }}</p>
+              <p style="{{ sectionBody }}">{{ s.body }}</p>
+            </div>
+          </sc-for>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isQuiz }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:620px;margin:0 auto;min-height:620px;display:flex;flex-direction:column;justify-content:center;padding:20px 0">
+        <div style="display:flex;gap:5px;margin-bottom:26px">
+          <sc-for list="{{ quizBars }}" as="b" hint-placeholder-count="10">
+            <div style="{{ b.style }}"></div>
+          </sc-for>
+        </div>
+        <p style="{{ quizStepLabel }}">Step {{ stepNo }} of {{ stepTotal }}</p>
+        <h2 style="{{ quizTitle }}">{{ step.title }}</h2>
+        <p style="{{ quizSub }}">{{ step.subtitle }}</p>
+
+        <sc-if value="{{ stepIsText }}" hint-placeholder-val="{{ true }}">
+          <textarea rows="3" placeholder="e.g. The Secret History, A Court of Thorns and Roses..." style="margin-top:26px;width:100%;box-sizing:border-box;border:1px solid #e7ded1;background:rgba(255,255,255,.85);border-radius:14px;padding:15px;font:400 15px 'Geist',sans-serif;color:#241b2f;resize:none;outline:none"></textarea>
+        </sc-if>
+
+        <sc-if value="{{ stepIsChips }}" hint-placeholder-val="{{ false }}">
+          <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:26px">
+            <sc-for list="{{ stepOptions }}" as="o" hint-placeholder-count="8">
+              <button type="button" onClick="{{ o.toggle }}" style="{{ o.style }}" style-hover="transform:translateY(-2px)">{{ o.label }}</button>
+            </sc-for>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ stepIsAccount }}" hint-placeholder-val="{{ false }}">
+          <div style="margin-top:26px;display:flex;flex-direction:column;gap:12px">
+            <button type="button" style="border:1px solid #e7ded1;background:rgba(255,255,255,.9);color:#241b2f;font:500 15px 'Geist',sans-serif;padding:14px 18px;border-radius:14px;cursor:pointer;text-align:left;white-space:nowrap;transition:transform .16s" style-hover="transform:translateY(-2px)">Continue with Google</button>
+            <button type="button" style="border:1px solid #e7ded1;background:rgba(255,255,255,.9);color:#241b2f;font:500 15px 'Geist',sans-serif;padding:14px 18px;border-radius:14px;cursor:pointer;text-align:left;white-space:nowrap;transition:transform .16s" style-hover="transform:translateY(-2px)">Continue with Apple</button>
+            <div style="display:flex;align-items:center;gap:12px;padding:4px 0">
+              <span style="flex:1;height:1px;background:#e7ded1"></span>
+              <span style="font:400 12px 'Geist',sans-serif;color:#8b8291">or</span>
+              <span style="flex:1;height:1px;background:#e7ded1"></span>
+            </div>
+            <input type="email" placeholder="you@example.com" style="border:1px solid #e7ded1;background:rgba(255,255,255,.9);border-radius:14px;padding:14px 16px;font:400 15px 'Geist',sans-serif;color:#241b2f;outline:none;box-sizing:border-box;width:100%">
+            <input type="password" placeholder="Pick a password" style="border:1px solid #e7ded1;background:rgba(255,255,255,.9);border-radius:14px;padding:14px 16px;font:400 15px 'Geist',sans-serif;color:#241b2f;outline:none;box-sizing:border-box;width:100%">
+            <div style="border-top:1px solid #e7ded1;margin-top:6px;padding-top:14px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+              <span style="background:#efe6da;color:#4a3f33;font:500 11px 'Geist',sans-serif;padding:4px 10px;border-radius:999px;white-space:nowrap">Free plan</span>
+              <span style="font:400 13px/1.5 'Geist',sans-serif;color:#6b6270">35 swipes a day. Upgrade any time — you won't be asked again today.</span>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ showMoodEcho }}" hint-placeholder-val="{{ false }}">
+          <p style="{{ moodEchoStyle }}">{{ moodEcho }}</p>
+        </sc-if>
+
+        <div style="display:flex;align-items:center;justify-content:space-between;margin-top:40px">
+          <button type="button" onClick="{{ quizBack }}" style="{{ backStyle }}">Back</button>
+          <button type="button" onClick="{{ quizNext }}" style="background:#5b2a86;color:#fff;border:none;font:500 15px 'Geist',sans-serif;padding:14px 26px;border-radius:999px;cursor:pointer;white-space:nowrap;box-shadow:0 8px 22px rgba(91,42,134,.26);transition:transform .18s" style-hover="transform:translateY(-2px)">{{ nextLabel }}</button>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isBrowse }}" hint-placeholder-val="{{ false }}">
+      <div style="display:flex;flex-wrap:wrap;gap:44px;justify-content:center;align-items:flex-start;max-width:1140px;margin:0 auto;padding-top:8px">
+
+        <div style="flex:1 1 340px;max-width:398px">
+          <div style="display:flex;align-items:baseline;justify-content:space-between;margin-bottom:14px">
+            <p style="{{ metaText }}">{{ remainingLabel }}</p>
+            <button type="button" onClick="{{ goShelf }}" style="{{ linkBtn }}">Shelf ({{ shelfCount }})</button>
+          </div>
+
+          <sc-if value="{{ hasCards }}" hint-placeholder-val="{{ true }}">
+            <div style="position:relative;height:566px;perspective:1400px">
+              <sc-for list="{{ cards }}" as="c" hint-placeholder-count="3">
+                <div style="{{ c.wrap }}" onPointerDown="{{ c.down }}" onPointerMove="{{ c.move }}" onPointerUp="{{ c.up }}" onPointerCancel="{{ c.up }}">
+                  <div style="{{ c.body }}">
+                    <div style="{{ c.cover }}">
+                      <div style="{{ c.sheen }}"></div>
+                      <div style="position:relative;z-index:2;display:flex;flex-direction:column;height:100%">
+                        <div style="display:flex;align-items:baseline;justify-content:space-between;gap:10px">
+                          <span style="font:500 10px 'Geist',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:rgba(255,255,255,.78);white-space:nowrap">{{ c.genre }}</span>
+                          <span style="{{ c.matchPill }}">{{ c.matchLabel }}</span>
+                        </div>
+                        <h2 style="{{ c.titleStyle }}">
+                          <sc-for list="{{ c.words }}" as="w" hint-placeholder-count="4">
+                            <span style="{{ w.style }}">{{ w.text }}</span>
+                          </sc-for>
+                        </h2>
+                        <p style="font:400 12px 'Geist',sans-serif;letter-spacing:.14em;text-transform:uppercase;margin:12px 0 0;color:rgba(255,255,255,.82)">{{ c.author }}</p>
+                      </div>
+                    </div>
+                    <div style="padding:18px 20px 20px;display:flex;flex-direction:column;gap:13px;flex:1">
+                      <p style="font:500 16px/1.42 'Geist',sans-serif;margin:0;text-wrap:pretty">{{ c.hook }}</p>
+                      <div style="padding-left:13px;border-left:2px solid #5b2a86">
+                        <p style="font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 4px">Our note</p>
+                        <p style="font:italic 400 14px/1.5 'Fraunces',serif;color:#3c3547;margin:0;text-wrap:pretty">{{ c.note }}</p>
+                      </div>
+                      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:auto">
+                        <sc-for list="{{ c.chips }}" as="t" hint-placeholder-count="4">
+                          <span style="{{ t.style }}" style-hover="transform:translateY(-2px)">{{ t.label }}</span>
+                        </sc-for>
+                      </div>
+                      <div style="border-top:1px solid #ece4d8;padding-top:11px;display:flex;justify-content:space-between;align-items:center">
+                        <span style="font:400 12px 'Geist',sans-serif;color:#8b8291">{{ c.meta }}</span>
+                        <span style="font:italic 400 13px 'Fraunces',serif;color:#6b6270">{{ c.comp }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div style="{{ c.veilYes }}"><span style="{{ c.veilYesLabel }}">To read</span></div>
+                  <div style="{{ c.veilNo }}"><span style="{{ c.veilNoLabel }}">Pass</span></div>
+                </div>
+              </sc-for>
+            </div>
+
+            <div style="display:flex;align-items:center;justify-content:center;gap:22px;margin-top:26px">
+              <button type="button" onClick="{{ pass }}" aria-label="Pass" style="{{ passBtn }}" style-hover="transform:translateY(-3px);box-shadow:0 12px 26px rgba(36,27,47,.14)" style-active="transform:translateY(1px) scale(.95)">✕</button>
+              <p style="font:400 12px 'Geist',sans-serif;color:#8b8291;margin:0;width:128px;text-align:center">{{ hint }}</p>
+              <button type="button" onClick="{{ like }}" aria-label="To read" style="{{ likeBtn }}" style-hover="transform:translateY(-3px);box-shadow:0 14px 30px rgba(91,42,134,.34)" style-active="transform:translateY(1px) scale(.95)">♥</button>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ isCapped }}" hint-placeholder-val="{{ false }}">
+            <div style="background:rgba(255,255,255,.74);border:1px solid #ece4d8;border-radius:22px;padding:32px;backdrop-filter:blur(8px);box-shadow:0 18px 50px rgba(36,27,47,.1);animation:bu-in .55s ease both">
+              <p style="font:500 10px 'Geist',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 14px">Lights down</p>
+              <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:30px;line-height:1.1;letter-spacing:-.02em;margin:0 0 12px">{{ doneTitle }}</h2>
+              <p style="font:400 15px/1.55 'Geist',sans-serif;color:#4a4353;margin:0 0 22px;text-wrap:pretty">{{ doneBody }}</p>
+
+              <div style="border:1px solid #5b2a86;border-radius:16px;padding:20px;background:rgba(255,255,255,.7);margin-bottom:16px">
+                <p style="font-family:'Fraunces',Georgia,serif;font-size:19px;margin:0 0 7px">Not done reading?</p>
+                <p style="font:400 14px/1.5 'Geist',sans-serif;color:#4a4353;margin:0 0 15px;text-wrap:pretty">Premium takes the cap off — swipe the whole deck, undo a pass, and keep a shelf per mood.</p>
+                <button type="button" style="background:#5b2a86;color:#fff;border:none;font:500 14px 'Geist',sans-serif;padding:12px 22px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:transform .16s" style-hover="transform:translateY(-2px)">Go Premium — $4/mo</button>
+              </div>
+              <button type="button" onClick="{{ reset }}" style="background:none;border:none;font:500 14px 'Geist',sans-serif;color:#6b6270;cursor:pointer;padding:0">Reshuffle the deck</button>
+            </div>
+          </sc-if>
+        </div>
+
+        <div style="flex:0 1 306px;min-width:250px;display:flex;flex-direction:column;gap:16px">
+          <div style="{{ asideCard }}">
+            <p style="font:500 10px 'Geist',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 9px">Reading you back</p>
+            <p style="{{ verdictStyle }}">{{ verdictShown }}<span style="{{ caretStyle }}">▍</span></p>
+          </div>
+
+          <div style="background:rgba(255,255,255,.68);border:1px solid #ece4d8;border-radius:20px;padding:20px;backdrop-filter:blur(8px)">
+            <p style="font:500 10px 'Geist',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 12px">Why this one</p>
+            <sc-for list="{{ reasons }}" as="r" hint-placeholder-count="4">
+              <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #f0e9de">
+                <span style="{{ r.dot }}"></span>
+                <span style="font:400 14px 'Geist',sans-serif;flex:1;text-transform:capitalize">{{ r.label }}</span>
+                <span style="font:500 12px 'Geist',sans-serif;color:#6b6270">{{ r.weight }}</span>
+              </div>
+            </sc-for>
+            <div style="display:flex;align-items:center;gap:12px;margin-top:16px">
+              <span style="{{ vibeSwatch }}"></span>
+              <div>
+                <p style="font-family:'Fraunces',Georgia,serif;font-size:17px;margin:0">{{ vibeName }}</p>
+                <p style="font:400 12px/1.45 'Geist',sans-serif;color:#8b8291;margin:2px 0 0">{{ vibeNote }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="background:rgba(255,255,255,.68);border:1px solid #ece4d8;border-radius:20px;padding:20px;backdrop-filter:blur(8px)">
+            <p style="font:500 10px 'Geist',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 12px">Your ledger</p>
+            <sc-for list="{{ ledger }}" as="l" hint-placeholder-count="0">
+              <div style="display:flex;align-items:center;gap:10px;padding:5px 0">
+                <span style="font:400 13px 'Geist',sans-serif;width:86px;text-transform:capitalize;color:#4a4353">{{ l.label }}</span>
+                <span style="{{ l.barTrack }}"><span style="{{ l.bar }}"></span></span>
+                <span style="font-family:'Geist Mono',monospace;font-size:10px;color:#8b8291;width:16px;text-align:right">{{ l.n }}</span>
+              </div>
+            </sc-for>
+            <sc-if value="{{ ledgerEmpty }}" hint-placeholder-val="{{ true }}">
+              <p style="font:400 13px/1.5 'Geist',sans-serif;color:#8b8291;margin:0">Nothing to go on yet. Swipe and I'll start forming opinions.</p>
+            </sc-if>
+          </div>
+        </div>
+      </div>
+    </sc-if>
+
+    <sc-if value="{{ isShelf }}" hint-placeholder-val="{{ false }}">
+      <div style="max-width:1140px;margin:0 auto;padding-top:8px">
+        <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:14px;margin-bottom:24px">
+          <div>
+            <h2 style="{{ shelfH }}">Your shelf</h2>
+            <p style="{{ shelfSubStyle }}">{{ shelfSub }}</p>
+          </div>
+          <button type="button" onClick="{{ goBrowse }}" style="{{ shelfBackBtn }}" style-hover="transform:translateY(-2px)">Back to swiping</button>
+        </div>
+
+        <sc-if value="{{ shelfHasBooks }}" hint-placeholder-val="{{ false }}">
+          <div style="{{ shelfTopGrid }}">
+            <div style="{{ asideCard }}">
+              <p style="font:500 10px 'Geist',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 9px">Reading you back</p>
+              <p style="{{ verdictStyle }}">{{ verdictShown }}<span style="{{ caretStyle }}">▍</span></p>
+            </div>
+            <div style="background:rgba(255,255,255,.68);border:1px solid #ece4d8;border-radius:20px;padding:20px;backdrop-filter:blur(8px)">
+              <p style="font:500 10px 'Geist',sans-serif;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 12px">What you keep going back to</p>
+              <sc-for list="{{ ledger }}" as="l" hint-placeholder-count="3">
+                <div style="display:flex;align-items:center;gap:10px;padding:5px 0">
+                  <span style="font:400 13px 'Geist',sans-serif;width:96px;text-transform:capitalize;color:#4a4353">{{ l.label }}</span>
+                  <span style="{{ l.barTrack }}"><span style="{{ l.bar }}"></span></span>
+                  <span style="font-family:'Geist Mono',monospace;font-size:10px;color:#8b8291;width:16px;text-align:right">{{ l.n }}</span>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-if>
+
+        <sc-if value="{{ shelfEmpty }}" hint-placeholder-val="{{ true }}">
+          <div style="{{ emptyShelfCard }}">
+            <p style="{{ emptyShelfTitle }}">Empty, but the chair's warm.</p>
+            <p style="{{ emptyShelfBody }}">Swipe right on a few and they'll land here, grouped by the feeling that made you save them.</p>
+          </div>
+        </sc-if>
+
+        <sc-for list="{{ shelfGroups }}" as="g" hint-placeholder-count="0">
+          <div style="margin-bottom:36px">
+            <div style="{{ shelfGroupRule }}">
+              <span style="{{ g.swatch }}"></span>
+              <span style="{{ shelfGroupLabel }}">{{ g.label }}</span>
+              <span style="{{ shelfSubStyle }}">{{ g.count }}</span>
+            </div>
+            <div style="{{ g.gridStyle }}">
+              <sc-for list="{{ g.books }}" as="b" hint-placeholder-count="3">
+                <div style="background:#fffdf9;border:1px solid #ece4d8;border-radius:16px;overflow:hidden;box-shadow:0 5px 18px rgba(36,27,47,.08);transition:transform .22s cubic-bezier(.2,.9,.3,1)" style-hover="transform:translateY(-5px)">
+                  <div style="{{ b.cover }}">
+                    <p style="font-family:'Fraunces',Georgia,serif;font-size:17px;line-height:1.18;margin:0;color:#fffdf9">{{ b.title }}</p>
+                    <p style="font:400 10px 'Geist',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,253,249,.76);margin:9px 0 0">{{ b.author }}</p>
+                  </div>
+                  <div style="padding:14px">
+                    <p style="font:500 14px/1.38 'Geist',sans-serif;margin:0;text-wrap:pretty">{{ b.hook }}</p>
+                    <p style="font:italic 400 13px/1.45 'Fraunces',serif;color:#6b6270;margin:9px 0 0;text-wrap:pretty">{{ b.note }}</p>
+                  </div>
+                </div>
+              </sc-for>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;lightStrength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.74,&quot;min&quot;:0.35,&quot;max&quot;:1,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Character&quot;},&quot;parallax&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Character&quot;},&quot;chattiness&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;quiet&quot;,&quot;knowing&quot;,&quot;chatty&quot;],&quot;default&quot;:&quot;knowing&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Character&quot;}}">
+class Component extends DCLogic {
+  themes = {
+    cozy:{c:["#e8b568","#f4d9a0","#c97a3d"],label:"Cozy",note:"Low amber, like a lamp two rooms over."},
+    dark:{c:["#5e0b15","#7a1420","#2b0a10"],label:"Dark",note:"The light's gone red. You know what you signed up for."},
+    whimsical:{c:["#c9a7eb","#e6d4f5","#a97fd4"],label:"Whimsical",note:"Lilac through a window that shouldn't be there."},
+    melancholy:{c:["#5c6b73","#7d8ca3","#46525a"],label:"Melancholy",note:"Grey-blue and slow. Afternoon light in a cold month."},
+  };
+  fam={cozy:"cozy",hopeful:"cozy",funny:"cozy",heartwarming:"cozy",dark:"dark",tense:"dark",unsettling:"dark",devastating:"dark",whimsical:"whimsical",atmospheric:"whimsical",bittersweet:"whimsical",melancholy:"melancholy"};
+  books=[
+    {t:"The Lantern-Keeper's Daughter",a:"Mira Halloway",h:"She inherited the lighthouse, the debts, and the thing that lives under the stairs.",n:"Reads gentler than the premise suggests. The monster is basically a roommate by chapter nine.",comp:"Legends & Lattes energy",g:"Cozy fantasy",m:["cozy","hopeful"],tr:["found family","small town"],p:342,y:2024},
+    {t:"Salt in the Wound",a:"Dov Ferrante",h:"Everyone on the island agreed on the story. That was the first problem.",n:"You'll guess the twist around page 200 and be wrong about why it matters.",comp:"If you liked The Guest List",g:"Thriller",m:["tense","dark"],tr:["unreliable narrator","closed circle"],p:401,y:2023},
+    {t:"Moths Under Glass",a:"Wren Ardelle",h:"The museum's night shift comes with a warning and a very specific key.",n:"Nothing is explained. That's the point, and it either delights you or it doesn't.",comp:"Piranesi, softer edges",g:"Magical realism",m:["whimsical","atmospheric"],tr:["secret door","slow burn"],p:317,y:2024},
+    {t:"Nine Kinds of Winter",a:"Tomas Brekke",h:"A translator returns to the fjord to finish a book that isn't hers.",n:"Slow, cold, and worth it. Don't start this one in February unless you mean it.",comp:"Quiet, cold, devastating",g:"Literary fiction",m:["melancholy","atmospheric"],tr:["homecoming","unreliable memory"],p:264,y:2022},
+    {t:"Every Door Was a Mouth",a:"Priya Raghunathan",h:"The house was listed as three bedrooms. She counted four.",n:"Genuinely frightening for the first half. The ending explains slightly too much.",comp:"Mexican Gothic readalike",g:"Horror",m:["unsettling","dark"],tr:["haunted house","isolation"],p:298,y:2024},
+    {t:"The Understudy Problem",a:"Cassie Lin",h:"She got the part. He got the part. Neither told the director they'd met.",n:"Very funny, lightly absurd, and the theatre details are suspiciously accurate.",comp:"Theatre-kid rom-com",g:"Romance",m:["funny","heartwarming"],tr:["forced proximity","enemies to lovers"],p:356,y:2025},
+  ];
+  quizSteps=[
+    {kind:"text",title:"Name a book or two you loved.",subtitle:"Totally optional, but it helps us get to know your taste faster."},
+    {kind:"chips",key:"displayMode",title:"How do you want to discover books?",subtitle:"You can change your mind later.",options:["Show me the covers","Surprise me — vibes first, cover hidden"]},
+    {kind:"chips",key:"mood",title:"What kind of feeling are you chasing?",subtitle:"Pick as many as sound good for a rainy Sunday.",options:["cozy","hopeful","funny","heartwarming","atmospheric","whimsical","bittersweet","melancholy","tense","dark","unsettling","devastating"]},
+    {kind:"chips",key:"trope",title:"Any tropes you can't resist?",subtitle:"Select the ones that make you swipe right immediately.",options:["found family","slow burn","enemies to lovers","second chance","forced proximity","haunted house","dual timeline","small town","secret door"]},
+    {kind:"chips",key:"genre",title:"Favorite genres?",subtitle:"Choose a few — this just gets things started.",options:["Cozy fantasy","Romance","Thriller","Horror","Literary fiction","Magical realism"]},
+    {kind:"chips",key:"heat",title:"How much heat do you want?",subtitle:"We'll keep things at or below this level.",options:["None","A little","Medium","Bring it"]},
+    {kind:"chips",key:"pacing",title:"Slow burn or fast-paced?",subtitle:"What keeps you turning pages?",options:["Slow burn","Somewhere in between","Fast-paced"]},
+    {kind:"chips",key:"frequency",title:"How often do you read?",subtitle:"No wrong answer here.",options:["Casual","Regular","Voracious"]},
+    {kind:"chips",key:"avoid",title:"Anything you'd rather avoid?",subtitle:"Optional — books with these will never be shown to you.",options:["graphic violence","animal death","sexual assault","self-harm","infidelity","medical trauma"]},
+    {kind:"account",title:"Save your shelf.",subtitle:"Make an account so your matches are still here tomorrow. Free gets you 35 swipes a day, every day."},
+  ];
+
+  state={screen:"landing",quizStep:0,picks:{},i:0,dx:0,dragging:false,shelf:[],passed:[],swipes:35,
+    sound:false,px:0.5,py:0.4,landingMood:"cozy",verdict:"I don't know you yet. Give me three swipes.",shown:"",typing:false};
+
+  familyOf(m){for(const x of m) if(this.fam[x]) return this.fam[x]; return "whimsical";}
+
+  active(){
+    const s=this.state;
+    if(s.screen==="landing") return s.landingMood;
+    if(s.screen==="quiz"){
+      const p=s.picks.mood||[];
+      return p.length?this.familyOf(p.slice().reverse()):"cozy";
+    }
+    if(s.screen==="shelf"){
+      const l=s.shelf[s.shelf.length-1];
+      return l?this.familyOf(l.m):"whimsical";
+    }
+    const b=this.books[s.i];
+    if(b) return this.familyOf(b.m);
+    const l=s.shelf[s.shelf.length-1];
+    return l?this.familyOf(l.m):"cozy";
+  }
+
+  componentDidMount(){this.type(this.state.verdict);}
+  componentWillUnmount(){clearInterval(this._ti);cancelAnimationFrame(this._raf);}
+
+  type(text){
+    clearInterval(this._ti);
+    let k=0;
+    this.setState({shown:"",typing:true});
+    this._ti=setInterval(()=>{
+      k+=1;
+      if(k>=text.length){clearInterval(this._ti);this.setState({shown:text,typing:false});return;}
+      this.setState({shown:text.slice(0,k)});
+    },16);
+  }
+
+  beep(kind){
+    if(!this.state.sound) return;
+    try{
+      const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+      const ctx=this._ctx||(this._ctx=new C());
+      if(ctx.state==="suspended") ctx.resume();
+      const t=ctx.currentTime;
+      if(kind==="page"){
+        const len=6600,buf=ctx.createBuffer(1,len,44100),d=buf.getChannelData(0);
+        for(let k=0;k<len;k++){const e=Math.sin(Math.PI*k/len);d[k]=(Math.random()*2-1)*e*0.4;}
+        const n=ctx.createBufferSource();n.buffer=buf;
+        const f=ctx.createBiquadFilter();f.type="lowpass";f.frequency.value=1500;
+        const g=ctx.createGain();g.gain.value=0.15;
+        n.connect(f);f.connect(g);g.connect(ctx.destination);n.start(t);
+      } else {
+        const o=ctx.createOscillator(),o2=ctx.createOscillator(),g=ctx.createGain();
+        const base=kind==="yes"?392:196;
+        o.type="sine";o2.type="sine";
+        o.frequency.setValueAtTime(base,t);o2.frequency.setValueAtTime(base*1.5,t);
+        g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.12,t+0.03);
+        g.gain.exponentialRampToValueAtTime(0.001,t+0.5);
+        o.connect(g);o2.connect(g);g.connect(ctx.destination);
+        o.start(t);o2.start(t);o.stop(t+0.55);o2.stop(t+0.55);
+      }
+    }catch(e){}
+  }
+
+  spring(target){
+    cancelAnimationFrame(this._raf);
+    let x=this.state.dx,v=this._v||0;
+    const tick=()=>{
+      v+=(target-x)*0.11-v*0.58;x+=v;
+      if(Math.abs(target-x)<0.6&&Math.abs(v)<0.6){this._v=0;this.setState({dx:target,dragging:false});return;}
+      this.setState({dx:x});this._raf=requestAnimationFrame(tick);
+    };
+    this._raf=requestAnimationFrame(tick);
+  }
+
+  verdictFor(shelf,passed){
+    if(shelf.length+passed.length<3) return "I don't know you yet. Give me three swipes.";
+    if(!shelf.length) return "You've passed on "+passed.length+" in a row. Either I've misread you completely or you're just browsing, which is allowed.";
+    const tally={};
+    shelf.forEach((b)=>b.m.concat(b.tr).forEach((x)=>{tally[x]=(tally[x]||0)+1;}));
+    if(shelf.length===1) return "One data point. You liked something "+shelf[0].m[0]+", and I'm not building a theory on that.";
+    const fams=[...new Set(shelf.map((b)=>this.familyOf(b.m)))];
+    if(fams.length===1) return "Every book you've kept is "+this.themes[fams[0]].label.toLowerCase()+". You're not browsing, you're committing.";
+    const top=Object.keys(tally).sort((a,b)=>tally[b]-tally[a])[0];
+    if(top&&tally[top]>1) return "The word that keeps coming up is \u201c"+top+"\u201d. You've kept "+tally[top]+" books with it.";
+    return "Your taste is wider than most. Harder to please, more fun to guess at.";
+  }
+
+  commit(dir){
+    const b=this.books[this.state.i]; if(!b) return;
+    this.beep(dir==="yes"?"yes":"no");
+    const shelf=dir==="yes"?[...this.state.shelf,b]:this.state.shelf;
+    const passed=dir==="no"?[...this.state.passed,b]:this.state.passed;
+    const v=this.verdictFor(shelf,passed);
+    const changed=v!==this.state.verdict;
+    this.setState({i:this.state.i+1,dx:0,dragging:false,shelf,passed,swipes:this.state.swipes-1,verdict:v});
+    if(changed) this.type(v);
+    this._v=0;
+  }
+
+  fling(dir){
+    const target=dir==="yes"?760:-760;
+    cancelAnimationFrame(this._raf);
+    let x=this.state.dx;
+    const tick=()=>{
+      x+=(target-x)*0.17;
+      if(Math.abs(target-x)<150){this.commit(dir);return;}
+      this.setState({dx:x});this._raf=requestAnimationFrame(tick);
+    };
+    this._raf=requestAnimationFrame(tick);
+  }
+
+  tab(name,ink,darkMode){
+    const on=this.state.screen===name;
+    return "border:none;cursor:pointer;white-space:nowrap;font:500 13px 'Geist',sans-serif;padding:7px 14px;border-radius:999px;transition:background .16s,color .8s ease;"+
+      (on?(darkMode?"background:"+ink.head+";color:#241b2f;":"background:#5b2a86;color:#fff;")
+        :"background:transparent;color:"+ink.body+";");
+  }
+
+  toggle(key,value,single){
+    const picks=Object.assign({},this.state.picks);
+    const cur=new Set(picks[key]||[]);
+    if(single) picks[key]=cur.has(value)?[]:[value];
+    else {if(cur.has(value)) cur.delete(value); else cur.add(value); picks[key]=[...cur];}
+    this.setState({picks});
+  }
+
+  renderVals(){
+    const s=this.state, af=this.active(), th=this.themes[af];
+    const drag=Math.min(Math.abs(s.dx)/200,1);
+    const b=this.books[s.i];
+    const lean=s.px-0.5, tilt=s.py-0.5;
+    const strength=this.props.lightStrength ?? 0.74;
+    const tintOpacity={dark:0.96,melancholy:0.92,cozy:0.86,whimsical:0.84}[af];
+    const darkMode=af==="dark"||af==="melancholy";
+    const ink=af==="dark"
+      ? {head:"#fdf4f2",body:"#f3dcd9",faint:"#dcb6b2",accent:"#f0b7c4",rule:"rgba(253,244,242,.72)",track:"rgba(253,244,242,.22)",panel:"rgba(28,8,12,.42)",panelEdge:"rgba(253,244,242,.18)"}
+      : af==="melancholy"
+      ? {head:"#f7fafb",body:"#e2ebef",faint:"#bccbd3",accent:"#cfd9ff",rule:"rgba(247,250,251,.72)",track:"rgba(247,250,251,.22)",panel:"rgba(18,28,34,.38)",panelEdge:"rgba(247,250,251,.18)"}
+      : {head:"#241b2f",body:"#453e50",faint:"#645b6b",accent:"#4c2273",rule:"#241b2f",track:"rgba(36,27,47,.2)",panel:"rgba(255,255,255,.72)",panelEdge:"#ece4d8"};
+
+    const layer=(idx)=>{
+      const t=th.c;
+      const size=idx?"min(900px,120vw)":"min(1500px,175vw)";
+      const ox=(idx?-28:16)*lean*2, oy=(idx?-20:11)*tilt*2;
+      return "position:absolute;top:50%;left:50%;width:"+size+";height:"+size+";margin-left:calc("+size+" / -2);margin-top:calc("+size+" / -2);"+
+        "background:radial-gradient(circle farthest-side at center,"+t[1]+" 0%,"+t[0]+(idx?" 44%":" 40%")+",transparent "+(idx?"72%":"78%")+");"+
+        "opacity:"+(((idx?0.3:0.38)*strength)+drag*0.1).toFixed(3)+";filter:blur("+(idx?12:30)+"px);"+
+        "transform:translate3d("+ox+"px,"+oy+"px,0) scale("+(1+drag*0.05)+");transition:background .8s ease,opacity .7s ease,transform .5s ease;"+
+        "animation:bu-light "+(idx?"19s":"26s")+" ease-in-out infinite"+(idx?"":" reverse")+";";
+    };
+
+    const chip=(label,kind)=>({label,
+      style:"font:500 11px 'Geist',sans-serif;padding:4px 10px;border-radius:999px;text-transform:capitalize;white-space:nowrap;transition:transform .18s;background:"+
+        (kind==="mood"?"#e6eef3;color:#234a63":"#f3e6f6;color:#5b2a86")});
+
+    const cards=this.books.slice(s.i,s.i+3).map((bk,n)=>{
+      const top=n===0, f=this.familyOf(bk.m), t=this.themes[f].c;
+      const rot=top?(s.dx/200)*10:(n===1?-1.2:1);
+      const yT=top&&s.dragging?tilt*-7:0, xT=top&&s.dragging?lean*9:0;
+      const yesOn=top?Math.max(0,Math.min(1,(s.dx-26)/104)):0;
+      const noOn=top?Math.max(0,Math.min(1,(-s.dx-26)/104)):0;
+      const veil=(on,color,side)=>"position:absolute;inset:0;z-index:15;pointer-events:none;border-radius:20px;display:flex;align-items:center;justify-content:center;"+
+        "background:linear-gradient(to "+(side==="right"?"left":"right")+","+color+"e6 0%,"+color+"55 45%,transparent 85%);opacity:"+on.toFixed(2);
+      const vLabel=(on)=>"font-family:'Fraunces',Georgia,serif;font-size:28px;color:#fff;letter-spacing:-.01em;transform:scale("+(0.86+on*0.14).toFixed(3)+")";
+      const overlap=(s.picks.mood||[]).filter((x)=>bk.m.includes(x)).length+(s.picks.trope||[]).filter((x)=>bk.tr.includes(x)).length;
+      const score=Math.min(98,74+overlap*7+(5-n*2));
+      return {
+        genre:bk.g,author:bk.a,hook:bk.h,note:bk.n,comp:bk.comp,meta:bk.p+" pp · "+bk.y,
+        chips:[...bk.m.slice(0,2).map((x)=>chip(x,"mood")),...bk.tr.slice(0,2).map((x)=>chip(x,"trope"))],
+        words:bk.t.split(" ").map((w,k)=>({text:w+"\u00a0",
+          style:"display:inline-block;animation:bu-word .5s cubic-bezier(.2,.9,.3,1) both;animation-delay:"+(top?k*66:0)+"ms"})),
+        titleStyle:"font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:27px;line-height:1.08;letter-spacing:-.025em;color:#fffdf9;margin:auto 0 0",
+        matchPill:"font:500 10px 'Geist',sans-serif;letter-spacing:.06em;padding:3px 9px;border-radius:999px;white-space:nowrap;background:rgba(255,255,255,.22);color:#fffdf9;backdrop-filter:blur(4px)",
+        matchLabel:score+"% match",
+        wrap:"position:absolute;left:0;right:0;top:"+n*8+"px;height:100%;touch-action:none;transform-style:preserve-3d;"+
+          "transform:translateX("+(top?s.dx:0)+"px) rotate("+rot+"deg) rotateY("+xT+"deg) rotateX("+yT+"deg) scale("+(1-n*0.03)+");"+
+          "transform-origin:50% 88%;z-index:"+(10-n)+";cursor:"+(top?(s.dragging?"grabbing":"grab"):"default")+";"+
+          (top&&!s.dragging?"transition:transform .1s linear;":top?"":"transition:transform .45s ease;"),
+        body:"height:100%;display:flex;flex-direction:column;background:#fffdf9;border:1px solid #ece4d8;border-radius:20px;overflow:hidden;"+
+          "box-shadow:0 "+(top?18+drag*16:10)+"px "+(top?46+drag*26:26)+"px rgba(36,27,47,"+(top?0.16+drag*0.06:0.09)+")",
+        cover:"position:relative;padding:22px;min-height:228px;display:flex;flex-direction:column;box-sizing:border-box;overflow:hidden;"+
+          "background:linear-gradient(158deg,"+t[0]+" 0%,"+t[2]+" 100%)",
+        sheen:"position:absolute;inset:-40%;z-index:1;pointer-events:none;background:radial-gradient(circle at "+
+          (top?(28+lean*52).toFixed(1):50)+"% "+(top?(18+tilt*44).toFixed(1):22)+"%,rgba(255,255,255,.44) 0%,rgba(255,255,255,.12) 34%,transparent 62%);transition:background .18s linear",
+        veilYes:veil(yesOn,"#2f6b3f","right"),veilNo:veil(noOn,"#a33a2a","left"),
+        veilYesLabel:vLabel(yesOn),veilNoLabel:vLabel(noOn),
+        down:top?(e)=>{e.currentTarget.setPointerCapture(e.pointerId);cancelAnimationFrame(this._raf);this._x0=e.clientX;this._last=e.clientX;this._v=0;this.setState({dragging:true});}:null,
+        move:top?(e)=>{if(!this.state.dragging)return;this._v=e.clientX-this._last;this._last=e.clientX;
+          if(Math.abs(e.clientX-this._x0)>100&&!this._pg){this._pg=true;this.beep("page");}
+          this.setState({dx:e.clientX-this._x0});}:null,
+        up:top?()=>{if(!this.state.dragging)return;this._pg=false;const d=this.state.dx;
+          if(d>110||this._v>12) this.fling("yes");
+          else if(d<-110||this._v<-12) this.fling("no");
+          else this.spring(0);}:null,
+      };
+    });
+
+    const reasons=b?[...b.m.map((x)=>({label:x,weight:"×3",k:"mood"})),...b.tr.map((x)=>({label:x,weight:"×3",k:"trope"})),{label:b.g,weight:"×1",k:"genre"}]
+      .map((r)=>({...r,dot:"width:8px;height:8px;border-radius:999px;flex:none;background:"+(r.k==="mood"?"#234a63":r.k==="trope"?"#5b2a86":"#4a3f33")})):[];
+
+    const tally={};
+    s.shelf.forEach((bk)=>bk.m.concat(bk.tr).forEach((x)=>{tally[x]=(tally[x]||0)+1;}));
+    const max=Math.max(1,...Object.values(tally));
+    const ledger=Object.keys(tally).sort((a,c)=>tally[c]-tally[a]).slice(0,5).map((k)=>({
+      label:k,n:tally[k],
+      barTrack:"flex:1;height:6px;border-radius:999px;background:#ece4d8;display:block;position:relative;overflow:hidden",
+      bar:"position:absolute;inset:0 auto 0 0;width:"+Math.round((tally[k]/max)*100)+"%;background:#5b2a86;display:block;transform-origin:left;animation:bu-bar .5s cubic-bezier(.2,.9,.3,1) both",
+    }));
+
+    const step=this.quizSteps[s.quizStep];
+    const moodPicks=s.picks.mood||[];
+    const demoCaptions={
+      cozy:"Warm amber, blanket weather, someone's making tea in chapter one.",
+      whimsical:"Lilac and a little strange — the books that don't explain themselves.",
+      melancholy:"Grey-blue and quiet. For when you want to feel something slowly.",
+      dark:"Deep red. You already know what you're in for.",
+    };
+
+    const order=["cozy","whimsical","melancholy","dark"];
+    const shelfGroups=order.map((k)=>{
+      const items=s.shelf.filter((bk)=>this.familyOf(bk.m)===k);
+      if(!items.length) return null;
+      const c=this.themes[k].c;
+      return {
+        label:this.themes[k].label,
+        count:items.length+(items.length===1?" book":" books"),
+        swatch:"width:15px;height:15px;border-radius:999px;flex:none;background:linear-gradient(135deg,"+c[0]+","+c[2]+")",
+        gridStyle:"display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(212px,1fr))",
+        books:items.map((bk)=>({
+          title:bk.t,author:bk.a,hook:bk.h,note:bk.n,
+          cover:"padding:17px;min-height:132px;display:flex;flex-direction:column;justify-content:flex-end;box-sizing:border-box;background:linear-gradient(158deg,"+c[0]+","+c[2]+")",
+        })),
+      };
+    }).filter(Boolean);
+
+    return {
+      tint:"position:absolute;inset:0;background:"+(darkMode?th.c[2]:th.c[1])+";opacity:"+Math.min(1,tintOpacity+drag*0.04).toFixed(3)+";transition:background .8s ease,opacity .7s ease",
+      lightFar:layer(0),lightNear:layer(1),
+      dust:"position:absolute;inset:-10%;opacity:"+(darkMode?.3:.45)+";background-image:radial-gradient(rgba(255,255,255,.7) 1px,transparent 1px),radial-gradient(rgba(255,255,255,.5) 1px,transparent 1px);background-size:190px 190px,127px 127px;background-position:0 0,60px 40px;animation:bu-dust 34s linear infinite",
+      trackRoom:(e)=>{const r=e.currentTarget.getBoundingClientRect();
+        this.setState({px:(e.clientX-r.left)/r.width,py:(e.clientY-r.top)/r.height});},
+
+      isLanding:s.screen==="landing",isQuiz:s.screen==="quiz",isBrowse:s.screen==="browse",isShelf:s.screen==="shelf",
+      goLanding:()=>this.setState({screen:"landing"}),
+      goQuiz:()=>this.setState({screen:"quiz",quizStep:0}),
+      goBrowse:()=>this.setState({screen:"browse"}),
+      goShelf:()=>this.setState({screen:"shelf"}),
+      tabLanding:this.tab("landing",ink,darkMode),tabQuiz:this.tab("quiz",ink,darkMode),
+      tabBrowse:this.tab("browse",ink,darkMode),tabShelf:this.tab("shelf",ink,darkMode),
+      brandStyle:"font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:20px;letter-spacing:-.02em;transition:color .8s ease;color:"+ink.head,
+      soundLabel:s.sound?"Sound on":"Sound off",
+      soundBtn:"margin-left:auto;font:500 11px 'Geist',sans-serif;letter-spacing:.06em;white-space:nowrap;padding:7px 13px;border-radius:999px;cursor:pointer;transition:background .16s,color .8s ease;"+
+        (s.sound?"border:1px solid "+ink.accent+";background:"+(darkMode?"rgba(255,255,255,.16)":"rgba(91,42,134,.12)")+";color:"+ink.accent
+          :"border:1px solid "+ink.panelEdge+";background:"+(darkMode?"rgba(255,255,255,.08)":"rgba(255,255,255,.6)")+";color:"+ink.faint),
+      toggleSound:()=>{const on=!s.sound;this.setState({sound:on});if(on)setTimeout(()=>this.beep("yes"),30);},
+
+      heroGrid:"display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:48px;align-items:center;padding:24px 0 48px",
+      heroKicker:"font:600 11px 'Geist',sans-serif;letter-spacing:.16em;text-transform:uppercase;margin:0 0 18px;transition:color .8s ease;color:"+ink.accent,
+      heroH1:"font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.025em;line-height:1.02;margin:0 0 14px;font-size:clamp(38px,6vw,66px);transition:color .8s ease;color:"+ink.head,
+      heroTag:"font-family:'Fraunces',Georgia,serif;font-weight:400;font-style:italic;letter-spacing:-.01em;line-height:1.25;margin:0 0 20px;font-size:clamp(19px,2.4vw,26px);transition:color .8s ease;color:"+ink.accent,
+      heroSub:"font:400 17px/1.6 'Geist',sans-serif;margin:0;max-width:30em;text-wrap:pretty;transition:color .8s ease;color:"+ink.body,
+      heroFoot:"font:500 13px 'Geist',sans-serif;margin:18px 0 0;transition:color .8s ease;color:"+ink.faint,
+      sectionBody:"font:400 14px/1.55 'Geist',sans-serif;margin:0;text-wrap:pretty;transition:color .8s ease;color:"+ink.body,
+      sectionNum:"font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 9px;transition:color .8s ease;color:"+ink.faint,
+      quizSub:"font:400 15px/1.55 'Geist',sans-serif;margin:9px 0 0;text-wrap:pretty;transition:color .8s ease;color:"+ink.body,
+      quizStepLabel:"font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;margin:0 0 12px;transition:color .8s ease;color:"+ink.faint,
+      metaText:"font:400 12px 'Geist',sans-serif;margin:0;transition:color .8s ease;color:"+ink.faint,
+      shelfSubStyle:"font:400 14px 'Geist',sans-serif;margin:7px 0 0;transition:color .8s ease;color:"+ink.faint,
+      demoMoods:["cozy","whimsical","melancholy","dark"].map((k)=>({
+        label:this.themes[k].label,
+        pick:()=>this.setState({landingMood:k}),
+        style:(s.landingMood===k?"border:1px solid #241b2f;background:#241b2f;color:#faf6f0;":"border:1px solid #e0d6c6;background:#fffdf9;color:#241b2f;")+
+          "font:500 14px 'Geist',sans-serif;padding:9px 16px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:all .2s cubic-bezier(.2,.9,.3,1)",
+      })),
+      demoCaption:demoCaptions[s.landingMood],
+      planGrid:"display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:22px;padding-bottom:48px",
+      plans:[
+        {name:"Free",price:"$0",note:"35 swipes a day",features:["35 swipes a day, refreshed each morning","One shelf, sorted by vibe","Full mood, trope and content-warning filters"],
+          style:"border:1px solid #ece4d8;background:rgba(255,255,255,.7);border-radius:20px;padding:24px;backdrop-filter:blur(8px)",
+          tagStyle:"background:#efe6da;color:#4a3f33;font:500 11px 'Geist',sans-serif;padding:4px 10px;border-radius:999px;white-space:nowrap"},
+        {name:"BookUp Premium",price:"$4/mo",note:"For the voracious",features:["Unlimited swipes — read the whole deck in one sitting","Undo a pass you regret","Separate shelves per mood, plus export","First look at new releases matching your vibe"],
+          style:"border:1px solid #5b2a86;background:rgba(255,255,255,.86);border-radius:20px;padding:24px;backdrop-filter:blur(8px);box-shadow:0 12px 36px rgba(91,42,134,.16)",
+          tagStyle:"background:#f3e6f6;color:#5b2a86;font:500 11px 'Geist',sans-serif;padding:4px 10px;border-radius:999px;white-space:nowrap"},
+      ],
+      stepGrid:"display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:34px",
+      ruleStyle:"border-top:2px solid "+ink.rule+";padding-top:14px;transition:border-color .8s ease",
+      sectionTitle:"font-family:'Fraunces',Georgia,serif;font-size:18px;margin:0 0 7px;line-height:1.28;transition:color .8s ease;color:"+ink.head,
+      shelfGroupRule:"display:flex;align-items:center;gap:12px;border-top:2px solid "+ink.rule+";padding:13px 0 16px;transition:border-color .8s ease",
+      shelfGroupLabel:"font-family:'Fraunces',Georgia,serif;font-size:20px;transition:color .8s ease;color:"+ink.head,
+      secondaryBtn:"border:1px solid "+ink.panelEdge+";font:500 15px 'Geist',sans-serif;padding:14px 26px;border-radius:999px;cursor:pointer;white-space:nowrap;transition:transform .18s cubic-bezier(.2,.9,.3,1),color .8s ease;"+
+        (darkMode?"background:rgba(255,255,255,.14);color:"+ink.head:"background:rgba(255,255,255,.72);color:#241b2f"),
+      shelfBackBtn:"border:1px solid "+ink.panelEdge+";border-radius:999px;padding:10px 20px;font:500 13px 'Geist',sans-serif;cursor:pointer;white-space:nowrap;transition:transform .16s,color .8s ease;"+
+        (darkMode?"background:rgba(255,255,255,.14);color:"+ink.head:"background:rgba(255,255,255,.72);color:#5b2a86"),
+      linkBtn:"background:none;border:none;font:500 12px 'Geist',sans-serif;cursor:pointer;padding:0;white-space:nowrap;transition:color .8s ease;color:"+ink.accent,
+      emptyShelfCard:"border:1px dashed "+ink.panelEdge+";border-radius:22px;padding:46px 26px;text-align:center;transition:all .8s ease;background:"+(darkMode?"rgba(255,255,255,.07)":"rgba(255,255,255,.5)"),
+      emptyShelfTitle:"font-family:'Fraunces',Georgia,serif;font-size:21px;margin:0;transition:color .8s ease;color:"+ink.head,
+      emptyShelfBody:"font:400 14px/1.55 'Geist',sans-serif;margin:9px 0 0;transition:color .8s ease;color:"+ink.body,
+      landingSteps:[
+        {num:"01",title:"Answer ten quick questions",body:"Moods, tropes, heat, pacing, and the things you never want to read about. Two minutes, then a free account to keep it."},
+        {num:"02",title:"Swipe a deck built for you",body:"Mood and trope matches count triple. Genre is a tiebreaker, not the whole point."},
+        {num:"03",title:"Your shelf sorts itself by feeling",body:"Not alphabetical. Grouped by the vibe that made you save it in the first place."},
+      ],
+
+      step,stepNo:s.quizStep+1,stepTotal:this.quizSteps.length,
+      stepIsText:step.kind==="text",stepIsChips:step.kind==="chips",stepIsAccount:step.kind==="account",
+      quizTitle:"font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.02em;line-height:1.14;margin:0;font-size:clamp(26px,3.6vw,34px);transition:color .8s ease;color:"+ink.head,
+      quizBars:this.quizSteps.map((_,i)=>({style:"height:5px;flex:1;border-radius:999px;transition:background .3s ease;background:"+(i<=s.quizStep?ink.accent:ink.track)})),
+      stepOptions:(step.options||[]).map((o)=>{
+        const single=["displayMode","heat","pacing","frequency"].includes(step.key);
+        const sel=(s.picks[step.key]||[]).includes(o);
+        return {label:o,toggle:()=>this.toggle(step.key,o,single),
+          style:(sel
+            ?(darkMode?"border:1px solid "+ink.head+";background:"+ink.head+";color:#241b2f;":"border:1px solid #5b2a86;background:#5b2a86;color:#fff;")
+            :(darkMode?"border:1px solid "+ink.panelEdge+";background:rgba(255,255,255,.12);color:"+ink.head+";":"border:1px solid #e7ded1;background:rgba(255,255,255,.84);color:#241b2f;"))+
+            "font:500 14px 'Geist',sans-serif;padding:10px 18px;border-radius:999px;cursor:pointer;white-space:nowrap;text-transform:capitalize;transition:all .18s cubic-bezier(.2,.9,.3,1)"};
+      }),
+      showMoodEcho:step.key==="mood"&&moodPicks.length>0,
+      moodEcho:"That's "+th.label.toLowerCase()+" energy. The room is already listening.",
+      moodEchoStyle:"font:italic 400 15px/1.55 'Fraunces',serif;margin:24px 0 0;animation:bu-in .45s ease both;text-wrap:pretty;color:"+ink.head,
+      backStyle:"background:none;border:none;font:500 14px 'Geist',sans-serif;cursor:pointer;padding:0;color:"+ink.faint+";opacity:"+(s.quizStep===0?0:1),
+      quizBack:()=>this.setState({quizStep:Math.max(0,s.quizStep-1)}),
+      quizNext:()=>{if(s.quizStep===this.quizSteps.length-1) this.setState({screen:"browse"});
+        else this.setState({quizStep:s.quizStep+1});},
+      nextLabel:s.quizStep===this.quizSteps.length-1?"Create account & start swiping":"Next",
+
+      cards,hasCards:!!b,isCapped:!b,
+      remainingLabel:s.swipes+" swipes left today",
+      shelfCount:s.shelf.length,
+      hint:s.dragging?"feel that?":"lift it, or tap",
+      passBtn:"height:60px;width:60px;border-radius:999px;border:1px solid #e7ded1;background:rgba(255,255,255,.9);color:rgba(36,27,47,.45);font-size:22px;cursor:pointer;transition:all .2s cubic-bezier(.2,.9,.3,1);box-shadow:0 5px 16px rgba(36,27,47,.08)",
+      likeBtn:"height:60px;width:60px;border-radius:999px;border:none;background:#5b2a86;color:#fff;font-size:22px;cursor:pointer;transition:all .2s cubic-bezier(.2,.9,.3,1);box-shadow:0 8px 22px rgba(91,42,134,.3)",
+      pass:()=>this.fling("no"),like:()=>this.fling("yes"),
+      reset:()=>{this.setState({i:0,swipes:35});},
+      doneTitle:s.shelf.length?"That's today's stack.":"You didn't pick one up.",
+      doneBody:s.shelf.length
+        ? s.shelf.length+" on the shelf. The room keeps the light of whichever one you took last — come back tomorrow for 35 more."
+        : "Six books, no takers. The lamp will be here tomorrow, and it isn't keeping score.",
+      reasons,vibeName:th.label,vibeNote:th.note,
+      vibeSwatch:"width:28px;height:28px;border-radius:999px;flex:none;background:linear-gradient(135deg,"+th.c[0]+","+th.c[2]+");box-shadow:0 0 0 4px "+th.c[1]+"66",
+      asideCard:"background:linear-gradient(145deg,"+th.c[1]+"52,rgba(255,255,255,.74));border:1px solid #ece4d8;border-radius:20px;padding:20px;backdrop-filter:blur(8px);transition:background .8s ease",
+      verdictShown:s.shown,
+      verdictStyle:"font:italic 400 16px/1.5 'Fraunces',serif;color:#3c3547;margin:0;min-height:3.2em;text-wrap:pretty",
+      caretStyle:"color:#5b2a86;margin-left:1px;"+(s.typing?"animation:bu-caret .7s step-end infinite":"opacity:0"),
+      ledger,ledgerEmpty:ledger.length===0,
+
+      shelfH:"font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.02em;margin:0;font-size:clamp(27px,3.8vw,36px);transition:color .8s ease;color:"+ink.head,
+      shelfSub:s.shelf.length?s.shelf.length+" book"+(s.shelf.length===1?"":"s")+" you matched with, grouped by the feeling.":"Nothing matched yet.",
+      shelfEmpty:s.shelf.length===0,shelfHasBooks:s.shelf.length>0,
+      shelfTopGrid:"display:grid;grid-template-columns:repeat(auto-fit,minmax(272px,1fr));gap:18px;margin-bottom:34px",
+      shelfGroups,
+    };
+  }
+}
+</script>
+</body>
+</html>

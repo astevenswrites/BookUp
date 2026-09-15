@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Geist:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#faf6f0;color:#241b2f;font-family:"Geist",ui-sans-serif,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#5b2a86;text-decoration:none}
+a:hover{color:#7a3fb0}
+@keyframes vibe-breathe{0%,100%{opacity:.85}50%{opacity:.95}}
+@keyframes bu-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes bu-drift{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(0,-14px,0) scale(1.03)}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;position:relative;overflow-x:hidden">
+
+  <div aria-hidden="true" style="position:fixed;inset:0;z-index:0;display:flex;align-items:center;justify-content:center;overflow:hidden;pointer-events:none">
+    <div style="{{ glowCozy }}"></div>
+    <div style="{{ glowDark }}"></div>
+    <div style="{{ glowWhimsical }}"></div>
+    <div style="{{ glowMelancholy }}"></div>
+  </div>
+
+  <div style="position:relative;z-index:2;display:flex;align-items:center;gap:16px;flex-wrap:wrap;padding:10px 18px;background:rgba(250,246,240,.82);backdrop-filter:blur(10px);border-bottom:1px solid #e7ded1">
+    <span style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:15px;letter-spacing:-.01em">BookUp</span>
+    <span style="font-size:11px;color:#6b6270;letter-spacing:.08em;text-transform:uppercase">Mockups</span>
+    <div style="display:flex;gap:4px;margin-left:auto;flex-wrap:wrap">
+      <button type="button" onClick="{{ goLanding }}" style="{{ tabLanding }}">Landing</button>
+      <button type="button" onClick="{{ goQuiz }}" style="{{ tabQuiz }}">Onboarding</button>
+      <button type="button" onClick="{{ goBrowse }}" style="{{ tabBrowse }}">Browse</button>
+      <button type="button" onClick="{{ goShelf }}" style="{{ tabShelf }}">Shelf</button>
+    </div>
+    <div style="display:flex;gap:4px;padding:3px;background:#efe8de;border-radius:999px">
+      <button type="button" onClick="{{ setDesktop }}" style="{{ vpDesktop }}">Desktop</button>
+      <button type="button" onClick="{{ setMobile }}" style="{{ vpMobile }}">Mobile</button>
+    </div>
+  </div>
+
+  <div style="position:relative;z-index:1;display:flex;justify-content:center;padding:28px 16px 56px">
+    <div style="{{ frameStyle }}">
+
+      <sc-if value="{{ isLanding }}" hint-placeholder-val="{{ true }}">
+        <div style="{{ padStyle }}">
+          <div style="display:flex;align-items:center;justify-content:space-between;padding-bottom:22px">
+            <span style="font-family:'Fraunces',Georgia,serif;font-size:20px;font-weight:600;letter-spacing:-.02em">BookUp</span>
+            <button type="button" onClick="{{ goQuiz }}" style="border:1px solid #e7ded1;background:rgba(255,255,255,.7);color:#241b2f;font:500 13px 'Geist',sans-serif;padding:8px 16px;border-radius:999px;cursor:pointer;white-space:nowrap">Sign in</button>
+          </div>
+
+          <div style="{{ heroGrid }}">
+            <div style="animation:bu-rise .5s ease both">
+              <p style="font:500 12px 'Geist',sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#5b2a86;margin:0 0 18px">A dating app, but for books</p>
+              <h1 style="{{ heroH1 }}">Hook Up with BookUp</h1>
+              <p style="{{ heroTag }}">Get paired with your ideal book match!</p>
+              <p style="{{ heroSub }}">Tell us the mood you're chasing, the tropes you'd swipe right on, and the things you'd rather not read about. We'll shuffle up books that match the feeling — and the whole page will start to look like it.</p>
+              <div style="display:flex;gap:12px;flex-wrap:wrap;margin-top:30px">
+                <button type="button" onClick="{{ goQuiz }}" style="background:#5b2a86;color:#fff;border:none;font:500 15px 'Geist',sans-serif;padding:14px 26px;border-radius:999px;cursor:pointer;white-space:nowrap;box-shadow:0 6px 20px rgba(91,42,134,.22)">Start the vibe check</button>
+                <button type="button" onClick="{{ goBrowse }}" style="background:rgba(255,255,255,.7);color:#241b2f;border:1px solid #e7ded1;font:500 15px 'Geist',sans-serif;padding:14px 26px;border-radius:999px;cursor:pointer;white-space:nowrap">Peek at the deck</button>
+              </div>
+              <p style="font:400 13px 'Geist',sans-serif;color:#6b6270;margin:18px 0 0">Free account, 35 swipes a day. Go premium when 35 stops being enough.</p>
+            </div>
+
+            <div style="{{ heroDemoWrap }}">
+              <div style="background:rgba(255,255,255,.78);border:1px solid #e7ded1;border-radius:20px;padding:20px;backdrop-filter:blur(6px);box-shadow:0 10px 40px rgba(36,27,47,.08)">
+                <p style="font:500 12px 'Geist',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:#6b6270;margin:0 0 4px">Try it right here</p>
+                <p style="font-family:'Fraunces',Georgia,serif;font-size:19px;line-height:1.3;margin:0 0 16px">Pick a feeling. Watch the page change.</p>
+                <div style="display:flex;flex-wrap:wrap;gap:8px">
+                  <sc-for list="{{ demoMoods }}" as="m" hint-placeholder-count="4">
+                    <button type="button" onClick="{{ m.pick }}" style="{{ m.style }}">{{ m.label }}</button>
+                  </sc-for>
+                </div>
+                <p style="font:400 13px 'Geist',sans-serif;color:#6b6270;margin:16px 0 0;line-height:1.5">{{ demoCaption }}</p>
+              </div>
+            </div>
+          </div>
+
+          <div style="{{ planGrid }}">
+            <sc-for list="{{ plans }}" as="p" hint-placeholder-count="2">
+              <div style="{{ p.style }}">
+                <div style="display:flex;align-items:baseline;justify-content:space-between;gap:12px;margin-bottom:4px">
+                  <span style="font-family:'Fraunces',Georgia,serif;font-size:20px;font-weight:600">{{ p.name }}</span>
+                  <span style="{{ p.tagStyle }}">{{ p.note }}</span>
+                </div>
+                <p style="font-family:'Fraunces',Georgia,serif;font-size:32px;font-weight:600;margin:0 0 16px;letter-spacing:-.02em">{{ p.price }}</p>
+                <sc-for list="{{ p.features }}" as="f" hint-placeholder-count="3">
+                  <div style="display:flex;gap:9px;align-items:flex-start;margin-bottom:9px">
+                    <span style="width:5px;height:5px;border-radius:999px;background:#5b2a86;flex:none;margin-top:7px"></span>
+                    <span style="font:400 14px/1.5 'Geist',sans-serif;color:#4a4353;text-wrap:pretty">{{ f }}</span>
+                  </div>
+                </sc-for>
+              </div>
+            </sc-for>
+          </div>
+
+          <div style="{{ stepGrid }}">
+            <sc-for list="{{ landingSteps }}" as="s" hint-placeholder-count="3">
+              <div style="border-top:2px solid #241b2f;padding-top:14px">
+                <p style="font:500 11px 'Geist',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#6b6270;margin:0 0 8px">{{ s.num }}</p>
+                <p style="font-family:'Fraunces',Georgia,serif;font-size:17px;margin:0 0 6px;line-height:1.3">{{ s.title }}</p>
+                <p style="font:400 14px/1.55 'Geist',sans-serif;color:#4a4353;margin:0">{{ s.body }}</p>
+              </div>
+            </sc-for>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isQuiz }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ quizPad }}">
+          <div style="display:flex;gap:5px;margin-bottom:26px">
+            <sc-for list="{{ quizBars }}" as="b" hint-placeholder-count="9">
+              <div style="{{ b.style }}"></div>
+            </sc-for>
+          </div>
+          <p style="font:500 11px 'Geist',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#6b6270;margin:0 0 10px">Step {{ stepNo }} of {{ stepTotal }}</p>
+          <h2 style="{{ quizTitle }}">{{ step.title }}</h2>
+          <p style="font:400 15px/1.5 'Geist',sans-serif;color:#6b6270;margin:8px 0 0">{{ step.subtitle }}</p>
+
+          <sc-if value="{{ stepIsText }}" hint-placeholder-val="{{ true }}">
+            <textarea rows="3" placeholder="e.g. The Secret History, A Court of Thorns and Roses..." style="margin-top:26px;width:100%;box-sizing:border-box;border:1px solid #e7ded1;background:rgba(255,255,255,.85);border-radius:12px;padding:14px;font:400 15px 'Geist',sans-serif;color:#241b2f;resize:none;outline:none"></textarea>
+          </sc-if>
+
+          <sc-if value="{{ stepIsChips }}" hint-placeholder-val="{{ false }}">
+            <div style="display:flex;flex-wrap:wrap;gap:9px;margin-top:26px">
+              <sc-for list="{{ stepOptions }}" as="o" hint-placeholder-count="8">
+                <button type="button" onClick="{{ o.toggle }}" style="{{ o.style }}">{{ o.label }}</button>
+              </sc-for>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ stepIsAccount }}" hint-placeholder-val="{{ false }}">
+            <div style="margin-top:26px;display:flex;flex-direction:column;gap:12px">
+              <button type="button" style="border:1px solid #e7ded1;background:rgba(255,255,255,.9);color:#241b2f;font:500 15px 'Geist',sans-serif;padding:13px 18px;border-radius:12px;cursor:pointer;text-align:left;white-space:nowrap">Continue with Google</button>
+              <button type="button" style="border:1px solid #e7ded1;background:rgba(255,255,255,.9);color:#241b2f;font:500 15px 'Geist',sans-serif;padding:13px 18px;border-radius:12px;cursor:pointer;text-align:left;white-space:nowrap">Continue with Apple</button>
+              <div style="display:flex;align-items:center;gap:12px;padding:4px 0">
+                <span style="flex:1;height:1px;background:#e7ded1"></span>
+                <span style="font:400 12px 'Geist',sans-serif;color:#6b6270">or</span>
+                <span style="flex:1;height:1px;background:#e7ded1"></span>
+              </div>
+              <input type="email" placeholder="you@example.com" style="border:1px solid #e7ded1;background:rgba(255,255,255,.9);border-radius:12px;padding:13px 16px;font:400 15px 'Geist',sans-serif;color:#241b2f;outline:none;box-sizing:border-box;width:100%">
+              <input type="password" placeholder="Pick a password" style="border:1px solid #e7ded1;background:rgba(255,255,255,.9);border-radius:12px;padding:13px 16px;font:400 15px 'Geist',sans-serif;color:#241b2f;outline:none;box-sizing:border-box;width:100%">
+              <div style="border-top:1px solid #e7ded1;margin-top:6px;padding-top:14px;display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+                <span style="background:#efe6da;color:#4a3f33;font:500 11px 'Geist',sans-serif;padding:4px 10px;border-radius:999px;white-space:nowrap">Free plan</span>
+                <span style="font:400 13px/1.5 'Geist',sans-serif;color:#6b6270">35 swipes a day. Upgrade any time — you won't be asked again today.</span>
+              </div>
+            </div>
+          </sc-if>
+
+          <sc-if value="{{ showMoodEcho }}" hint-placeholder-val="{{ false }}">
+            <p style="font:400 13px/1.5 'Geist',sans-serif;color:#5b2a86;margin:22px 0 0">{{ moodEcho }}</p>
+          </sc-if>
+
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-top:40px">
+            <button type="button" onClick="{{ quizBack }}" style="{{ backStyle }}">Back</button>
+            <button type="button" onClick="{{ quizNext }}" style="background:#5b2a86;color:#fff;border:none;font:500 15px 'Geist',sans-serif;padding:13px 26px;border-radius:999px;cursor:pointer">{{ nextLabel }}</button>
+          </div>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isBrowse }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ browseWrap }}">
+          <div style="{{ deckCol }}">
+            <div style="display:flex;align-items:center;justify-content:space-between;width:100%;max-width:360px;margin-bottom:12px">
+              <p style="font:400 12px 'Geist',sans-serif;color:#6b6270;margin:0">{{ remainingLabel }}</p>
+              <button type="button" onClick="{{ goShelf }}" style="background:none;border:none;font:500 12px 'Geist',sans-serif;color:#5b2a86;cursor:pointer;padding:0">Shelf ({{ shelfCount }})</button>
+            </div>
+
+            <sc-if value="{{ deckEmpty }}" hint-placeholder-val="{{ false }}">
+              <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;min-height:420px;max-width:340px">
+                <h2 style="font-family:'Fraunces',Georgia,serif;font-size:26px;margin:0">That's today's matches!</h2>
+                <p style="font:400 15px/1.5 'Geist',sans-serif;color:#6b6270;margin:10px 0 0">You put {{ shelfCount }} on the shelf. Come back tomorrow for 35 more.</p>
+                <div style="margin-top:26px;border:1px solid #5b2a86;background:rgba(255,255,255,.85);border-radius:16px;padding:20px;text-align:left">
+                  <p style="font-family:'Fraunces',Georgia,serif;font-size:18px;margin:0 0 6px">Not done reading?</p>
+                  <p style="font:400 14px/1.5 'Geist',sans-serif;color:#4a4353;margin:0 0 14px">Premium takes the cap off — swipe the whole deck, undo a pass, and keep a shelf per mood.</p>
+                  <button type="button" style="background:#5b2a86;color:#fff;border:none;font:500 14px 'Geist',sans-serif;padding:11px 22px;border-radius:999px;cursor:pointer;white-space:nowrap">Go Premium — $4/mo</button>
+                </div>
+                <button type="button" onClick="{{ resetDeck }}" style="margin-top:16px;background:none;border:none;font:500 14px 'Geist',sans-serif;color:#6b6270;cursor:pointer">Reshuffle the deck</button>
+              </div>
+            </sc-if>
+
+            <sc-if value="{{ deckHasCards }}" hint-placeholder-val="{{ true }}">
+              <div style="position:relative;width:100%;max-width:360px;height:560px">
+                <sc-for list="{{ deckCards }}" as="c" hint-placeholder-count="3">
+                  <div style="{{ c.wrapStyle }}" onPointerDown="{{ c.onDown }}" onPointerMove="{{ c.onMove }}" onPointerUp="{{ c.onUp }}" onPointerCancel="{{ c.onUp }}">
+                    <div style="background:#fff;border:1px solid #e7ded1;border-radius:18px;overflow:hidden;box-shadow:0 8px 30px rgba(36,27,47,.12);display:flex;flex-direction:column;height:100%">
+                      <div style="{{ c.coverStyle }}">
+                        <p style="font-family:'Fraunces',Georgia,serif;font-size:23px;line-height:1.2;margin:0;color:#faf6f0">{{ c.title }}</p>
+                        <p style="font:400 12px 'Geist',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:rgba(250,246,240,.7);margin:10px 0 0">{{ c.author }}</p>
+                        <div style="margin-top:auto;padding-top:18px"><div style="width:44px;height:2px;background:rgba(250,246,240,.5)"></div></div>
+                      </div>
+                      <div style="padding:16px;display:flex;flex-direction:column;gap:10px;flex:1">
+                        <div>
+                          <p style="font-family:'Fraunces',Georgia,serif;font-size:18px;line-height:1.25;margin:0">{{ c.title }}</p>
+                          <p style="font:400 13px 'Geist',sans-serif;color:#6b6270;margin:3px 0 0">{{ c.author }}</p>
+                        </div>
+                        <div style="display:flex;flex-wrap:wrap;gap:6px">
+                          <sc-for list="{{ c.chips }}" as="t" hint-placeholder-count="4">
+                            <span style="{{ t.style }}">{{ t.label }}</span>
+                          </sc-for>
+                        </div>
+                        <p style="font:500 15px/1.4 'Geist',sans-serif;margin:0">{{ c.hook }}</p>
+                        <p style="font:italic 400 13px 'Geist',sans-serif;color:#6b6270;margin:0">{{ c.comp }}</p>
+                        <div style="margin-top:auto;border-top:1px solid #e7ded1;padding-top:10px;display:flex;align-items:center;justify-content:space-between">
+                          <span style="background:#efe6da;color:#4a3f33;font:400 11px 'Geist',sans-serif;padding:3px 8px;border-radius:4px">{{ c.genre }}</span>
+                          <span style="font:400 12px 'Geist',sans-serif;color:#6b6270">{{ c.meta }}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div style="{{ c.likeStamp }}">TO READ</div>
+                    <div style="{{ c.passStamp }}">PASS</div>
+                  </div>
+                </sc-for>
+              </div>
+
+              <div style="display:flex;gap:18px;margin-top:22px;align-items:center">
+                <button type="button" onClick="{{ swipeLeft }}" aria-label="Pass" style="height:58px;width:58px;border-radius:999px;border:1px solid #e7ded1;background:rgba(255,255,255,.9);color:rgba(36,27,47,.5);font-size:22px;cursor:pointer;box-shadow:0 3px 12px rgba(36,27,47,.08)">✕</button>
+                <p style="font:400 12px 'Geist',sans-serif;color:#6b6270;margin:0;width:120px;text-align:center">{{ dragHint }}</p>
+                <button type="button" onClick="{{ swipeRight }}" aria-label="Add to shelf" style="height:58px;width:58px;border-radius:999px;border:1px solid #5b2a86;background:#5b2a86;color:#fff;font-size:22px;cursor:pointer;box-shadow:0 6px 18px rgba(91,42,134,.28)">♥</button>
+              </div>
+            </sc-if>
+          </div>
+
+          <sc-if value="{{ showRail }}" hint-placeholder-val="{{ true }}">
+            <aside style="width:300px;flex:none;padding-top:46px">
+              <div style="background:rgba(255,255,255,.8);border:1px solid #e7ded1;border-radius:18px;padding:20px;backdrop-filter:blur(6px)">
+                <p style="font:500 11px 'Geist',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#6b6270;margin:0 0 14px">Why this one</p>
+                <sc-for list="{{ matchReasons }}" as="r" hint-placeholder-count="3">
+                  <div style="display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid #efe8de">
+                    <span style="{{ r.dot }}"></span>
+                    <span style="font:400 14px 'Geist',sans-serif;flex:1">{{ r.label }}</span>
+                    <span style="font:500 12px 'Geist',sans-serif;color:#6b6270">{{ r.weight }}</span>
+                  </div>
+                </sc-for>
+                <div style="margin-top:16px">
+                  <p style="font:500 11px 'Geist',sans-serif;letter-spacing:.12em;text-transform:uppercase;color:#6b6270;margin:0 0 8px">Vibe reading</p>
+                  <div style="display:flex;align-items:center;gap:10px">
+                    <span style="{{ vibeSwatch }}"></span>
+                    <span style="font-family:'Fraunces',Georgia,serif;font-size:18px">{{ vibeLabel }}</span>
+                  </div>
+                  <p style="font:400 13px/1.5 'Geist',sans-serif;color:#6b6270;margin:8px 0 0">The glow behind the page is reading this card. Swipe and the room changes with it.</p>
+                </div>
+              </div>
+            </aside>
+          </sc-if>
+        </div>
+      </sc-if>
+
+      <sc-if value="{{ isShelf }}" hint-placeholder-val="{{ false }}">
+        <div style="{{ padStyle }}">
+          <div style="display:flex;align-items:flex-end;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:26px">
+            <div>
+              <h2 style="{{ shelfH }}">Your shelf</h2>
+              <p style="font:400 14px 'Geist',sans-serif;color:#6b6270;margin:6px 0 0">{{ shelfSub }}</p>
+            </div>
+            <button type="button" onClick="{{ goBrowse }}" style="background:none;border:1px solid #e7ded1;border-radius:999px;padding:9px 18px;font:500 13px 'Geist',sans-serif;color:#5b2a86;cursor:pointer;background:rgba(255,255,255,.7);white-space:nowrap">Back to swiping</button>
+          </div>
+
+          <sc-if value="{{ shelfEmpty }}" hint-placeholder-val="{{ false }}">
+            <div style="border:1px dashed #d9cfc0;border-radius:18px;padding:44px 24px;text-align:center;background:rgba(255,255,255,.45)">
+              <p style="font-family:'Fraunces',Georgia,serif;font-size:20px;margin:0">Nothing here yet.</p>
+              <p style="font:400 14px 'Geist',sans-serif;color:#6b6270;margin:8px 0 0">Swipe right on a few books and they'll land here, sorted by the feeling they gave you.</p>
+            </div>
+          </sc-if>
+
+          <sc-for list="{{ shelfGroups }}" as="g" hint-placeholder-count="2">
+            <div style="margin-bottom:34px">
+              <div style="display:flex;align-items:center;gap:12px;border-top:2px solid #241b2f;padding:12px 0 16px">
+                <span style="{{ g.swatch }}"></span>
+                <span style="font-family:'Fraunces',Georgia,serif;font-size:19px">{{ g.label }}</span>
+                <span style="font:400 13px 'Geist',sans-serif;color:#6b6270">{{ g.count }}</span>
+              </div>
+              <div style="{{ g.gridStyle }}">
+                <sc-for list="{{ g.books }}" as="b" hint-placeholder-count="3">
+                  <div style="background:#fff;border:1px solid #e7ded1;border-radius:14px;overflow:hidden;box-shadow:0 4px 16px rgba(36,27,47,.07)">
+                    <div style="{{ b.coverStyle }}">
+                      <p style="font-family:'Fraunces',Georgia,serif;font-size:17px;line-height:1.2;margin:0;color:#faf6f0">{{ b.title }}</p>
+                      <p style="font:400 10px 'Geist',sans-serif;letter-spacing:.1em;text-transform:uppercase;color:rgba(250,246,240,.7);margin:8px 0 0">{{ b.author }}</p>
+                    </div>
+                    <div style="padding:13px">
+                      <p style="font:500 14px/1.35 'Geist',sans-serif;margin:0">{{ b.hook }}</p>
+                      <div style="display:flex;flex-wrap:wrap;gap:5px;margin-top:9px">
+                        <sc-for list="{{ b.chips }}" as="t" hint-placeholder-count="2">
+                          <span style="{{ t.style }}">{{ t.label }}</span>
+                        </sc-for>
+                      </div>
+                    </div>
+                  </div>
+                </sc-for>
+              </div>
+            </div>
+          </sc-for>
+        </div>
+      </sc-if>
+
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;glowIntensity&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.92,&quot;min&quot;:0.3,&quot;max&quot;:1,&quot;step&quot;:0.02,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Vibe glow&quot;}}">
+class Component extends DCLogic {
+  themes = {
+    cozy: { colors: ["#e8b568", "#f4d9a0", "#c97a3d"], label: "Cozy" },
+    dark: { colors: ["#5e0b15", "#7a1420", "#2b0a10"], label: "Dark" },
+    whimsical: { colors: ["#c9a7eb", "#e6d4f5", "#a97fd4"], label: "Whimsical" },
+    melancholy: { colors: ["#5c6b73", "#7d8ca3", "#46525a"], label: "Melancholy" },
+  };
+  moodFamily = {
+    cozy: "cozy", heartwarming: "cozy", hopeful: "cozy", funny: "cozy",
+    dark: "dark", tense: "dark", unsettling: "dark", devastating: "dark",
+    whimsical: "whimsical", atmospheric: "whimsical", bittersweet: "whimsical",
+    melancholy: "melancholy",
+  };
+  books = [
+    { id: "b1", title: "The Lantern-Keeper's Daughter", author: "Mira Halloway", hook: "She inherited the lighthouse, the debts, and the thing that lives under the stairs.", comp: "For readers of Legends & Lattes", genre: "Cozy fantasy", moods: ["cozy", "hopeful"], tropes: ["found family", "small town"], pages: 342, year: 2024 },
+    { id: "b2", title: "Salt in the Wound", author: "Dov Ferrante", hook: "Everyone on the island agreed on the story. That was the first problem.", comp: "If you liked The Guest List", genre: "Thriller", moods: ["tense", "dark"], tropes: ["unreliable narrator", "closed circle"], pages: 401, year: 2023 },
+    { id: "b3", title: "A Brief History of Falling", author: "Nadia Okonjo", hook: "Two sisters, one apartment, and thirty years of almost saying it.", comp: "For fans of Normal People", genre: "Literary fiction", moods: ["bittersweet", "melancholy"], tropes: ["dual timeline", "epistolary"], pages: 288, year: 2025 },
+    { id: "b4", title: "Moths Under Glass", author: "Wren Ardelle", hook: "The museum's night shift comes with a warning and a very specific key.", comp: "Piranesi energy, softer edges", genre: "Magical realism", moods: ["whimsical", "atmospheric"], tropes: ["secret door", "slow burn"], pages: 317, year: 2024 },
+    { id: "b5", title: "The Understudy Problem", author: "Cassie Lin", hook: "She got the part. He got the part. Neither of them told the director they'd met.", comp: "Rom-com with a theatre kid's heart", genre: "Romance", moods: ["funny", "heartwarming"], tropes: ["forced proximity", "enemies to lovers"], pages: 356, year: 2025 },
+    { id: "b6", title: "Nine Kinds of Winter", author: "Tomas Brekke", hook: "A translator returns to the fjord to finish a book that isn't hers.", comp: "Quiet, cold, devastating", genre: "Literary fiction", moods: ["melancholy", "atmospheric"], tropes: ["homecoming", "unreliable memory"], pages: 264, year: 2022 },
+    { id: "b7", title: "Every Door Was a Mouth", author: "Priya Raghunathan", hook: "The house was listed as three bedrooms. She counted four.", comp: "Mexican Gothic readalike", genre: "Horror", moods: ["unsettling", "dark"], tropes: ["haunted house", "isolation"], pages: 298, year: 2024 },
+    { id: "b8", title: "Second Draft of Us", author: "Elena Voss", hook: "Their divorce was final. Their ghostwriting contract was not.", comp: "Second chance, first laugh", genre: "Romance", moods: ["hopeful", "bittersweet"], tropes: ["second chance", "forced proximity"], pages: 372, year: 2025 },
+  ];
+
+  quizSteps = [
+    { kind: "text", title: "Name a book or two you loved.", subtitle: "Totally optional, but it helps us get to know your taste faster." },
+    { kind: "chips", key: "displayMode", title: "How do you want to discover books?", subtitle: "You can change your mind later.", options: ["Show me the covers", "Surprise me — vibes first, cover hidden"] },
+    { kind: "chips", key: "mood", title: "What kind of feeling are you chasing?", subtitle: "Pick as many as sound good for a rainy Sunday.", options: ["cozy", "hopeful", "funny", "heartwarming", "atmospheric", "whimsical", "bittersweet", "melancholy", "tense", "dark", "unsettling", "devastating"] },
+    { kind: "chips", key: "trope", title: "Any tropes you can't resist?", subtitle: "Select the ones that make you swipe right immediately.", options: ["found family", "slow burn", "enemies to lovers", "second chance", "forced proximity", "haunted house", "dual timeline", "small town", "secret door"] },
+    { kind: "chips", key: "genre", title: "Favorite genres?", subtitle: "Choose a few — this just gets things started.", options: ["Cozy fantasy", "Romance", "Thriller", "Horror", "Literary fiction", "Magical realism"] },
+    { kind: "chips", key: "heat", title: "How much heat do you want?", subtitle: "We'll keep things at or below this level.", options: ["None", "A little", "Medium", "Bring it"] },
+    { kind: "chips", key: "pacing", title: "Slow burn or fast-paced?", subtitle: "What keeps you turning pages?", options: ["Slow burn", "Somewhere in between", "Fast-paced"] },
+    { kind: "chips", key: "frequency", title: "How often do you read?", subtitle: "No wrong answer here.", options: ["Casual", "Regular", "Voracious"] },
+    { kind: "chips", key: "avoid", title: "Anything you'd rather avoid?", subtitle: "Optional — books with these will never be shown to you.", options: ["graphic violence", "animal death", "sexual assault", "self-harm", "infidelity", "medical trauma"] },
+    { kind: "account", title: "Save your shelf.", subtitle: "Make an account so your matches are still here tomorrow. Free gets you 35 swipes a day, every day." },
+  ];
+
+  state = {
+    screen: "landing", vp: "desktop", quizStep: 0, picks: {},
+    deckIndex: 0, shelf: [], dragX: 0, dragging: false,
+    landingMood: "cozy", swipes: 35,
+  };
+
+  isMobile() { return this.state.vp === "mobile"; }
+
+  vignette(c) {
+    return "radial-gradient(ellipse farthest-corner at center, transparent 14%, " + c[1] + " 52%, " + c[0] + " 100%)";
+  }
+
+  familyOf(moods) {
+    for (const m of moods) { const f = this.moodFamily[m]; if (f) return f; }
+    return null;
+  }
+
+  activeTheme() {
+    const s = this.state;
+    if (s.screen === "landing") return s.landingMood;
+    if (s.screen === "browse") {
+      const b = this.books[s.deckIndex];
+      return b ? this.familyOf(b.moods) : "cozy";
+    }
+    if (s.screen === "quiz") {
+      const picked = [...(s.picks.mood || [])];
+      return picked.length ? this.familyOf(picked.slice().reverse()) : null;
+    }
+    if (s.screen === "shelf") {
+      const last = s.shelf[s.shelf.length - 1];
+      return last ? this.familyOf(last.moods) : "whimsical";
+    }
+    return null;
+  }
+
+  glowStyle(key) {
+    const active = this.activeTheme();
+    const intensity = this.props.glowIntensity ?? 0.92;
+    const on = active === key;
+    const drag = Math.min(Math.abs(this.state.dragX) / 200, 1);
+    const boost = this.state.screen === "browse" ? 1 + drag * 0.35 : 1;
+    return "position:absolute;inset:-4%;width:108%;height:108%;background:" + this.vignette(this.themes[key].colors) +
+      ";opacity:" + (on ? (intensity * boost).toFixed(3) : 0) +
+      ";transform:scale(" + (on ? 1 + drag * 0.04 : 1) + ");transition:opacity .8s ease, transform .8s ease;" +
+      (on ? "animation:bu-drift 18s ease-in-out infinite;" : "");
+  }
+
+  tab(name) {
+    const on = this.state.screen === name;
+    return "border:none;cursor:pointer;white-space:nowrap;font:500 13px 'Geist',sans-serif;padding:7px 14px;border-radius:999px;" +
+      (on ? "background:#5b2a86;color:#fff;" : "background:transparent;color:#4a4353;");
+  }
+  vpBtn(name) {
+    const on = this.state.vp === name;
+    return "border:none;cursor:pointer;white-space:nowrap;font:500 12px 'Geist',sans-serif;padding:6px 14px;border-radius:999px;" +
+      (on ? "background:#fff;color:#241b2f;box-shadow:0 1px 3px rgba(36,27,47,.12);" : "background:transparent;color:#6b6270;");
+  }
+
+  chip(label, kind, selected) {
+    const palette = { mood: ["#e6eef3", "#234a63"], trope: ["#f3e6f6", "#5b2a86"], genre: ["#efe6da", "#4a3f33"] };
+    const p = palette[kind] || palette.trope;
+    if (selected) return "border:1px solid #5b2a86;background:#5b2a86;color:#fff;font:500 14px 'Geist',sans-serif;padding:10px 18px;border-radius:999px;cursor:pointer;transition:all .18s ease;text-transform:capitalize;white-space:nowrap";
+    return "border:1px solid #e7ded1;background:rgba(255,255,255,.82);color:#241b2f;font:500 14px 'Geist',sans-serif;padding:10px 18px;border-radius:999px;cursor:pointer;transition:all .18s ease;text-transform:capitalize;white-space:nowrap";
+  }
+  tagChip(label, kind) {
+    const palette = { mood: ["#e6eef3", "#234a63"], trope: ["#f3e6f6", "#5b2a86"] };
+    const p = palette[kind] || palette.mood;
+    return { label: label, style: "background:" + p[0] + ";color:" + p[1] + ";font:500 11px 'Geist',sans-serif;padding:4px 10px;border-radius:999px;text-transform:capitalize;white-space:nowrap" };
+  }
+
+  coverStyle(book, tall) {
+    const f = this.familyOf(book.moods) || "whimsical";
+    const c = this.themes[f].colors;
+    return "background:linear-gradient(155deg, " + c[0] + " 0%, " + c[2] + " 100%);padding:" + (tall ? "24px" : "16px") +
+      ";display:flex;flex-direction:column;min-height:" + (tall ? "230px" : "130px") + ";box-sizing:border-box";
+  }
+
+  toggle(key, value, single) {
+    const picks = Object.assign({}, this.state.picks);
+    const cur = new Set(picks[key] || []);
+    if (single) { picks[key] = cur.has(value) ? [] : [value]; }
+    else { if (cur.has(value)) cur.delete(value); else cur.add(value); picks[key] = [...cur]; }
+    this.setState({ picks });
+  }
+
+  commitSwipe(dir) {
+    const book = this.books[this.state.deckIndex];
+    if (!book) return;
+    this.setState((s) => ({
+      deckIndex: s.deckIndex + 1,
+      dragX: 0,
+      dragging: false,
+      swipes: s.swipes - 1,
+      shelf: dir === "right" ? [...s.shelf, book] : s.shelf,
+    }));
+  }
+
+  renderVals() {
+    const s = this.state;
+    const mobile = this.isMobile();
+    const step = this.quizSteps[s.quizStep];
+    const deck = this.books.slice(s.deckIndex, s.deckIndex + 3);
+    const top = this.books[s.deckIndex];
+    const activeFamily = this.activeTheme() || "whimsical";
+
+    const frameStyle = mobile
+      ? "width:390px;min-height:760px;background:rgba(250,246,240,.62);border:10px solid #241b2f;border-radius:44px;overflow:hidden;box-shadow:0 24px 70px rgba(36,27,47,.28);position:relative"
+      : "width:100%;max-width:1180px;min-height:700px;background:rgba(250,246,240,.5);border:1px solid #e7ded1;border-radius:20px;overflow:hidden;box-shadow:0 18px 60px rgba(36,27,47,.1);position:relative";
+
+    const padStyle = mobile ? "padding:26px 20px 40px" : "padding:44px 48px 56px";
+
+    const demoMoods = ["cozy", "whimsical", "melancholy", "dark"].map((k) => ({
+      label: this.themes[k].label,
+      pick: () => this.setState({ landingMood: k }),
+      style: (s.landingMood === k
+        ? "border:1px solid #241b2f;background:#241b2f;color:#faf6f0;"
+        : "border:1px solid #e7ded1;background:rgba(255,255,255,.7);color:#241b2f;") +
+        "font:500 14px 'Geist',sans-serif;padding:9px 16px;border-radius:999px;cursor:pointer;transition:all .2s ease",
+    }));
+
+    const demoCaptions = {
+      cozy: "Warm amber, blanket weather, someone's making tea in chapter one.",
+      whimsical: "Lilac and a little strange — the books that don't explain themselves.",
+      melancholy: "Grey-blue and quiet. For when you want to feel something slowly.",
+      dark: "Deep red. You already know what you're in for.",
+    };
+
+    const chipsFor = (b) => [
+      ...b.moods.slice(0, 2).map((m) => this.tagChip(m, "mood")),
+      ...b.tropes.slice(0, 2).map((t) => this.tagChip(t, "trope")),
+    ];
+
+    const deckCards = deck.map((b, i) => {
+      const isTop = i === 0;
+      const depth = i;
+      const tx = isTop ? s.dragX : 0;
+      const rot = isTop ? (s.dragX / 200) * 12 : 0;
+      const stamp = (side, color) =>
+        "position:absolute;top:18px;" + side + ":18px;z-index:12;pointer-events:none;border:2px solid " + color +
+        ";color:" + color + ";font:700 13px 'Geist',sans-serif;letter-spacing:.08em;padding:5px 10px;border-radius:6px;background:rgba(255,255,255,.9);opacity:" +
+        (isTop ? (side === "right" ? Math.max(0, Math.min(1, (s.dragX - 20) / 100)) : Math.max(0, Math.min(1, (-s.dragX - 20) / 100))) : 0);
+      return {
+        title: b.title, author: b.author, hook: b.hook, comp: b.comp, genre: b.genre,
+        meta: b.pages + " pp · " + b.year,
+        chips: chipsFor(b),
+        coverStyle: this.coverStyle(b, true),
+        wrapStyle: "position:absolute;left:0;right:0;top:" + depth * 9 + "px;height:100%;touch-action:none;cursor:" +
+          (isTop ? "grab" : "default") + ";transform:translateX(" + tx + "px) rotate(" + rot + "deg) scale(" + (1 - depth * 0.035) + ");" +
+          "transform-origin:50% 90%;z-index:" + (10 - depth) + ";transition:" + (s.dragging && isTop ? "none" : "transform .45s cubic-bezier(.2,.9,.3,1)") + ";",
+        likeStamp: stamp("right", "#3f7d4e"),
+        passStamp: stamp("left", "#a33a2a"),
+        onDown: isTop ? (e) => { e.currentTarget.setPointerCapture(e.pointerId); this._x0 = e.clientX; this.setState({ dragging: true }); } : null,
+        onMove: isTop ? (e) => { if (!this.state.dragging) return; this.setState({ dragX: e.clientX - this._x0 }); } : null,
+        onUp: isTop ? () => {
+          const d = this.state.dragX;
+          if (d > 110) this.commitSwipe("right");
+          else if (d < -110) this.commitSwipe("left");
+          else this.setState({ dragX: 0, dragging: false });
+        } : null,
+      };
+    });
+
+    const reasons = top
+      ? [
+          ...top.moods.map((m) => ({ label: m, weight: "×3", kind: "mood" })),
+          ...top.tropes.map((t) => ({ label: t, weight: "×3", kind: "trope" })),
+          { label: top.genre, weight: "×1", kind: "genre" },
+        ].map((r) => ({
+          label: r.label,
+          weight: r.weight,
+          dot: "width:8px;height:8px;border-radius:999px;flex:none;background:" +
+            (r.kind === "mood" ? "#234a63" : r.kind === "trope" ? "#5b2a86" : "#4a3f33"),
+        }))
+      : [];
+
+    const groupOrder = ["cozy", "whimsical", "melancholy", "dark"];
+    const shelfGroups = groupOrder
+      .map((k) => {
+        const items = s.shelf.filter((b) => this.familyOf(b.moods) === k);
+        if (!items.length) return null;
+        const c = this.themes[k].colors;
+        return {
+          label: this.themes[k].label,
+          count: items.length + (items.length === 1 ? " book" : " books"),
+          swatch: "width:14px;height:14px;border-radius:999px;background:linear-gradient(135deg," + c[0] + "," + c[2] + ")",
+          gridStyle: "display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(" + (mobile ? "150px" : "220px") + ",1fr))",
+          books: items.map((b) => ({
+            title: b.title, author: b.author, hook: b.hook,
+            coverStyle: this.coverStyle(b, false),
+            chips: chipsFor(b).slice(0, 2),
+          })),
+        };
+      })
+      .filter(Boolean);
+
+    const moodPicks = s.picks.mood || [];
+
+    return {
+      isLanding: s.screen === "landing", isQuiz: s.screen === "quiz",
+      isBrowse: s.screen === "browse", isShelf: s.screen === "shelf",
+      goLanding: () => this.setState({ screen: "landing" }),
+      goQuiz: () => this.setState({ screen: "quiz", quizStep: 0 }),
+      goBrowse: () => this.setState({ screen: "browse" }),
+      goShelf: () => this.setState({ screen: "shelf" }),
+      setDesktop: () => this.setState({ vp: "desktop" }),
+      setMobile: () => this.setState({ vp: "mobile" }),
+      tabLanding: this.tab("landing"), tabQuiz: this.tab("quiz"),
+      tabBrowse: this.tab("browse"), tabShelf: this.tab("shelf"),
+      vpDesktop: this.vpBtn("desktop"), vpMobile: this.vpBtn("mobile"),
+
+      glowCozy: this.glowStyle("cozy"), glowDark: this.glowStyle("dark"),
+      glowWhimsical: this.glowStyle("whimsical"), glowMelancholy: this.glowStyle("melancholy"),
+
+      frameStyle, padStyle,
+      heroGrid: mobile
+        ? "display:flex;flex-direction:column;gap:28px;padding:8px 0 36px"
+        : "display:grid;grid-template-columns:1.15fr .85fr;gap:56px;align-items:center;padding:26px 0 52px",
+      heroH1: "font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.025em;line-height:1.02;margin:0 0 14px;font-size:" + (mobile ? "42px" : "68px"),
+      heroTag: "font-family:'Fraunces',Georgia,serif;font-weight:400;font-style:italic;letter-spacing:-.01em;line-height:1.25;margin:0 0 20px;color:#5b2a86;font-size:" + (mobile ? "20px" : "26px"),
+      heroSub: "font:400 " + (mobile ? "16px" : "18px") + "/1.6 'Geist',sans-serif;color:#4a4353;margin:0;max-width:30em;text-wrap:pretty",
+      heroDemoWrap: mobile ? "" : "padding-left:8px",
+      demoMoods, demoCaption: demoCaptions[s.landingMood],
+      landingSteps: [
+        { num: "01", title: "Answer nine quick questions", body: "Moods, tropes, heat, pacing, and the things you never want to read about. Two minutes, no account." },
+        { num: "02", title: "Swipe a deck built for you", body: "Mood and trope matches count triple. Genre is a tiebreaker, not the whole point." },
+        { num: "03", title: "Your shelf sorts itself by feeling", body: "Not alphabetical. Grouped by the vibe that made you save it in the first place." },
+      ],
+      stepGrid: mobile ? "display:flex;flex-direction:column;gap:26px;padding-top:8px" : "display:grid;grid-template-columns:repeat(3,1fr);gap:36px;padding-top:8px",
+
+      step, stepNo: s.quizStep + 1, stepTotal: this.quizSteps.length,
+      stepIsText: step.kind === "text", stepIsChips: step.kind === "chips",
+      stepIsAccount: step.kind === "account",
+      plans: [
+        { name: "Free", price: "$0", note: "35 swipes a day", features: ["35 swipes a day, refreshed each morning", "One shelf, sorted by vibe", "Full mood, trope and content-warning filters"], style: "border:1px solid #e7ded1;background:rgba(255,255,255,.72);border-radius:18px;padding:24px;backdrop-filter:blur(6px)", tagStyle: "background:#efe6da;color:#4a3f33;font:500 11px 'Geist',sans-serif;padding:4px 10px;border-radius:999px;white-space:nowrap" },
+        { name: "BookUp Premium", price: "$4/mo", note: "For the voracious", features: ["Unlimited swipes — read the whole deck in one sitting", "Undo a pass you regret", "Separate shelves per mood, plus export", "First look at new releases matching your vibe"], style: "border:1px solid #5b2a86;background:rgba(255,255,255,.88);border-radius:18px;padding:24px;backdrop-filter:blur(6px);box-shadow:0 10px 34px rgba(91,42,134,.16)", tagStyle: "background:#f3e6f6;color:#5b2a86;font:500 11px 'Geist',sans-serif;padding:4px 10px;border-radius:999px;white-space:nowrap" },
+      ],
+      planGrid: mobile ? "display:flex;flex-direction:column;gap:16px;padding-top:14px" : "display:grid;grid-template-columns:1fr 1fr;gap:24px;padding-top:14px",
+      quizPad: mobile ? "padding:32px 20px 40px;min-height:700px;display:flex;flex-direction:column;justify-content:center" : "padding:56px 48px;max-width:640px;margin:0 auto;min-height:660px;display:flex;flex-direction:column;justify-content:center",
+      quizTitle: "font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.02em;line-height:1.15;margin:0;font-size:" + (mobile ? "27px" : "34px"),
+      quizBars: this.quizSteps.map((_, i) => ({
+        style: "height:5px;flex:1;border-radius:999px;transition:background .3s ease;background:" + (i <= s.quizStep ? "#5b2a86" : "#e7ded1"),
+      })),
+      stepOptions: (step.options || []).map((o) => {
+        const single = step.key === "displayMode" || step.key === "heat" || step.key === "pacing" || step.key === "frequency";
+        const sel = (s.picks[step.key] || []).includes(o);
+        const kind = step.key === "mood" ? "mood" : step.key === "genre" ? "genre" : "trope";
+        return { label: o, style: this.chip(o, kind, sel), toggle: () => this.toggle(step.key, o, single) };
+      }),
+      showMoodEcho: step.key === "mood" && moodPicks.length > 0,
+      moodEcho: "That's " + this.themes[activeFamily].label.toLowerCase() + " energy. The page is already listening.",
+      backStyle: "background:none;border:none;font:400 14px 'Geist',sans-serif;color:#6b6270;cursor:pointer;padding:0;opacity:" + (s.quizStep === 0 ? 0 : 1),
+      quizBack: () => this.setState({ quizStep: Math.max(0, s.quizStep - 1) }),
+      quizNext: () => {
+        if (s.quizStep === this.quizSteps.length - 1) this.setState({ screen: "browse" });
+        else this.setState({ quizStep: s.quizStep + 1 });
+      },
+      nextLabel: s.quizStep === this.quizSteps.length - 1 ? "Create account & start swiping" : "Next",
+
+      browseWrap: mobile
+        ? "padding:18px 16px 32px;display:flex;justify-content:center"
+        : "padding:34px 48px 48px;display:flex;gap:44px;justify-content:center;align-items:flex-start",
+      deckCol: "display:flex;flex-direction:column;align-items:center;flex:none;width:" + (mobile ? "100%" : "380px"),
+      showRail: !mobile && !!top,
+      deckCards, deckHasCards: deck.length > 0, deckEmpty: deck.length === 0,
+      remainingLabel: s.swipes + " swipes left today",
+      shelfCount: s.shelf.length,
+      dragHint: s.dragging ? "keep going…" : "or drag the card",
+      swipeLeft: () => this.commitSwipe("left"),
+      swipeRight: () => this.commitSwipe("right"),
+      resetDeck: () => this.setState({ deckIndex: 0, swipes: 35 }),
+      matchReasons: reasons,
+      vibeLabel: this.themes[activeFamily].label,
+      vibeSwatch: "width:24px;height:24px;border-radius:999px;background:linear-gradient(135deg," + this.themes[activeFamily].colors[0] + "," + this.themes[activeFamily].colors[2] + ")",
+
+      shelfH: "font-family:'Fraunces',Georgia,serif;font-weight:600;letter-spacing:-.02em;margin:0;font-size:" + (mobile ? "28px" : "36px"),
+      shelfSub: s.shelf.length ? s.shelf.length + " book" + (s.shelf.length === 1 ? "" : "s") + " you matched with, grouped by the feeling." : "Nothing matched yet.",
+      shelfEmpty: s.shelf.length === 0,
+      shelfGroups,
+    };
+  }
+}
+</script>
+</body>
+</html>

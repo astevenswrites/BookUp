@@ -1,0 +1,320 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f2ece2;color:#241b2f;font-family:"Geist",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#5b2a86;text-decoration:none}a:hover{color:#7a3fb0}
+@keyframes bu-set{from{opacity:0;transform:translateY(0.5em) rotate(-4deg)}to{opacity:1;transform:none}}
+@keyframes bu-ink{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(-6px,-10px,0)}}
+@keyframes bu-ink2{0%,100%{transform:translate3d(0,0,0)}50%{transform:translate3d(8px,6px,0)}}
+@keyframes bu-rise{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;position:relative;overflow:hidden;background:#f2ece2">
+
+  <div aria-hidden="true" style="position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none;mix-blend-mode:multiply">
+    <div style="{{ inkA }}"></div>
+    <div style="{{ inkB }}"></div>
+  </div>
+
+  <div aria-hidden="true" style="position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.42;mix-blend-mode:multiply;background-image:url(&quot;data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)'/%3E%3C/svg%3E&quot;);background-size:140px 140px"></div>
+
+  <div style="position:relative;z-index:2;display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:20px 28px;border-bottom:2px solid #241b2f">
+    <span style="font-family:'Fraunces',Georgia,serif;font-weight:700;font-size:19px;letter-spacing:-.02em">BookUp</span>
+    <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#6b6270;border:1px solid #cbbfad;padding:3px 7px">Letterpress</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:16px">
+      <span style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.1em;color:#6b6270">{{ counter }}</span>
+      <button type="button" onClick="{{ toggleSound }}" style="{{ soundBtn }}" style-hover="background:#241b2f;color:#f2ece2">{{ soundLabel }}</button>
+    </div>
+  </div>
+
+  <div style="position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:40px;padding:36px 28px 56px;align-items:flex-start;justify-content:center">
+
+    <div style="flex:1 1 340px;max-width:400px;display:flex;flex-direction:column;align-items:stretch">
+
+      <sc-if value="{{ hasCards }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;height:540px">
+          <sc-for list="{{ cards }}" as="c" hint-placeholder-count="3">
+            <div style="{{ c.wrap }}" onPointerDown="{{ c.down }}" onPointerMove="{{ c.move }}" onPointerUp="{{ c.up }}" onPointerCancel="{{ c.up }}">
+              <div style="{{ c.plate }}">
+                <div style="{{ c.cover }}">
+                  <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;margin:0 0 auto;opacity:.75">{{ c.genre }}</p>
+                  <h2 style="{{ c.titleStyle }}">
+                    <sc-for list="{{ c.letters }}" as="l" hint-placeholder-count="12">
+                      <span style="{{ l.style }}">{{ l.ch }}</span>
+                    </sc-for>
+                  </h2>
+                  <div style="height:2px;background:currentColor;opacity:.45;margin:14px 0 10px;width:52px"></div>
+                  <p style="font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;margin:0">{{ c.author }}</p>
+                </div>
+                <div style="padding:18px;display:flex;flex-direction:column;gap:12px;flex:1;border-top:2px solid #241b2f">
+                  <p style="font:500 16px/1.4 'Geist',sans-serif;margin:0;text-wrap:pretty">{{ c.hook }}</p>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px">
+                    <sc-for list="{{ c.chips }}" as="t" hint-placeholder-count="4">
+                      <span style="{{ t.style }}">{{ t.label }}</span>
+                    </sc-for>
+                  </div>
+                  <div style="margin-top:auto;display:flex;align-items:baseline;justify-content:space-between;border-top:1px solid #d6cab7;padding-top:10px">
+                    <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;color:#6b6270">{{ c.meta }}</span>
+                    <span style="font:italic 400 12px 'Fraunces',serif;color:#4a4353">{{ c.comp }}</span>
+                  </div>
+                </div>
+              </div>
+              <div style="{{ c.stampYes }}">TO READ</div>
+              <div style="{{ c.stampNo }}">PASS</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;align-items:stretch;gap:0;margin-top:26px;border:2px solid #241b2f">
+          <button type="button" onClick="{{ pass }}" style="flex:1;border:none;border-right:2px solid #241b2f;background:transparent;color:#241b2f;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:16px 10px;cursor:pointer;transition:background .12s" style-hover="background:#e3d9c8" style-active="background:#241b2f;color:#f2ece2">Pass</button>
+          <button type="button" onClick="{{ like }}" style="flex:1;border:none;background:#5b2a86;color:#f2ece2;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:16px 10px;cursor:pointer;transition:background .12s" style-hover="background:#6d33a0" style-active="background:#452066">To read</button>
+        </div>
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;color:#8b8291;text-align:center;margin:12px 0 0">{{ hint }}</p>
+      </sc-if>
+
+      <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+        <div style="border:2px solid #241b2f;padding:34px;background:rgba(242,236,226,.7);animation:bu-rise .5s ease both">
+          <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6b6270;margin:0 0 14px">End of impression</p>
+          <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:30px;line-height:1.1;margin:0 0 12px;letter-spacing:-.02em">{{ doneTitle }}</h2>
+          <p style="font:400 15px/1.55 'Geist',sans-serif;color:#4a4353;margin:0 0 22px;text-wrap:pretty">{{ doneBody }}</p>
+          <button type="button" onClick="{{ reset }}" style="border:2px solid #241b2f;background:transparent;color:#241b2f;font-family:'Geist Mono',monospace;font-size:12px;letter-spacing:.14em;text-transform:uppercase;padding:13px 22px;cursor:pointer" style-hover="background:#241b2f;color:#f2ece2">Run the press again</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="flex:0 1 300px;min-width:240px">
+      <div style="border-top:2px solid #241b2f;padding-top:14px">
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6b6270;margin:0 0 4px">Colophon</p>
+        <p style="font-family:'Fraunces',Georgia,serif;font-size:17px;margin:0 0 14px">{{ vibeName }} ink</p>
+        <sc-for list="{{ reasons }}" as="r" hint-placeholder-count="4">
+          <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px solid #d6cab7">
+            <span style="font-family:'Geist Mono',monospace;font-size:10px;color:#8b8291;width:18px">{{ r.n }}</span>
+            <span style="font:400 14px 'Geist',sans-serif;flex:1;text-transform:capitalize">{{ r.label }}</span>
+            <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#5b2a86">{{ r.weight }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="margin-top:26px;border-top:2px solid #241b2f;padding-top:14px">
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6b6270;margin:0 0 10px">Marginalia</p>
+        <p style="{{ asideStyle }}">{{ aside }}</p>
+      </div>
+
+      <div style="margin-top:26px;border-top:2px solid #241b2f;padding-top:14px">
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:#6b6270;margin:0 0 12px">Shelf · {{ shelfCount }}</p>
+        <div style="display:flex;flex-wrap:wrap;gap:6px">
+          <sc-for list="{{ shelfTiles }}" as="s" hint-placeholder-count="0">
+            <span style="{{ s.style }}">{{ s.initials }}</span>
+          </sc-for>
+        </div>
+        <sc-if value="{{ shelfEmpty }}" hint-placeholder-val="{{ true }}">
+          <p style="font:italic 400 13px/1.5 'Fraunces',serif;color:#8b8291;margin:0">Nothing pressed yet. The shelf is a clean sheet.</p>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:820},&quot;inkStrength&quot;:{&quot;editor&quot;:&quot;range&quot;,&quot;default&quot;:0.5,&quot;min&quot;:0.2,&quot;max&quot;:0.9,&quot;step&quot;:0.05,&quot;tsType&quot;:&quot;number&quot;,&quot;section&quot;:&quot;Character&quot;},&quot;grain&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Character&quot;}}">
+class Component extends DCLogic {
+  themes = {
+    cozy: { c: ["#e8b568", "#f4d9a0", "#c97a3d"], ink: "#8a4a18", label: "Cozy" },
+    dark: { c: ["#5e0b15", "#7a1420", "#2b0a10"], ink: "#4a0a12", label: "Dark" },
+    whimsical: { c: ["#c9a7eb", "#e6d4f5", "#a97fd4"], ink: "#5b2a86", label: "Whimsical" },
+    melancholy: { c: ["#5c6b73", "#7d8ca3", "#46525a"], ink: "#3c4a52", label: "Melancholy" },
+  };
+  fam = { cozy:"cozy", hopeful:"cozy", funny:"cozy", heartwarming:"cozy", dark:"dark", tense:"dark", unsettling:"dark", whimsical:"whimsical", atmospheric:"whimsical", bittersweet:"whimsical", melancholy:"melancholy" };
+  books = [
+    { t:"The Lantern-Keeper's Daughter", a:"Mira Halloway", h:"She inherited the lighthouse, the debts, and the thing that lives under the stairs.", comp:"Legends & Lattes energy", g:"Cozy fantasy", m:["cozy","hopeful"], tr:["found family","small town"], p:342, y:2024 },
+    { t:"Salt in the Wound", a:"Dov Ferrante", h:"Everyone on the island agreed on the story. That was the first problem.", comp:"If you liked The Guest List", g:"Thriller", m:["tense","dark"], tr:["unreliable narrator","closed circle"], p:401, y:2023 },
+    { t:"Moths Under Glass", a:"Wren Ardelle", h:"The museum's night shift comes with a warning and a very specific key.", comp:"Piranesi, softer edges", g:"Magical realism", m:["whimsical","atmospheric"], tr:["secret door","slow burn"], p:317, y:2024 },
+    { t:"Nine Kinds of Winter", a:"Tomas Brekke", h:"A translator returns to the fjord to finish a book that isn't hers.", comp:"Quiet, cold, devastating", g:"Literary fiction", m:["melancholy","atmospheric"], tr:["homecoming","unreliable memory"], p:264, y:2022 },
+    { t:"Every Door Was a Mouth", a:"Priya Raghunathan", h:"The house was listed as three bedrooms. She counted four.", comp:"Mexican Gothic readalike", g:"Horror", m:["unsettling","dark"], tr:["haunted house","isolation"], p:298, y:2024 },
+    { t:"The Understudy Problem", a:"Cassie Lin", h:"She got the part. He got the part. Neither told the director they'd met.", comp:"Theatre-kid rom-com", g:"Romance", m:["funny","heartwarming"], tr:["forced proximity","enemies to lovers"], p:356, y:2025 },
+  ];
+
+  state = { i: 0, dx: 0, dragging: false, shelf: [], sound: false, aside: "Drag the card. It has weight.", asideKey: 0, streak: 0, streakFam: null };
+
+  familyOf(m) { for (const x of m) if (this.fam[x]) return this.fam[x]; return "whimsical"; }
+  active() { const b = this.books[this.state.i]; return b ? this.familyOf(b.m) : (this.state.shelf.length ? this.familyOf(this.state.shelf[this.state.shelf.length-1].m) : "whimsical"); }
+
+  beep(kind) {
+    if (!this.state.sound) return;
+    try {
+      const C = window.AudioContext || window.webkitAudioContext; if (!C) return;
+      const ctx = this._ctx || (this._ctx = new C());
+      if (ctx.state === "suspended") ctx.resume();
+      const t = ctx.currentTime;
+      if (kind === "slide") {
+        const n = ctx.createBufferSource(), len = 4410, buf = ctx.createBuffer(1, len, 44100), d = buf.getChannelData(0);
+        for (let k = 0; k < len; k++) d[k] = (Math.random()*2-1) * (1 - k/len) * 0.5;
+        n.buffer = buf;
+        const f = ctx.createBiquadFilter(); f.type = "bandpass"; f.frequency.value = 2200;
+        const g = ctx.createGain(); g.gain.value = 0.18;
+        n.connect(f); f.connect(g); g.connect(ctx.destination); n.start(t);
+      } else {
+        const o = ctx.createOscillator(), g = ctx.createGain();
+        o.type = "triangle"; o.frequency.setValueAtTime(kind === "yes" ? 190 : 120, t);
+        o.frequency.exponentialRampToValueAtTime(kind === "yes" ? 90 : 62, t + 0.14);
+        g.gain.setValueAtTime(0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.18);
+        o.connect(g); g.connect(ctx.destination); o.start(t); o.stop(t + 0.2);
+      }
+    } catch (e) {}
+  }
+
+  spring(target, onRest) {
+    cancelAnimationFrame(this._raf);
+    let x = this.state.dx, v = this._v || 0;
+    const tick = () => {
+      v += (target - x) * 0.14 - v * 0.62; x += v;
+      if (Math.abs(target - x) < 0.6 && Math.abs(v) < 0.6) { this._v = 0; this.setState({ dx: target, dragging: false }); if (onRest) onRest(); return; }
+      this.setState({ dx: x });
+      this._raf = requestAnimationFrame(tick);
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
+
+  commit(dir) {
+    const b = this.books[this.state.i]; if (!b) return;
+    this.beep(dir === "yes" ? "yes" : "no");
+    const f = this.familyOf(b.m);
+    this.setState((s) => {
+      const same = dir === "yes" && s.streakFam === f;
+      const streak = same ? s.streak + 1 : (dir === "yes" ? 1 : 0);
+      return {
+        i: s.i + 1, dx: 0, dragging: false,
+        shelf: dir === "yes" ? [...s.shelf, b] : s.shelf,
+        streak, streakFam: dir === "yes" ? f : null,
+        asideKey: s.asideKey + 1,
+        aside: this.pickAside(dir, f, streak, s.shelf.length),
+      };
+    });
+    this._v = 0;
+  }
+
+  pickAside(dir, f, streak, shelfLen) {
+    if (dir === "yes" && streak >= 3) return "Three " + this.themes[f].label.toLowerCase() + " in a row. At this point it's not a mood, it's a personality.";
+    if (dir === "yes" && streak === 2) return "Two " + this.themes[f].label.toLowerCase() + " picks running. Noted, without judgement.";
+    if (dir === "yes") return "Pressed to the shelf. The ink shifts to match it.";
+    if (shelfLen === 0) return "Passed. Still an empty sheet — no pressure.";
+    return "Passed. Somewhere an author felt a small chill.";
+  }
+
+  fling(dir) {
+    const target = dir === "yes" ? 700 : -700;
+    this._v = dir === "yes" ? 14 : -14;
+    cancelAnimationFrame(this._raf);
+    let x = this.state.dx;
+    const tick = () => {
+      x += (target - x) * 0.2;
+      if (Math.abs(target - x) < 140) { this.commit(dir); return; }
+      this.setState({ dx: x });
+      this._raf = requestAnimationFrame(tick);
+    };
+    this._raf = requestAnimationFrame(tick);
+  }
+
+  renderVals() {
+    const s = this.state, af = this.active(), th = this.themes[af];
+    const drag = Math.min(Math.abs(s.dx) / 190, 1);
+    const b = this.books[s.i];
+
+    const inkLayer = (key, idx) => {
+      const on = af === key, t = this.themes[key];
+      return "position:absolute;top:50%;left:50%;width:min(1100px,150vw);height:min(1100px,150vh);margin:-" +
+        (idx ? "540px 0 0 -520px" : "560px 0 0 -560px") +
+        ";background:radial-gradient(ellipse farthest-side at center," + t.c[1] + " 0%," + t.c[0] + " 48%,transparent 74%);" +
+        "opacity:" + (on ? (0.5 + drag * 0.22).toFixed(3) : 0) + ";transition:opacity .75s ease;" +
+        (on ? "animation:" + (idx ? "bu-ink2 21s" : "bu-ink 17s") + " ease-in-out infinite;" : "");
+    };
+
+    const chip = (label, kind) => ({
+      label,
+      style: "font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.08em;text-transform:uppercase;padding:4px 8px;border:1px solid " +
+        (kind === "mood" ? "#234a63;color:#234a63" : "#5b2a86;color:#5b2a86") + ";white-space:nowrap",
+    });
+
+    const cards = this.books.slice(s.i, s.i + 3).map((bk, n) => {
+      const top = n === 0, f = this.familyOf(bk.m), t = this.themes[f];
+      const rot = top ? (s.dx / 190) * 9 : (n === 1 ? -1.4 : 1.1);
+      const stamp = (side, on, color) => "position:absolute;top:26px;" + side + ":22px;z-index:20;pointer-events:none;" +
+        "font-family:'Geist Mono',monospace;font-size:14px;font-weight:500;letter-spacing:.2em;padding:8px 12px;border:2px solid " + color +
+        ";color:" + color + ";background:rgba(242,236,226,.86);opacity:" + on.toFixed(2) +
+        ";transform:rotate(" + (side === "right" ? -9 : 8) + "deg) scale(" + (0.82 + on * 0.18).toFixed(3) + ")";
+      return {
+        genre: bk.g, author: bk.a, hook: bk.h, comp: bk.comp, meta: bk.p + " pp · " + bk.y,
+        chips: [...bk.m.slice(0,2).map((x)=>chip(x,"mood")), ...bk.tr.slice(0,2).map((x)=>chip(x,"trope"))],
+        letters: bk.t.split("").map((ch, k) => ({
+          ch: ch === " " ? "\u00a0" : ch,
+          style: "display:inline-block;animation:bu-set .42s cubic-bezier(.2,.9,.3,1) both;animation-delay:" + (top ? k * 17 : 0) + "ms",
+        })),
+        titleStyle: "font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:26px;line-height:1.08;letter-spacing:-.02em;margin:14px 0 0",
+        wrap: "position:absolute;left:0;right:0;top:" + n * 7 + "px;height:100%;touch-action:none;" +
+          "transform:translateX(" + (top ? s.dx : 0) + "px) rotate(" + rot + "deg) scale(" + (1 - n * 0.026) + ");transform-origin:50% 92%;" +
+          "z-index:" + (10 - n) + ";cursor:" + (top ? (s.dragging ? "grabbing" : "grab") : "default") + ";" +
+          (top ? "" : "transition:transform .4s ease;"),
+        plate: "height:100%;display:flex;flex-direction:column;background:#f6f1e8;border:2px solid #241b2f;" +
+          "box-shadow:" + (top ? "6px 6px 0 rgba(36,27,47," + (0.1 + drag * 0.12).toFixed(2) + ")" : "4px 4px 0 rgba(36,27,47,.07)"),
+        cover: "padding:20px;min-height:238px;display:flex;flex-direction:column;box-sizing:border-box;color:" + t.ink +
+          ";background:linear-gradient(0deg," + t.c[1] + "44," + t.c[1] + "44)",
+        stampYes: stamp("right", top ? Math.max(0, Math.min(1, (s.dx - 24) / 96)) : 0, "#2f6b3f"),
+        stampNo: stamp("left", top ? Math.max(0, Math.min(1, (-s.dx - 24) / 96)) : 0, "#a33a2a"),
+        down: top ? (e) => { e.currentTarget.setPointerCapture(e.pointerId); cancelAnimationFrame(this._raf); this._x0 = e.clientX; this._last = e.clientX; this._v = 0; this.setState({ dragging: true }); } : null,
+        move: top ? (e) => { if (!this.state.dragging) return; this._v = e.clientX - this._last; this._last = e.clientX; if (Math.abs(e.clientX - this._x0) > 90 && !this._shh) { this._shh = true; this.beep("slide"); } this.setState({ dx: e.clientX - this._x0 }); } : null,
+        up: top ? () => {
+          if (!this.state.dragging) return;
+          this._shh = false;
+          const d = this.state.dx;
+          if (d > 105 || this._v > 11) this.fling("yes");
+          else if (d < -105 || this._v < -11) this.fling("no");
+          else this.spring(0);
+        } : null,
+      };
+    });
+
+    const reasons = b ? [...b.m.map((x)=>({label:x,weight:"×3"})), ...b.tr.map((x)=>({label:x,weight:"×3"})), {label:b.g,weight:"×1"}]
+      .map((r,k)=>({ ...r, n: String(k+1).padStart(2,"0") })) : [];
+
+    return {
+      inkA: inkLayer(af, 0), inkB: inkLayer(af, 1),
+      counter: (35 - s.i) + " of 35 left",
+      soundLabel: s.sound ? "Sound on" : "Sound off",
+      soundBtn: "font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;white-space:nowrap;padding:6px 10px;cursor:pointer;transition:all .15s;border:1px solid #241b2f;background:" +
+        (s.sound ? "#241b2f;color:#f2ece2" : "transparent;color:#241b2f"),
+      toggleSound: () => { const on = !s.sound; this.setState({ sound: on }); if (on) setTimeout(()=>this.beep("yes"), 30); },
+      cards, hasCards: !!b, isDone: !b,
+      hint: s.dragging ? "let go to commit" : "drag, or use the keys below",
+      pass: () => this.fling("no"), like: () => this.fling("yes"),
+      reset: () => this.setState({ i: 0, shelf: [], streak: 0, aside: "Fresh sheet. Same press." }),
+      doneTitle: s.shelf.length ? "That's the run." : "Nothing took the ink.",
+      doneBody: s.shelf.length
+        ? "Six books through the press, " + s.shelf.length + " kept. Come back tomorrow and we'll set another sheet."
+        : "You passed on every one. Either we read you wrong or you're in a mood — both are fixable.",
+      vibeName: th.label, reasons,
+      aside: s.aside,
+      asideStyle: "font:italic 400 15px/1.55 'Fraunces',serif;color:#4a4353;margin:0;text-wrap:pretty;animation:bu-rise .45s ease both",
+      shelfCount: s.shelf.length ? s.shelf.length + " kept" : "empty",
+      shelfEmpty: s.shelf.length === 0,
+      shelfTiles: s.shelf.map((bk) => {
+        const t = this.themes[this.familyOf(bk.m)];
+        return { initials: bk.t.split(" ").filter((w)=>/[A-Za-z]/.test(w[0])).slice(0,2).map((w)=>w[0]).join(""),
+          style: "font-family:'Geist Mono',monospace;font-size:11px;letter-spacing:.06em;width:34px;height:44px;display:flex;align-items:center;justify-content:center;border:2px solid #241b2f;color:" + t.ink + ";background:" + t.c[1] + "55;animation:bu-rise .4s ease both" };
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

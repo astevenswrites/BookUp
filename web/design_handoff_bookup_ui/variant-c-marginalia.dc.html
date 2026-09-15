@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Geist:wght@400;500;600&family=Geist+Mono:wght@400&display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#f7f3ec;color:#241b2f;font-family:"Geist",system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:#5b2a86;text-decoration:none}a:hover{color:#7a3fb0}
+@keyframes bu-lamp{0%,100%{transform:translate3d(0,0,0) scale(1)}50%{transform:translate3d(0,-16px,0) scale(1.035)}}
+@keyframes bu-note{from{opacity:0;transform:translateX(-10px) rotate(-1.5deg)}to{opacity:1;transform:rotate(-1.5deg)}}
+@keyframes bu-in{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@keyframes bu-caret{0%,49%{opacity:1}50%,100%{opacity:0}}
+@keyframes bu-rule{from{transform:scaleX(0)}to{transform:scaleX(1)}}
+</style>
+</helmet>
+
+<div style="min-height:100vh;position:relative;overflow:hidden;background:#f7f3ec">
+
+  <div aria-hidden="true" style="position:absolute;inset:0;z-index:0;overflow:hidden;pointer-events:none">
+    <div style="{{ lamp }}"></div>
+  </div>
+  <div aria-hidden="true" style="position:absolute;inset:0;z-index:1;pointer-events:none;opacity:.5;background-image:linear-gradient(#241b2f0f 1px,transparent 1px);background-size:100% 32px"></div>
+
+  <div style="position:relative;z-index:2;display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:20px 30px;border-bottom:1px solid #ddd2c0">
+    <span style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:20px;letter-spacing:-.02em">BookUp</span>
+    <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8291">Marginalia</span>
+    <div style="margin-left:auto;display:flex;align-items:center;gap:14px">
+      <span style="font-family:'Geist Mono',monospace;font-size:11px;color:#6b6270">{{ counter }}</span>
+      <button type="button" onClick="{{ toggleSound }}" style="{{ soundBtn }}" style-hover="border-color:#241b2f;color:#241b2f">{{ soundLabel }}</button>
+    </div>
+  </div>
+
+  <div style="position:relative;z-index:2;display:flex;flex-wrap:wrap;gap:40px;padding:30px 30px 60px;align-items:flex-start;justify-content:center">
+
+    <div style="flex:1 1 330px;max-width:390px">
+      <sc-if value="{{ hasCards }}" hint-placeholder-val="{{ true }}">
+        <div style="position:relative;height:524px">
+          <sc-for list="{{ cards }}" as="c" hint-placeholder-count="3">
+            <div style="{{ c.wrap }}" onPointerDown="{{ c.down }}" onPointerMove="{{ c.move }}" onPointerUp="{{ c.up }}" onPointerCancel="{{ c.up }}">
+              <div style="{{ c.body }}">
+                <div style="display:flex;align-items:baseline;gap:8px;padding:14px 18px;border-bottom:1px solid #e4dac8;background:#fdfbf6">
+                  <span style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:#8b8291;white-space:nowrap">No. {{ c.num }}</span>
+                  <span style="{{ c.genrePill }}">{{ c.genre }}</span>
+                  <span style="margin-left:auto;font-family:'Geist Mono',monospace;font-size:10px;color:#8b8291">{{ c.meta }}</span>
+                </div>
+                <div style="{{ c.cover }}">
+                  <h2 style="{{ c.titleStyle }}">{{ c.title }}</h2>
+                  <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;margin:10px 0 0;opacity:.8">{{ c.author }}</p>
+                </div>
+                <div style="padding:18px;display:flex;flex-direction:column;gap:13px;flex:1">
+                  <p style="font:500 16px/1.42 'Geist',sans-serif;margin:0;text-wrap:pretty">{{ c.hook }}</p>
+                  <div style="padding-left:13px;border-left:2px solid #5b2a86">
+                    <p style="font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 4px">Our note</p>
+                    <p style="font:italic 400 14px/1.5 'Fraunces',serif;color:#3c3547;margin:0;text-wrap:pretty">{{ c.note }}</p>
+                  </div>
+                  <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:auto">
+                    <sc-for list="{{ c.chips }}" as="t" hint-placeholder-count="4">
+                      <span style="{{ t.style }}" style-hover="border-bottom-color:#5b2a86;color:#5b2a86">{{ t.label }}</span>
+                    </sc-for>
+                  </div>
+                </div>
+              </div>
+              <div style="{{ c.noteYes }}">{{ c.noteYesText }}</div>
+              <div style="{{ c.noteNo }}">{{ c.noteNoText }}</div>
+            </div>
+          </sc-for>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:24px">
+          <button type="button" onClick="{{ pass }}" style="{{ passBtn }}" style-hover="background:#efe7d9" style-active="transform:translateY(1px)">Not for me</button>
+          <button type="button" onClick="{{ like }}" style="{{ likeBtn }}" style-hover="background:#6d33a0" style-active="transform:translateY(1px)">Put it on the shelf</button>
+        </div>
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.1em;text-transform:uppercase;color:#a09889;text-align:center;margin:12px 0 0">{{ hint }}</p>
+      </sc-if>
+
+      <sc-if value="{{ isDone }}" hint-placeholder-val="{{ false }}">
+        <div style="background:#fdfbf6;border:1px solid #ddd2c0;padding:34px;animation:bu-in .5s ease both;box-shadow:0 10px 30px rgba(36,27,47,.07)">
+          <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 14px">Closing note</p>
+          <h2 style="font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:29px;line-height:1.12;letter-spacing:-.02em;margin:0 0 12px">{{ doneTitle }}</h2>
+          <p style="font:400 15px/1.55 'Geist',sans-serif;color:#4a4353;margin:0 0 22px;text-wrap:pretty">{{ doneBody }}</p>
+          <button type="button" onClick="{{ reset }}" style="border:1px solid #241b2f;background:transparent;color:#241b2f;font:500 13px 'Geist',sans-serif;padding:12px 22px;cursor:pointer;transition:all .15s" style-hover="background:#241b2f;color:#f7f3ec">Bring me more</button>
+        </div>
+      </sc-if>
+    </div>
+
+    <div style="flex:0 1 320px;min-width:250px">
+      <div style="padding-bottom:16px;border-bottom:1px solid #ddd2c0">
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 10px">Reading you back</p>
+        <p style="{{ verdictStyle }}">{{ verdictShown }}<span style="{{ caretStyle }}">▍</span></p>
+      </div>
+
+      <div style="padding:16px 0;border-bottom:1px solid #ddd2c0">
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 12px">Your ledger</p>
+        <sc-for list="{{ ledger }}" as="l" hint-placeholder-count="4">
+          <div style="display:flex;align-items:center;gap:10px;padding:5px 0">
+            <span style="font:400 13px 'Geist',sans-serif;width:88px;text-transform:capitalize;color:#4a4353">{{ l.label }}</span>
+            <span style="{{ l.barTrack }}"><span style="{{ l.bar }}"></span></span>
+            <span style="font-family:'Geist Mono',monospace;font-size:10px;color:#8b8291;width:18px;text-align:right">{{ l.n }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ ledgerEmpty }}" hint-placeholder-val="{{ true }}">
+          <p style="font:italic 400 14px/1.5 'Fraunces',serif;color:#8b8291;margin:0">Nothing to go on yet. Swipe and I'll start forming opinions.</p>
+        </sc-if>
+      </div>
+
+      <div style="padding:16px 0;border-bottom:1px solid #ddd2c0">
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 10px">Why this one</p>
+        <sc-for list="{{ reasons }}" as="r" hint-placeholder-count="4">
+          <div style="display:flex;align-items:baseline;gap:9px;padding:5px 0">
+            <span style="font-family:'Geist Mono',monospace;font-size:10px;color:#5b2a86">{{ r.weight }}</span>
+            <span style="font:400 14px 'Geist',sans-serif;text-transform:capitalize;flex:1">{{ r.label }}</span>
+          </div>
+        </sc-for>
+      </div>
+
+      <div style="padding-top:16px">
+        <p style="font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:#8b8291;margin:0 0 12px">Shelf · {{ shelfCount }}</p>
+        <sc-for list="{{ shelfRows }}" as="s" hint-placeholder-count="0">
+          <div style="display:flex;align-items:baseline;gap:10px;padding:7px 0;border-bottom:1px dotted #ddd2c0;animation:bu-in .4s ease both">
+            <span style="{{ s.mark }}"></span>
+            <span style="font-family:'Fraunces',Georgia,serif;font-size:14px;flex:1;text-wrap:pretty">{{ s.title }}</span>
+          </div>
+        </sc-for>
+        <sc-if value="{{ shelfEmpty }}" hint-placeholder-val="{{ true }}">
+          <p style="font:italic 400 14px/1.5 'Fraunces',serif;color:#8b8291;margin:0">Empty. I'll hold my tongue until it isn't.</p>
+        </sc-if>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props="{&quot;$preview&quot;:{&quot;width&quot;:1100,&quot;height&quot;:820},&quot;chattiness&quot;:{&quot;editor&quot;:&quot;enum&quot;,&quot;options&quot;:[&quot;quiet&quot;,&quot;knowing&quot;,&quot;chatty&quot;],&quot;default&quot;:&quot;knowing&quot;,&quot;tsType&quot;:&quot;string&quot;,&quot;section&quot;:&quot;Character&quot;},&quot;ruledPaper&quot;:{&quot;editor&quot;:&quot;boolean&quot;,&quot;default&quot;:true,&quot;tsType&quot;:&quot;boolean&quot;,&quot;section&quot;:&quot;Character&quot;}}">
+class Component extends DCLogic {
+  themes = {
+    cozy:{c:["#e8b568","#f4d9a0","#c97a3d"],ink:"#7d4114",label:"Cozy"},
+    dark:{c:["#5e0b15","#7a1420","#2b0a10"],ink:"#f7f3ec",label:"Dark"},
+    whimsical:{c:["#c9a7eb","#e6d4f5","#a97fd4"],ink:"#4d2273",label:"Whimsical"},
+    melancholy:{c:["#5c6b73","#7d8ca3","#46525a"],ink:"#f7f3ec",label:"Melancholy"},
+  };
+  fam={cozy:"cozy",hopeful:"cozy",funny:"cozy",heartwarming:"cozy",dark:"dark",tense:"dark",unsettling:"dark",whimsical:"whimsical",atmospheric:"whimsical",bittersweet:"whimsical",melancholy:"melancholy"};
+  books=[
+    {t:"The Lantern-Keeper's Daughter",a:"Mira Halloway",h:"She inherited the lighthouse, the debts, and the thing that lives under the stairs.",n:"Reads gentler than the premise suggests. The monster is basically a roommate by chapter nine.",g:"Cozy fantasy",m:["cozy","hopeful"],tr:["found family","small town"],p:342,y:2024},
+    {t:"Salt in the Wound",a:"Dov Ferrante",h:"Everyone on the island agreed on the story. That was the first problem.",n:"You will guess the twist around page 200 and be wrong about why it matters.",g:"Thriller",m:["tense","dark"],tr:["unreliable narrator","closed circle"],p:401,y:2023},
+    {t:"Moths Under Glass",a:"Wren Ardelle",h:"The museum's night shift comes with a warning and a very specific key.",n:"Nothing is explained. That's the point, and it either delights you or it doesn't.",g:"Magical realism",m:["whimsical","atmospheric"],tr:["secret door","slow burn"],p:317,y:2024},
+    {t:"Nine Kinds of Winter",a:"Tomas Brekke",h:"A translator returns to the fjord to finish a book that isn't hers.",n:"Slow, cold, and worth it. Do not start this one in February unless you mean it.",g:"Literary fiction",m:["melancholy","atmospheric"],tr:["homecoming","unreliable memory"],p:264,y:2022},
+    {t:"Every Door Was a Mouth",a:"Priya Raghunathan",h:"The house was listed as three bedrooms. She counted four.",n:"Genuinely frightening for the first half. The ending explains slightly too much.",g:"Horror",m:["unsettling","dark"],tr:["haunted house","isolation"],p:298,y:2024},
+    {t:"The Understudy Problem",a:"Cassie Lin",h:"She got the part. He got the part. Neither told the director they'd met.",n:"Very funny, lightly absurd, and the theatre details are suspiciously accurate.",g:"Romance",m:["funny","heartwarming"],tr:["forced proximity","enemies to lovers"],p:356,y:2025},
+  ];
+  yesNotes=["shelved.","noted.","good call.","yes — obviously."];
+  noNotes=["fair enough.","noted, coldly.","next.","your loss, maybe."];
+
+  state={i:0,dx:0,dragging:false,shelf:[],passed:[],sound:false,verdict:"I don't know you yet. Give me three swipes.",shown:"",typing:false};
+
+  familyOf(m){for(const x of m) if(this.fam[x]) return this.fam[x]; return "whimsical";}
+  active(){const b=this.books[this.state.i];return b?this.familyOf(b.m):(this.state.shelf.length?this.familyOf(this.state.shelf[this.state.shelf.length-1].m):"cozy");}
+
+  componentDidMount(){ this.type(this.state.verdict); }
+  componentWillUnmount(){ clearInterval(this._ti); cancelAnimationFrame(this._raf); }
+
+  type(text){
+    clearInterval(this._ti);
+    let k=0;
+    this.setState({shown:"",typing:true});
+    this._ti=setInterval(()=>{
+      k+=1;
+      if(k>=text.length){ clearInterval(this._ti); this.setState({shown:text,typing:false}); return; }
+      this.setState({shown:text.slice(0,k)});
+      if(this.state.sound&&k%2===0) this.beep("tick");
+    },17);
+  }
+
+  beep(kind){
+    if(!this.state.sound) return;
+    try{
+      const C=window.AudioContext||window.webkitAudioContext; if(!C) return;
+      const ctx=this._ctx||(this._ctx=new C());
+      if(ctx.state==="suspended") ctx.resume();
+      const t=ctx.currentTime;
+      if(kind==="tick"){
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type="square";o.frequency.value=2000+Math.random()*500;
+        g.gain.setValueAtTime(0.022,t);g.gain.exponentialRampToValueAtTime(0.0008,t+0.02);
+        o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+0.025);
+      } else {
+        const o=ctx.createOscillator(),g=ctx.createGain();
+        o.type="square";o.frequency.setValueAtTime(kind==="yes"?880:330,t);
+        o.frequency.exponentialRampToValueAtTime(kind==="yes"?1320:220,t+0.05);
+        g.gain.setValueAtTime(0.06,t);g.gain.exponentialRampToValueAtTime(0.001,t+0.1);
+        o.connect(g);g.connect(ctx.destination);o.start(t);o.stop(t+0.12);
+      }
+    }catch(e){}
+  }
+
+  spring(target){
+    cancelAnimationFrame(this._raf);
+    let x=this.state.dx,v=this._v||0;
+    const tick=()=>{
+      v+=(target-x)*0.13-v*0.6;x+=v;
+      if(Math.abs(target-x)<0.6&&Math.abs(v)<0.6){this._v=0;this.setState({dx:target,dragging:false});return;}
+      this.setState({dx:x});this._raf=requestAnimationFrame(tick);
+    };
+    this._raf=requestAnimationFrame(tick);
+  }
+
+  verdictFor(shelf,passed){
+    if(shelf.length+passed.length<3) return "I don't know you yet. Give me three swipes.";
+    const tally={};
+    shelf.forEach((b)=>b.m.concat(b.tr).forEach((x)=>{tally[x]=(tally[x]||0)+1;}));
+    const top=Object.keys(tally).sort((a,b)=>tally[b]-tally[a])[0];
+    if(!shelf.length) return "You've passed on "+passed.length+" in a row. Either I've misread you completely or you're browsing, which is allowed.";
+    if(shelf.length===1) return "One data point. You liked something "+shelf[0].m[0]+", and I'm not going to build a theory on that.";
+    const fams=[...new Set(shelf.map((b)=>this.familyOf(b.m)))];
+    if(fams.length===1) return "Every book you've kept is "+this.themes[fams[0]].label.toLowerCase()+". You're not browsing, you're committing.";
+    if(top) return "The word that keeps coming up is \u201c"+top+"\u201d. You've kept "+tally[top]+" books with it and passed on the ones without.";
+    return "Your taste is wider than most. That makes you harder to please and more fun to guess at.";
+  }
+
+  commit(dir){
+    const b=this.books[this.state.i]; if(!b) return;
+    this.beep(dir==="yes"?"yes":"no");
+    const shelf=dir==="yes"?[...this.state.shelf,b]:this.state.shelf;
+    const passed=dir==="no"?[...this.state.passed,b]:this.state.passed;
+    const v=this.verdictFor(shelf,passed);
+    this.setState({i:this.state.i+1,dx:0,dragging:false,shelf,passed,verdict:v});
+    if(v!==this.state.verdict) this.type(v);
+    this._v=0;
+  }
+
+  fling(dir){
+    const target=dir==="yes"?720:-720;
+    cancelAnimationFrame(this._raf);
+    let x=this.state.dx;
+    const tick=()=>{
+      x+=(target-x)*0.19;
+      if(Math.abs(target-x)<145){this.commit(dir);return;}
+      this.setState({dx:x});this._raf=requestAnimationFrame(tick);
+    };
+    this._raf=requestAnimationFrame(tick);
+  }
+
+  renderVals(){
+    const s=this.state, af=this.active(), th=this.themes[af];
+    const drag=Math.min(Math.abs(s.dx)/190,1);
+    const b=this.books[s.i];
+
+    const chip=(label,kind)=>({label,
+      style:"font:400 12px 'Geist',sans-serif;padding:2px 1px;border-bottom:1.5px solid "+
+        (kind==="mood"?"#9db4c4":"#c9a7eb")+";color:#4a4353;text-transform:capitalize;white-space:nowrap;cursor:default;transition:all .16s"});
+
+    const cards=this.books.slice(s.i,s.i+3).map((bk,n)=>{
+      const top=n===0, f=this.familyOf(bk.m), t=this.themes[f];
+      const rot=top?(s.dx/190)*8:(n===1?-1:0.8);
+      const yesOn=top?Math.max(0,Math.min(1,(s.dx-22)/100)):0;
+      const noOn=top?Math.max(0,Math.min(1,(-s.dx-22)/100)):0;
+      const note=(on,side,color)=>"position:absolute;top:"+(side==="right"?"44px":"92px")+";"+side+":-14px;z-index:20;pointer-events:none;"+
+        "font:italic 400 17px 'Fraunces',serif;color:"+color+";background:#fdfbf6;border:1px solid "+color+";padding:5px 11px;"+
+        "opacity:"+on.toFixed(2)+";transform:rotate("+(side==="right"?-2.5:2)+"deg) translateX("+((1-on)*(side==="right"?16:-16)).toFixed(1)+"px)";
+      return {
+        num:String(s.i+n+1).padStart(2,"0"), genre:bk.g, title:bk.t, author:bk.a, hook:bk.h, note:bk.n, meta:bk.p+" pp · "+bk.y,
+        chips:[...bk.m.slice(0,2).map((x)=>chip(x,"mood")),...bk.tr.slice(0,2).map((x)=>chip(x,"trope"))],
+        genrePill:"font-family:'Geist Mono',monospace;font-size:9px;letter-spacing:.12em;text-transform:uppercase;padding:3px 7px;background:#efe6da;color:#4a3f33;white-space:nowrap",
+        titleStyle:"font-family:'Fraunces',Georgia,serif;font-weight:600;font-size:25px;line-height:1.1;letter-spacing:-.02em;margin:auto 0 0;color:"+t.ink,
+        cover:"padding:20px;min-height:186px;display:flex;flex-direction:column;box-sizing:border-box;background:linear-gradient(162deg,"+t.c[0]+" 0%,"+t.c[2]+" 100%)",
+        wrap:"position:absolute;left:0;right:0;top:"+n*6+"px;height:100%;touch-action:none;"+
+          "transform:translateX("+(top?s.dx:0)+"px) rotate("+rot+"deg) scale("+(1-n*0.022)+");transform-origin:50% 92%;"+
+          "z-index:"+(10-n)+";cursor:"+(top?(s.dragging?"grabbing":"grab"):"default")+";"+(top?"":"transition:transform .42s ease;"),
+        body:"height:100%;display:flex;flex-direction:column;background:#fdfbf6;border:1px solid "+(top?"#c9bda8":"#ddd2c0")+";overflow:hidden;"+
+          "box-shadow:0 "+(top?12+drag*10:6)+"px "+(top?30+drag*18:18)+"px rgba(36,27,47,"+(top?0.11+drag*0.05:0.06)+")",
+        noteYes:note(yesOn,"right","#2f6b3f"), noteNo:note(noOn,"left","#a33a2a"),
+        noteYesText:this.yesNotes[(s.i)%this.yesNotes.length],
+        noteNoText:this.noNotes[(s.i)%this.noNotes.length],
+        down:top?(e)=>{e.currentTarget.setPointerCapture(e.pointerId);cancelAnimationFrame(this._raf);this._x0=e.clientX;this._last=e.clientX;this._v=0;this.setState({dragging:true});}:null,
+        move:top?(e)=>{if(!this.state.dragging)return;this._v=e.clientX-this._last;this._last=e.clientX;this.setState({dx:e.clientX-this._x0});}:null,
+        up:top?()=>{if(!this.state.dragging)return;const d=this.state.dx;
+          if(d>102||this._v>11) this.fling("yes");
+          else if(d<-102||this._v<-11) this.fling("no");
+          else this.spring(0);}:null,
+      };
+    });
+
+    const reasons=b?[...b.m.map((x)=>({label:x,weight:"×3"})),...b.tr.map((x)=>({label:x,weight:"×3"})),{label:b.g,weight:"×1"}]:[];
+
+    const tally={};
+    s.shelf.forEach((bk)=>bk.m.concat(bk.tr).forEach((x)=>{tally[x]=(tally[x]||0)+1;}));
+    const max=Math.max(1,...Object.values(tally));
+    const ledger=Object.keys(tally).sort((a,c)=>tally[c]-tally[a]).slice(0,5).map((k)=>({
+      label:k, n:tally[k],
+      barTrack:"flex:1;height:6px;background:#e9e0cf;display:block;position:relative;overflow:hidden",
+      bar:"position:absolute;inset:0 auto 0 0;width:"+Math.round((tally[k]/max)*100)+"%;background:#5b2a86;display:block;transform-origin:left;animation:bu-rule .45s cubic-bezier(.2,.9,.3,1) both",
+    }));
+
+    return {
+      lamp:"position:absolute;top:-16%;left:50%;width:min(1000px,140vw);height:min(1000px,130vh);margin-left:calc(min(1000px,140vw) / -2);"+
+        "background:radial-gradient(ellipse farthest-side at center,"+th.c[1]+" 0%,"+th.c[0]+" 44%,transparent 72%);"+
+        "opacity:"+(0.6+drag*0.2).toFixed(3)+";filter:blur(14px);transition:background .8s ease,opacity .7s ease;animation:bu-lamp 20s ease-in-out infinite",
+      counter:"No. "+Math.min(s.i+1,this.books.length)+" / "+this.books.length,
+      soundLabel:s.sound?"Sound on":"Sound off",
+      soundBtn:"font-family:'Geist Mono',monospace;font-size:10px;letter-spacing:.12em;text-transform:uppercase;white-space:nowrap;padding:6px 10px;cursor:pointer;transition:all .15s;background:transparent;border:1px solid "+
+        (s.sound?"#5b2a86;color:#5b2a86":"#c9bda8;color:#8b8291"),
+      toggleSound:()=>{const on=!s.sound;this.setState({sound:on});if(on)setTimeout(()=>this.beep("yes"),30);},
+      cards, hasCards:!!b, isDone:!b,
+      hint:s.dragging?"I'm watching":"drag it, or use the buttons",
+      passBtn:"flex:1;border:1px solid #241b2f;background:transparent;color:#241b2f;font:500 13px 'Geist',sans-serif;padding:14px 12px;cursor:pointer;transition:all .14s",
+      likeBtn:"flex:1.4;border:1px solid #5b2a86;background:#5b2a86;color:#fdfbf6;font:500 13px 'Geist',sans-serif;padding:14px 12px;cursor:pointer;transition:all .14s",
+      pass:()=>this.fling("no"), like:()=>this.fling("yes"),
+      reset:()=>{this.setState({i:0,shelf:[],passed:[]});this.type("Clean slate. I've forgotten everything, allegedly.");},
+      doneTitle:s.shelf.length?"That's my whole cart.":"I struck out entirely.",
+      doneBody:s.shelf.length
+        ? "You kept "+s.shelf.length+" of six. I've written it all down and I'll be insufferable about it tomorrow."
+        : "Six recommendations, six passes. I'm revising my notes on you, which is the polite way of saying I was wrong.",
+      verdictShown:s.shown,
+      verdictStyle:"font:italic 400 17px/1.5 'Fraunces',serif;color:#3c3547;margin:0;min-height:3.2em;text-wrap:pretty",
+      caretStyle:"color:#5b2a86;margin-left:1px;"+(s.typing?"animation:bu-caret .7s step-end infinite":"opacity:0"),
+      ledger, ledgerEmpty:ledger.length===0, reasons,
+      shelfCount:s.shelf.length?s.shelf.length+" kept":"empty",
+      shelfEmpty:s.shelf.length===0,
+      shelfRows:s.shelf.map((bk)=>{
+        const t=this.themes[this.familyOf(bk.m)].c;
+        return { title:bk.t, mark:"width:9px;height:9px;flex:none;background:linear-gradient(135deg,"+t[0]+","+t[2]+")" };
+      }),
+    };
+  }
+}
+</script>
+</body>
+</html>

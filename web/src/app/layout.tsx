@@ -4,7 +4,8 @@ import "./globals.css";
 import { getActor, hasIdentity } from "@/lib/actor";
 import { getDemoTheme } from "@/lib/session";
 import { getPreferenceForActor, getPreferenceMoodLabels } from "@/lib/preferences";
-import { deriveVibeTheme, DEFAULT_VIBE_THEME, THEME_CONFIG } from "@/lib/theme";
+import { deriveVibeTheme, DEFAULT_VIBE_THEME, THEME_CONFIG, INK_TOKENS } from "@/lib/theme";
+import type { CSSProperties } from "react";
 import { VibeBackground } from "@/components/VibeBackground";
 import { ThemeSwitcher } from "@/components/ThemeSwitcher";
 import { AuthStatus } from "@/components/AuthStatus";
@@ -46,7 +47,11 @@ export default async function RootLayout({ children }: LayoutProps<"/">) {
       lang="en"
       className={`${geistSans.variable} ${geistMono.variable} ${bookSerif.variable} h-full antialiased`}
     >
-      <body className={`min-h-full flex flex-col${isDarkVibe ? " vibe-dark" : ""}`}>
+      <body
+        className="min-h-full flex flex-col"
+        data-mode={isDarkVibe ? "dark" : "light"}
+        style={INK_TOKENS[theme] as CSSProperties}
+      >
         <VibeBackground theme={theme} />
         <AuthStatus />
         <TimezoneSync currentTimezone={preference?.timezone ?? null} />

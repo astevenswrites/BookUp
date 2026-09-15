@@ -324,4 +324,54 @@ Running record of decisions made at each step, tied back to [research/market-res
 
 ---
 
+## Design — "Reading Room" visual pass
+
+Design handoff bundle committed at `web/design_handoff_bookup_ui/` (`START-HERE.md` is the
+entry point). A full designed direction across 5 sections — ground/modes, card physics,
+landing/onboarding/shelf, an editorial layer, and sound — meant to be built one section per
+session, per the handoff's own build order. This entry covers section 1 only; later
+sections get their own D-numbers as they land.
+
+### D50. Opaque vibe ground + dual light/dark mode ink tokens (handoff §1 + §1b)
+- **Why now:** the previous single radial-gradient vignette (D33 and its follow-ups) could
+  never truly reach a box's corners with color — the gradient *is* the color, and a
+  rectangle's corners are always farthest from center — so color visibly faded to
+  `--background` at the edges no matter how the box or its stops were tuned.
+- **Choice:** `VibeBackground` is now four stacked layers (`lib/theme.ts` supplies the
+  per-family values): an opaque **tint** (this is what actually carries color to the
+  corners — light-mode families ground on their `colors[1]`/light shade, dark-mode
+  families on `colors[2]`/deep shade, at a per-family base opacity 0.84-0.96), then **far
+  light** and **near light** (soft centered radial blooms, blurred, low opacity, animated
+  drift) and a **dust** layer (two tiled dot patterns, animated drift) purely for texture on
+  top of the now-opaque base. Pointer-position parallax offsets the two light layers in
+  opposite directions, gated behind `prefers-reduced-motion`. `prefers-contrast: more`
+  forces the tint to full opacity and zeroes the light/dust layers.
+- **Melancholy now flips to dark mode too** (`THEME_CONFIG.melancholy.isDark` was `false`,
+  now `true`) — an opaque slate-blue ground this deep has the exact same ink-contrast
+  problem `dark`'s wine-red ground already had. `dark` and `melancholy` need *different*
+  dark-mode ink hues from each other (warm rose vs. cool periwinkle — brand purple
+  disappears into both), so the new `INK_TOKENS` map in `lib/theme.ts` is keyed by theme,
+  not collapsed to a single light/dark boolean; `layout.tsx` injects all eight as inline
+  CSS custom properties on `<body>`, computed server-side from the session's existing
+  theme resolution (this pass does not yet build the live per-card `VibeProvider` context
+  the handoff's §1d describes — deliberately deferred with the rest of §2-§5).
+- **Cards and their contents, and the landing mood pills, are deliberately exempt** — cards
+  are cream surfaces sitting *on* the ground, not part of it, and stay on
+  `--foreground`/`--muted` unconditionally; the mood pills are solid `#fffdf9` rather than
+  translucent, since a translucent pill over a dark ground turned its own label to mud.
+- **Real bug caught in browser verification, not assumed fixed from the diff alone:**
+  the first pass declared `--on-vibe-fg/-muted/-accent: var(--ink-head/...)` at `:root`.
+  Headings and meta text stayed light-mode-colored under a dark theme regardless — because
+  a custom property's `var()` reference resolves using the *value visible at the element
+  where it's declared*, and `:root` never receives `layout.tsx`'s per-theme inline
+  overrides (only `<body>` does); `:root`'s `--on-vibe-fg` had already locked onto
+  `:root`'s own light-mode `--ink-head` default, and that resolved value is what
+  descendants inherited. Fixed by moving the three `--on-vibe-*` declarations from `:root`
+  down to the `body` rule itself, where `var(--ink-head)` now resolves against `body`'s own
+  (correctly overridden) value. Re-verified across all four families afterward, including
+  reading the actual computed `color` via the browser console, not just eyeballing
+  screenshots.
+
+---
+
 *(Later phases append their own sections here as we build them.)*

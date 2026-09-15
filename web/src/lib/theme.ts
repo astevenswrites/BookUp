@@ -50,22 +50,90 @@ export const THEME_CONFIG: Record<VibeTheme, ThemeConfig> = {
     isDark: false,
   },
   melancholy: {
+    // D50 design pass: melancholy now flips to dark mode too (see
+    // buildGroundTint / the [data-mode] token set below) — a slate-blue
+    // ground this deep needs light ink, the same problem dark's wine-red
+    // ground had.
     colors: ["#5c6b73", "#7d8ca3", "#46525a"],
     label: "Melancholy",
-    isDark: false,
+    isDark: true,
   },
 };
 
-// D33 follow-up: full-viewport again, but the center is no longer literal
-// `transparent` — that revealed the page's near-white cream background right
-// under the login form/buttons, killing contrast for white UI elements.
-// Center is now a muted tint of the theme's own hue (light color mixed
-// mostly with white) instead of transparent or a flat white, so the whole
-// background reads as "this theme's color," just paler in the middle.
-export function buildVignetteGradient(colors: [string, string, string]): string {
-  const [base, light] = colors;
-  return `radial-gradient(ellipse at center, color-mix(in srgb, ${light} 35%, white) 0%, ${light} 60%, ${base} 100%)`;
+// D50 ("Reading Room" pass): the ground is now a flat OPAQUE fill — the
+// previous single radial gradient (however its stops were tuned) could
+// never truly reach the corners with color, since the gradient itself
+// *is* the color and a box's corners are always farthest from center.
+// Per-family base opacity (before the `+drag` boost VibeBackground adds).
+export const GROUND_TINT_OPACITY: Record<VibeTheme, number> = {
+  cozy: 0.86,
+  whimsical: 0.84,
+  melancholy: 0.92,
+  dark: 0.96,
+};
+
+// Dark-mode families ground on their own *deep* shade; light-mode families
+// ground on their *light* shade — either way, the flat fill IS what carries
+// color to the edges, so light/blur/dust layers on top only need to breathe.
+export function getGroundTintColor(theme: VibeTheme): string {
+  const { colors, isDark } = THEME_CONFIG[theme];
+  return isDark ? colors[2] : colors[1];
 }
+
+// D50 §1b: with an opaque ground, fixed ink can't survive contact with a
+// genuinely dark surface. `dark` and `melancholy` are both "dark mode" by
+// `isDark`, but they need *different* ink hues (warm rose vs. cool
+// periwinkle) — accent purple disappears into both, for different reasons
+// — so this is keyed by theme, not collapsed to a light/dark boolean.
+// Cards and their contents are deliberately NOT part of this system (D50:
+// "cards are cream surfaces sitting on the ground, not part of it") — they
+// keep using --foreground/--muted unconditionally, same as before.
+export type InkTokens = {
+  "--ink-head": string;
+  "--ink-body": string;
+  "--ink-faint": string;
+  "--ink-accent": string;
+  "--rule": string;
+  "--track": string;
+  "--panel": string;
+  "--panel-edge": string;
+};
+
+const LIGHT_INK: InkTokens = {
+  "--ink-head": "#241b2f",
+  "--ink-body": "#453e50",
+  "--ink-faint": "#645b6b",
+  "--ink-accent": "#4c2273",
+  "--rule": "#241b2f",
+  "--track": "rgba(36, 27, 47, .2)",
+  "--panel": "rgba(255, 255, 255, .72)",
+  "--panel-edge": "#ece4d8",
+};
+
+export const INK_TOKENS: Record<VibeTheme, InkTokens> = {
+  cozy: LIGHT_INK,
+  whimsical: LIGHT_INK,
+  dark: {
+    "--ink-head": "#fdf4f2",
+    "--ink-body": "#f3dcd9",
+    "--ink-faint": "#dcb6b2",
+    "--ink-accent": "#f0b7c4",
+    "--rule": "rgba(253, 244, 242, .72)",
+    "--track": "rgba(253, 244, 242, .22)",
+    "--panel": "rgba(28, 8, 12, .42)",
+    "--panel-edge": "rgba(253, 244, 242, .18)",
+  },
+  melancholy: {
+    "--ink-head": "#f7fafb",
+    "--ink-body": "#e2ebef",
+    "--ink-faint": "#bccbd3",
+    "--ink-accent": "#cfd9ff",
+    "--rule": "rgba(247, 250, 251, .72)",
+    "--track": "rgba(247, 250, 251, .22)",
+    "--panel": "rgba(18, 28, 34, .38)",
+    "--panel-edge": "rgba(247, 250, 251, .18)",
+  },
+};
 
 export const THEME_ORDER: VibeTheme[] = [
   VibeTheme.cozy,

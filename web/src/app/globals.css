@@ -19,27 +19,27 @@
   --tag-mood: #e6eef3;
   --tag-mood-foreground: #234a63;
 
-  /* Text sitting directly on the vibe background (D33) — page headers,
-     subtitles, empty-state copy — as opposed to text inside a white card,
-     which always uses --foreground/--muted unconditionally since the card's
-     own white background never changes. Defaults match --foreground/--muted;
-     .vibe-dark on <body> (set when the active vibe theme is dark-toned, e.g.
-     VibeTheme.dark) flips these to light so text stays readable against a
-     background that's dark almost everywhere, not just at the edges. */
-  --on-vibe-fg: var(--foreground);
-  --on-vibe-muted: var(--muted);
-  /* Any accent-purple text sitting directly on the vibe background — links,
-     eyebrows, italic taglines — not inside a solid bg-accent button.
-     Defaults to --accent; the plain purple read as a jarring blue-ish clash
-     against the dark theme's warm wine-red, so .vibe-dark warms it to gold
-     instead of just lightening the same hue. */
-  --on-vibe-accent: var(--accent);
-}
-
-body.vibe-dark {
-  --on-vibe-fg: #f7eef2;
-  --on-vibe-muted: #d9c3cb;
-  --on-vibe-accent: #e8b568;
+  /* D50 ("Reading Room" pass, README-v2 §1b): dual light/dark mode ink
+     tokens for anything sitting directly on the vibe ground — headings,
+     body copy, eyebrows/meta, rules, the quiz progress track, chips,
+     secondary buttons, the shelf's empty state. Cards and their contents
+     are deliberately NOT part of this system — cream surfaces sitting ON
+     the ground, not part of it — they keep --foreground/--muted always.
+     Values here are the light-mode (cozy/whimsical) defaults; layout.tsx
+     overrides all eight as inline custom properties from lib/theme.ts's
+     INK_TOKENS, keyed by the active theme (dark and melancholy need
+     different ink hues from each other, not just "the light values
+     inverted" — see INK_TOKENS' own comment). Defined here too so any
+     page rendered before a theme is known (or without JS) still has a
+     sane, readable default instead of an unset custom property. */
+  --ink-head: #241b2f;
+  --ink-body: #453e50;
+  --ink-faint: #645b6b;
+  --ink-accent: #4c2273;
+  --rule: #241b2f;
+  --track: rgba(36, 27, 47, 0.2);
+  --panel: rgba(255, 255, 255, 0.72);
+  --panel-edge: #ece4d8;
 }
 
 @theme inline {
@@ -59,6 +59,10 @@ body.vibe-dark {
   --color-tag-trope-foreground: var(--tag-trope-foreground);
   --color-tag-mood: var(--tag-mood);
   --color-tag-mood-foreground: var(--tag-mood-foreground);
+  --color-rule: var(--rule);
+  --color-track: var(--track);
+  --color-panel: var(--panel);
+  --color-panel-edge: var(--panel-edge);
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
   --font-serif: var(--font-book-serif);
@@ -67,20 +71,120 @@ body.vibe-dark {
 body {
   background: var(--background);
   color: var(--foreground);
+
+  /* Text sitting directly on the vibe background (D33) — page headers,
+     subtitles, empty-state copy — as opposed to text inside a white card,
+     which always uses --foreground/--muted unconditionally since the card's
+     own white background never changes. Sourced from the ink tokens (D50)
+     rather than a single vibe-dark boolean, so dark and melancholy each get
+     their own correct hue. Deliberately declared HERE, not at :root: a
+     custom property's `var()` reference resolves using the value visible
+     AT THE ELEMENT WHERE IT'S DECLARED — declaring these at :root would
+     permanently lock them to :root's own light-mode --ink-* defaults, since
+     :root itself never receives layout.tsx's per-theme inline overrides
+     (only <body> does), and inheritance passes down the already-resolved
+     value, not a live reference. (Caught in browser testing: headings and
+     meta text stayed light-mode-colored even under a dark theme.) */
+  --on-vibe-fg: var(--ink-head);
+  --on-vibe-muted: var(--ink-body);
+  --on-vibe-accent: var(--ink-accent);
 }
 
-/* Ambient "vibe" background (D33) — settled via a design-canvas exploration
-   on a full edge vignette with richly-saturated color (Option F), picked
-   directly by the user after two earlier rounds (patchy blobs, then a
-   too-faint full gradient). Breathing stays subtle relative to this
-   stronger base intensity. */
-.vibe-glow {
-  opacity: 0.92; /* static fallback for prefers-reduced-motion, and the base look */
+/* Ambient "vibe" ground (D33, restructured D50) — four stacked layers,
+   bottom to top: opaque tint (this IS the color reaching the corners —
+   see DECISIONS.md D50 for why the old single-gradient approach never
+   could), far light, near light, dust. All four cross-fade together on a
+   theme change since every layer transitions `background`/`opacity`. */
+.vibe-tint {
+  position: absolute;
+  inset: 0;
+  transition: background 0.8s ease, opacity 0.7s ease;
 }
-@keyframes vibe-breathe {
-  0%, 100% { opacity: 0.85; }
-  50% { opacity: 0.95; }
+
+.vibe-light {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  border-radius: 50%;
+  transform: translate3d(
+    calc(-50% + var(--parallax-x, 0px)),
+    calc(-50% + var(--parallax-y, 0px)),
+    0
+  );
+  transition: background 0.8s ease, opacity 0.7s ease;
 }
+.vibe-light-far {
+  width: min(1500px, 175vw);
+  height: min(1500px, 175vw);
+  filter: blur(30px);
+  opacity: 0.38;
+}
+.vibe-light-near {
+  width: min(900px, 120vw);
+  height: min(900px, 120vw);
+  filter: blur(12px);
+  opacity: 0.3;
+}
+
+.vibe-dust {
+  position: absolute;
+  inset: -10%;
+  background-image: radial-gradient(circle, #fffdf9 1px, transparent 1px),
+    radial-gradient(circle, #fffdf9 1px, transparent 1px);
+  background-size: 190px 190px, 127px 127px;
+  background-position: 0 0, 60px 40px;
+  transition: opacity 0.7s ease;
+}
+
+@keyframes bu-light {
+  0%,
+  100% {
+    transform: translate3d(
+      calc(-50% + var(--parallax-x, 0px)),
+      calc(-50% + var(--parallax-y, 0px)),
+      0
+    )
+    scale(1);
+  }
+  50% {
+    transform: translate3d(
+      calc(-50% + var(--parallax-x, 0px) + 20px),
+      calc(-50% + var(--parallax-y, 0px) - 24px),
+      0
+    )
+    scale(1.06);
+  }
+}
+@keyframes bu-dust {
+  0% {
+    transform: translate3d(0, 0, 0);
+  }
+  100% {
+    transform: translate3d(-40px, -60px, 0);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
-  .vibe-glow { animation: vibe-breathe 8s ease-in-out infinite; }
+  .vibe-light-far {
+    animation: bu-light 26s ease-in-out infinite reverse;
+  }
+  .vibe-light-near {
+    animation: bu-light 19s ease-in-out infinite;
+  }
+  .vibe-dust {
+    animation: bu-dust 34s linear infinite;
+  }
+}
+
+/* D50: this is also the answer to "more contrast" — an opaque ground at
+   full strength with the light pools suppressed reads as a flat, high-
+   contrast color field rather than a softly lit room. */
+@media (prefers-contrast: more) {
+  .vibe-tint {
+    opacity: 1 !important;
+  }
+  .vibe-light,
+  .vibe-dust {
+    opacity: 0 !important;
+  }
 }

@@ -284,7 +284,11 @@ function StackEdges({ count }: { count: number }) {
             aria-hidden
             className="pointer-events-none absolute inset-x-0 rounded-b-2xl border border-card-border bg-card"
             style={{
-              bottom: -(depth * STACK_EDGE_GAP),
+              // depth=1 sits flush with the card's own bottom edge (0, not
+              // -GAP) — leaving a gap there let the background show through
+              // a visible sliver of "nothing," breaking the stacked-card
+              // illusion right where it mattered most.
+              bottom: -((depth - 1) * STACK_EDGE_GAP),
               height: STACK_EDGE_HEIGHT,
               zIndex: MAX_STACK_EDGES - depth,
               opacity: 1 - depth * 0.15,

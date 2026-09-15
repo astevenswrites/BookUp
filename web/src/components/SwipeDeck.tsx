@@ -140,7 +140,7 @@ export function SwipeDeck({
         <p className="mb-3 text-xs text-on-vibe-muted">
           {isAnonymous ? `${remaining} preview swipes left` : `${remaining} swipes left today`}
         </p>
-        <div className="relative w-full h-[600px]">
+        <div className="relative w-full">
           {deck
             .slice(0, 3)
             .reverse()
@@ -207,12 +207,24 @@ function SwipeCard({
 
   return (
     <motion.div
-      className="absolute inset-0 overflow-y-auto rounded-2xl"
+      // The top card sits in normal document flow (position: relative) so it
+      // establishes its own natural height — the whole card, including an
+      // expanded "More details" section, is always fully visible with no
+      // internal scrollbar; the page scrolls if it needs to, not a clipped
+      // pane. Only the two peek-behind stack cards are position: absolute,
+      // purely for the layered-stack visual — they never need to affect
+      // layout height since they're always smaller (scaled down) and mostly
+      // hidden behind the top card anyway.
+      className={
+        isTop
+          ? "relative w-full rounded-2xl"
+          : "absolute inset-x-0 top-0 w-full rounded-2xl"
+      }
       style={{
         x: isTop ? x : 0,
         rotate: isTop ? rotate : 0,
         scale: 1 - stackDepth * 0.04,
-        top: stackDepth * 8,
+        top: isTop ? undefined : stackDepth * 8,
         zIndex: 10 - stackDepth,
       }}
       drag={isTop ? "x" : false}

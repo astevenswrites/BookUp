@@ -53,3 +53,39 @@ export function TbrBookshelf({ count }: { count: number }) {
     </Link>
   );
 }
+
+// D58: the full shelf above needs real width (a row of up to 14 spines) —
+// fine under the desktop "Why this one" rail, but there's no equivalent
+// spare real estate on a phone/tablet without stealing space from the card
+// itself (the exact problem MatchReasonsMobile already solved for the "why
+// this one" panel, with a floating button instead of squeezing content into
+// the page). This is that pattern applied here: a fixed circular badge in
+// the same right-edge stack, sized to match MatchReasonsMobile's "?"
+// button, showing a fixed 3-bar glyph (not one bar per book — doesn't scale
+// down to icon size) plus the actual count. Hidden once there's nothing to
+// show yet, so it only ever appears once it has something to say.
+export function TbrShelfBadge({ count }: { count: number }) {
+  if (count <= 0) return null;
+
+  return (
+    <Link
+      href="/tbr"
+      aria-label={`${count} book${count === 1 ? "" : "s"} on your shelf — view your shelf`}
+      title="View your shelf"
+      // bottom-36 stacks above MatchReasonsMobile's "?" (bottom-20) and the
+      // ThemeSwitcher pill (bottom-4) in the same right-edge column.
+      className="fixed bottom-36 right-4 z-30 flex h-14 w-14 flex-col items-center justify-center gap-1 rounded-full border border-card-border bg-card shadow-lg lg:hidden"
+    >
+      <span className="flex items-end gap-[2px]" aria-hidden>
+        {SPINE_COLORS.slice(0, 3).map((color, i) => (
+          <span
+            key={color}
+            className={`w-[3px] rounded-t-sm ${color}`}
+            style={{ height: 8 + i * 3 }}
+          />
+        ))}
+      </span>
+      <span className="text-xs font-semibold text-foreground">{count}</span>
+    </Link>
+  );
+}

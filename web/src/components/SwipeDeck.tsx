@@ -5,7 +5,7 @@ import Link from "next/link";
 import { motion, useMotionValue, useTransform } from "motion/react";
 import { BookCard } from "@/components/BookCard";
 import { SwipeCommitVeil, pickVeilVariant } from "@/components/SwipeCommitVeil";
-import { TbrBookshelf } from "@/components/TbrBookshelf";
+import { TbrShelfBadge } from "@/components/TbrBookshelf";
 import { MatchReasonsRail } from "@/components/MatchReasonsRail";
 import { MatchReasonsMobile } from "@/components/MatchReasonsMobile";
 import { SignUpWall } from "@/components/SignUpWall";
@@ -241,12 +241,9 @@ export function SwipeDeck({
           />
         </div>
 
-        <div className="mt-6 flex flex-col items-center gap-4">
-          <p className="text-xs text-on-vibe-muted">
-            <span aria-hidden>←</span> drag to pass · drag to like <span aria-hidden>→</span>
-          </p>
-          <TbrBookshelf count={tbrCount} />
-        </div>
+        <p className="mt-6 text-xs text-on-vibe-muted">
+          <span aria-hidden>←</span> drag to pass · drag to like <span aria-hidden>→</span>
+        </p>
 
         {lastSwiped && (
           <button
@@ -259,8 +256,9 @@ export function SwipeDeck({
         )}
       </div>
 
-      <MatchReasonsRail reasons={matchReasons} moodLabels={topCardMoodLabels} />
+      <MatchReasonsRail reasons={matchReasons} moodLabels={topCardMoodLabels} tbrCount={tbrCount} />
       <MatchReasonsMobile reasons={matchReasons} moodLabels={topCardMoodLabels} />
+      <TbrShelfBadge count={tbrCount} />
     </div>
   );
 }

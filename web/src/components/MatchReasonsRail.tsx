@@ -1,4 +1,5 @@
 import { THEME_CONFIG, deriveVibeTheme } from "@/lib/theme";
+import { TbrBookshelf } from "@/components/TbrBookshelf";
 import type { MatchReason } from "@/lib/matchReasons";
 
 const DOT_COLOR: Record<string, string> = {
@@ -75,9 +76,11 @@ export function MatchReasonsContent({
 export function MatchReasonsRail({
   reasons,
   moodLabels,
+  tbrCount,
 }: {
   reasons: MatchReason[];
   moodLabels: string[];
+  tbrCount: number;
 }) {
   return (
     <aside className="sticky top-8 hidden w-[300px] flex-none self-start pt-12 lg:block">
@@ -86,6 +89,9 @@ export function MatchReasonsRail({
           Why this one
         </p>
         <MatchReasonsContent reasons={reasons} moodLabels={moodLabels} />
+      </div>
+      <div className="mt-4 flex justify-center rounded-2xl border border-card-border bg-card/80 p-4 backdrop-blur-sm">
+        <TbrBookshelf count={tbrCount} />
       </div>
     </aside>
   );

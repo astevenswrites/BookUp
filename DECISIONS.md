@@ -428,4 +428,14 @@ sections get their own D-numbers as they land.
 
 ---
 
+### D58. TBR bookshelf relocated: under "Why this one" on desktop, a floating badge on mobile
+- **Why:** the full spine-shelf (D54) sat below the swipe card, in the main column both viewport sizes share — but the user wanted it moved to live alongside "Why this one" instead, which only exists as a permanent element on desktop (`MatchReasonsRail`, `hidden lg:block`); on mobile that same content is a floating button + bottom sheet (`MatchReasonsMobile`) specifically because there's no spare space to squeeze a permanent panel into the page there. The shelf needed an equivalent split, not just a straight relocation.
+- **Choice:**
+  - **Desktop:** the existing full `TbrBookshelf` (spines + count label) now renders inside `MatchReasonsRail`'s sticky aside, in its own bordered card directly below the "Why this one" panel — `MatchReasonsRail` takes a new `tbrCount` prop for this.
+  - **Mobile:** a new `TbrShelfBadge` — a fixed circular button in the same right-edge stack as `MatchReasonsMobile`'s "?" button (`bottom-36`, one slot above it) and the `ThemeSwitcher` pill (`bottom-4`), sized to match. Doesn't render one bar per book like the full version (doesn't scale down to icon size) — a fixed 3-bar glyph plus the actual count instead, linking straight to `/tbr` rather than opening a sheet, since there's nothing further to disclose beyond the number. Renders nothing at all until `count > 0`, so it only ever appears once it has something to say.
+  - The below-card hint text ("← drag to pass · drag to like →") stays in the main column on both sizes — it's about the swipe gesture itself, not the shelf, so it wasn't part of what needed to move.
+- **Verified live:** resized to both a desktop (1280px) and mobile (375px) viewport; confirmed the full shelf renders under the rail's "Why this one" card on desktop, the floating badge appears above the "?" button on mobile without overlapping it, and both link correctly to `/tbr` with the count matching that page's own "N books you've matched with."
+
+---
+
 *(Later phases append their own sections here as we build them.)*

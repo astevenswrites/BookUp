@@ -240,6 +240,46 @@ export async function getCollaborativeBoosts(
 }
 
 // --- Scoring -----------------------------------------------------------
+//
+// D65: found live — a reader who picked "dark" as a mood but never touched
+// any romance tag was getting dark romance recommendations. Root cause
+// traced (not assumed): the catalog's mood assignment is genre-agnostic by
+// design (generate-catalog.ts picks moods independent of genre, verified by
+// counting "dark"-tagged books per genre — no romance skew in the data
+// itself), but the OLD scoring below summed every matched tag's weight with
+// no requirement that a book's genre also line up with anything the reader
+// actually picked. Mood/trope are weighted 3x (CATEGORY_WEIGHT) and genre
+// only 1x, so 2-3 incidental mood matches (very likely given only ~16 mood
+// options total) could outscore genuine genre-aligned books outright, for
+// ANY genre, since an unselected genre carries no penalty at all — only
+// zero weight, same as never being mentioned.
+//
+// Three changes, aimed straight at that mechanism:
+// 1. Genre alignment gate: if the reader selected at least one genre,
+//    mood+trope contributions are discounted (not zeroed — see below) on a
+//    book whose OWN genre isn't one of them. A strong genre-agnostic mood
+//    match can no longer single-handedly out-rank real genre alignment.
+// 2. A flat bonus for genre alignment itself, on top of the existing 1x tag
+//    weight — verified empirically (a throwaway script scoring real catalog
+//    books) that the tag weight alone wasn't enough: a book matching only
+//    the selected genre (no mood/trope overlap at all) was still scoring
+//    BELOW an off-genre book with just one discounted mood match, exactly
+//    backwards from what "genre is the primary signal" should mean.
+// 3. Category coverage bonus: a book scoring across multiple categories
+//    (mood AND trope, or mood AND trope AND genre) gets a small bonus on
+//    top of the raw sum — "several tags line up" is rewarded as its own
+//    signal, not just whichever category happens to carry the most weight.
+//
+// GENRE_MISMATCH_DISCOUNT is a discount, not a hard exclusion — on purpose:
+// the ask was for "some slight variation," not a rigid genre-only feed. A
+// genuinely strong off-genre mood/trope match can still surface, just
+// discounted enough that genre-aligned books consistently win the main
+// deck, and it lands more often in the explore slice
+// (composeExploreExploitDeck) than the main exploit deck as a natural side
+// effect of sorting lower — no special-casing needed there.
+const GENRE_MISMATCH_DISCOUNT = 0.2;
+const GENRE_ALIGNED_BONUS = 2;
+const CATEGORY_COVERAGE_BONUS = 2;
 
 function scoreBook(
   book: BookWithTags,
@@ -247,17 +287,34 @@ function scoreBook(
   heatLevelMax: HeatLevel | null,
   pacing: string | null,
   currentMoodTagId: string | null,
-  collaborativeBoost: number
+  collaborativeBoost: number,
+  selectedGenreIds: Set<string>
 ): number {
-  let score = 0;
-
+  const categoryScore: Partial<Record<string, number>> = {};
   for (const { tag } of book.tags) {
     if (tag.category === "content_warning") continue; // hard-filtered elsewhere, D24
-    score += tagWeights.get(tag.id) ?? 0;
+    let contribution = tagWeights.get(tag.id) ?? 0;
     if (currentMoodTagId && tag.id === currentMoodTagId) {
-      score += CURRENT_MOOD_BOOST;
+      contribution += CURRENT_MOOD_BOOST;
     }
+    categoryScore[tag.category] = (categoryScore[tag.category] ?? 0) + contribution;
   }
+
+  const bookGenreTagId = book.tags.find(({ tag }) => tag.category === "genre")?.tagId;
+  const genreWasSelected = selectedGenreIds.size > 0;
+  const genreAligned = !genreWasSelected || (bookGenreTagId != null && selectedGenreIds.has(bookGenreTagId));
+  const moodTropeMultiplier = genreAligned ? 1 : GENRE_MISMATCH_DISCOUNT;
+
+  let score =
+    (categoryScore.mood ?? 0) * moodTropeMultiplier +
+    (categoryScore.trope ?? 0) * moodTropeMultiplier +
+    (categoryScore.genre ?? 0) +
+    (genreWasSelected && genreAligned ? GENRE_ALIGNED_BONUS : 0);
+
+  const matchedCategoryCount = ["mood", "trope", "genre"].filter(
+    (category) => (categoryScore[category] ?? 0) > 0
+  ).length;
+  if (matchedCategoryCount > 1) score += (matchedCategoryCount - 1) * CATEGORY_COVERAGE_BONUS;
 
   if (pacing && book.pacing === pacing) score += 1;
 
@@ -383,6 +440,12 @@ export async function getDeckForPreference(
   const tagWeights = mergeWeights(explicitWeights, implicit.stable);
   const collaborativeBoosts = await getCollaborativeBoosts(actor, candidates.map((c) => c.id));
 
+  // D65: explicit quiz genre picks only — the clearest, most direct signal
+  // of "what kind of book is this" for the mismatch discount in scoreBook.
+  const selectedGenreIds = new Set(
+    preference.tags.filter(({ tag }) => tag.category === "genre").map(({ tagId }) => tagId)
+  );
+
   const scored = candidates
     .map((book) => ({
       book,
@@ -392,7 +455,8 @@ export async function getDeckForPreference(
         preference.heatLevelMax,
         preference.pacing,
         preference.currentMoodTagId,
-        collaborativeBoosts.get(book.id) ?? 0
+        collaborativeBoosts.get(book.id) ?? 0,
+        selectedGenreIds
       ),
     }))
     .sort((a, b) => b.score - a.score);

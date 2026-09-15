@@ -488,4 +488,19 @@ sections get their own D-numbers as they land.
 
 ---
 
+### D65. Matching: genre-alignment gate + multi-category coverage bonus
+- **Reported live:** a reader who selected "dark" as a mood and no romance tag anywhere in their profile ("I'm okay with some spice" — a heat-level answer, not a genre pick) kept getting dark romance recommendations.
+- **Root cause traced, not assumed:** first checked whether the *catalog* over-represents "dark" among Romance/Romantasy specifically — it doesn't (counted "dark"-tagged books per genre directly from `catalog.json`: Romance 7/23, Romantasy 5/30, Contemporary 10/45, Cozy Mystery 7/29 — noisy, no romance skew; `generate-catalog.ts` assigns moods independent of genre by construction). The actual cause was purely in `scoreBook`: it summed every matched tag's weight with mood/trope weighted 3x (`CATEGORY_WEIGHT`) against genre's 1x, and an unselected genre carried *zero* penalty — the same as never being mentioned. With only ~16 mood options total, 2-3 incidental mood matches on an off-genre book could easily outscore genuine genre-aligned books outright, for any genre, not just romance.
+- **Choice — three additions to `scoreBook`, all in `lib/matching.ts`:**
+  1. **Genre alignment gate:** when the reader selected at least one genre, a book whose own genre isn't among them gets its mood+trope contribution discounted by `GENRE_MISMATCH_DISCOUNT` (0.2) — a discount, not a hard exclusion, since "some slight variation" was explicitly requested, not a rigid genre-only feed.
+  2. **`GENRE_ALIGNED_BONUS` (+2) flat bonus** for matching the reader's selected genre — added after verifying empirically that the discount alone wasn't sufficient: a book matching *only* the right genre (no mood/trope overlap) was still scoring below an off-genre book with a single discounted mood match, exactly backwards. The bonus corrects that ordering.
+  3. **`CATEGORY_COVERAGE_BONUS` (+2 per additional category matched):** a book scoring across mood *and* trope *and* genre gets rewarded for that breadth directly, not just whichever single category happened to carry the most raw weight — the literal "multiple tags should match" ask.
+  - Genre-mismatched-but-strong-mood-match books naturally sort lower and land more often in the explore slice (`composeExploreExploitDeck`) than the main exploit deck as a side effect of the discount — no special-casing needed there.
+- **Verified against real catalog data via a throwaway script** (`prisma/verify-genre-gate.ts`, deleted after use) exercising `getDeckForPreference` directly against the local dev database, not just reasoning about the formula:
+  - Mood=dark + genre=Sci-Fi: **before** the fix, the top 30 was scattered across a dozen genres (Cozy Mystery led with 6, Romance+Romantasy 9 combined, Sci-Fi only 4). **After**: Sci-Fi 25 of 30, with the single Sci-Fi book that also matched "dark" correctly ranked #1.
+  - Mood=dark, no genre selected: genre breakdown stayed broadly scattered across a dozen genres, confirming the gate only activates when the reader actually expressed a genre preference — no regression for a reader who hasn't.
+- **Not yet re-verified after a mid-task local Postgres outage** (unrelated to this change — `prisma dev`'s local instance stopped accepting connections partway through testing a third scenario, confirmed by the main dev server itself failing the same way moments later): a mixed multi-genre + multi-mood scenario (Horror+Mystery genres, dark+tense moods) was queued but not run. The two scenarios above are the ones that directly reproduce and fix the reported bug; the third was additional polish-level confidence, not load-bearing for this fix.
+
+---
+
 *(Later phases append their own sections here as we build them.)*

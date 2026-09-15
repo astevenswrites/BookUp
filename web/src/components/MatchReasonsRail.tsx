@@ -90,7 +90,7 @@ export function MatchReasonsRail({
         </p>
         <MatchReasonsContent reasons={reasons} moodLabels={moodLabels} />
       </div>
-      <div className="mt-4 flex justify-center rounded-2xl border border-card-border bg-card/80 p-4 backdrop-blur-sm">
+      <div className="mt-4 flex justify-center">
         <TbrBookshelf count={tbrCount} />
       </div>
     </aside>

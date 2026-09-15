@@ -3,6 +3,11 @@ import { VibeTheme } from "@/generated/prisma/enums";
 
 const SESSION_COOKIE = "bd_session";
 const DEMO_THEME_COOKIE = "bd_demo_theme";
+// D57: `false` under plain `npm run dev` (no local HTTPS) so these cookies
+// still get set at all — `secure` cookies are silently dropped by the
+// browser over http://. Vercel serves production over HTTPS exclusively,
+// so this is `true` everywhere it actually matters.
+const SECURE_COOKIE = process.env.NODE_ENV === "production";
 
 // Read-only — safe to call from Server Components. Returns null until the
 // user's first mutation (quiz submit), which is when getOrCreateSessionId
@@ -21,6 +26,7 @@ export async function getOrCreateSessionId(): Promise<string> {
   const id = crypto.randomUUID();
   store.set(SESSION_COOKIE, id, {
     httpOnly: true,
+    secure: SECURE_COOKIE,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 365,
     path: "/",
@@ -49,6 +55,7 @@ export async function setDemoTheme(theme: VibeTheme): Promise<void> {
   const store = await cookies();
   store.set(DEMO_THEME_COOKIE, theme, {
     httpOnly: true,
+    secure: SECURE_COOKIE,
     sameSite: "lax",
     maxAge: 60 * 60 * 24 * 365,
     path: "/",

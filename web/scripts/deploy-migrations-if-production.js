@@ -6,6 +6,8 @@
 // an unmerged branch's migrations run against it automatically would be its
 // own risk. Skips silently (exit 0) for local `npm run build` too, since
 // VERCEL_ENV is never set outside Vercel's own build environment.
+// Plain CommonJS script, run directly via `node`, not bundled/transpiled by Next.
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const { execSync } = require("node:child_process");
 
 if (process.env.VERCEL_ENV === "production") {

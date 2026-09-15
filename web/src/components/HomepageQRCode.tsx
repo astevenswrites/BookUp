@@ -1,19 +1,17 @@
 import { headers } from "next/headers";
 import QRCode from "qrcode";
+import { getSiteOrigin } from "@/lib/site";
 
 // D43: a scannable link to the homepage itself, for sharing in person
-// (demos, meetups). Points at whatever origin actually served this request
-// (headers().get("host"), same pattern as signUpWithPassword's
-// emailRedirectTo) rather than a hardcoded production URL, so it naturally
-// points at localhost during dev and the real domain in production.
-// Generated server-side as inline SVG (no client JS, no external image
-// host) — dark-on-white regardless of the active vibe theme, since QR
+// (demos, meetups). D57: uses the same platform-provided-origin helper as
+// signUpWithPassword's emailRedirectTo, rather than trusting the request's
+// own Host header directly — points at the real production domain
+// regardless of which deployment served the request, and at localhost in
+// local dev. Generated server-side as inline SVG (no client JS, no external
+// image host) — dark-on-white regardless of the active vibe theme, since QR
 // scanners need reliable contrast more than they need theme-matching.
 export async function HomepageQRCode() {
-  const headerList = await headers();
-  const host = headerList.get("host") ?? "book-up-hc6s.vercel.app";
-  const protocol = host.startsWith("localhost") || host.startsWith("127.0.0.1") ? "http" : "https";
-  const url = `${protocol}://${host}/`;
+  const url = `${getSiteOrigin(await headers())}/`;
 
   const svg = await QRCode.toString(url, {
     type: "svg",

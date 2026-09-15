@@ -9,6 +9,7 @@ import { getPreferenceForActor } from "@/lib/preferences";
 import { getSwipedBookIds } from "@/lib/limits";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { completeSignIn } from "@/lib/auth";
+import { getSiteOrigin } from "@/lib/site";
 import { HeatLevel, Pacing, ReadingFrequency, DisplayMode, VibeTheme, TbrStatus } from "@/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -256,7 +257,9 @@ export async function signUpWithPassword(formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
   const supabase = await createServerSupabaseClient();
-  const origin = (await headers()).get("origin");
+  // D57: not header-derived — see lib/site.ts for why the raw Origin header
+  // isn't trustworthy input for a link Supabase emails out.
+  const origin = getSiteOrigin(await headers());
 
   const { data, error } = await supabase.auth.signUp({
     email,

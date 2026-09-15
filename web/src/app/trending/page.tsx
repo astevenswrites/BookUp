@@ -41,7 +41,7 @@ export default async function TrendingPage() {
         <p className="mt-1 text-sm text-on-vibe-muted">
           What every reader&apos;s adding right now — not filtered to your taste.
         </p>
-        <Link href="/" className="mt-2 inline-block text-sm text-on-vibe-accent underline">
+        <Link href="/swipe" className="mt-2 inline-block text-sm text-on-vibe-accent underline">
           Back to swiping
         </Link>
       </header>

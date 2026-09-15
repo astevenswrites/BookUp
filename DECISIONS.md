@@ -454,4 +454,16 @@ sections get their own D-numbers as they land.
 
 ---
 
+### D61. `/` becomes a signed-in home dashboard; the swipe deck moves to `/swipe`
+- **Why:** D60's fix made the floating nav row wrap cleanly, but didn't address the actual complaint underneath it — the swipe page's header (nav pills, the mood picker, and everything else previously crammed on top of the deck) was cluttered on mobile even wrapped correctly onto two lines. Rather than keep squeezing more into that one header, split it: `/` becomes a real dashboard for signed-in users (shelf, profile, blind date, trending, the mood picker, a big "Start swiping" button), and the deck itself moves to its own route, `/swipe`, with a genuinely minimal header.
+- **Choice:**
+  - New `web/src/app/swipe/page.tsx` — the deck-fetching logic and states (anonymous preview cap, signup wall, daily cap, "come back tomorrow") lifted from the old `/` almost unchanged, just without `MoodQuickSelect`. Redirects to `/` if there's no preference yet.
+  - `web/src/app/page.tsx` rewritten: no preference → `<Landing />` (unchanged); a real signed-in account (`actor.kind === "user"`) with a preference → the new `<Home>` dashboard; an **anonymous session with a preference redirects straight to `/swipe`**, deliberately skipping the dashboard — the whole point of the anonymous preview funnel (D42) is getting a first-time visitor into real matching fast, and a menu of features an account-less session can't fully use (Profile, Today's Picks) would just be friction in that funnel, not an upgrade.
+  - New `web/src/components/Home.tsx` — welcome header with a live shelf-count/swipes-remaining line, the relocated `MoodQuickSelect`, a prominent "Start swiping" link to `/swipe`, and a 2-column grid of cards (Your shelf, Today's picks, Blind date, Trending, Profile) replacing what used to be individual floating nav pills.
+  - `AuthStatus` trimmed to just **Home** + sign in/out — Profile, Blind date, Trending, and Today's Picks all moved to the dashboard's cards instead of living in the floating row on every single page. This is what actually fixes D60's mobile clutter, not just the wrapping — there's simply less in that row now.
+  - Every "Back to swiping" link across `/tbr`, `/today`, `/trending`, `/profile`, plus `/login`'s "keep browsing without an account" and the quiz's post-submit redirect, now point at `/swipe` instead of `/`. `submitQuiz` and `setCurrentMood` now revalidate both `/` and `/swipe`, since either one's data (mood, shelf count) can go stale from the other.
+- **Verified live:** confirmed `/` correctly redirects an anonymous session with a preference straight to `/swipe`; temporarily forced the dashboard branch to render for that same session to confirm `Home`'s layout, mood picker (toggling a mood there and seeing it reflected in the very next deck load's "Why this one" weights), and "Start swiping" link all work, then reverted the temporary bypass; confirmed the trimmed `AuthStatus` no longer wraps at all on a 375px viewport.
+
+---
+
 *(Later phases append their own sections here as we build them.)*

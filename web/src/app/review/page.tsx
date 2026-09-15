@@ -17,8 +17,8 @@ export default async function ReviewPage() {
           {books.length} synthetic placeholder books, for reviewing the card
           design across variety. Internal design QA only — the real product
           loop is at{" "}
-          <Link href="/" className="underline">
-            /
+          <Link href="/swipe" className="underline">
+            /swipe
           </Link>
           .
         </p>

@@ -68,6 +68,7 @@ export async function submitQuiz(formData: FormData) {
   }
 
   revalidatePath("/");
+  revalidatePath("/swipe");
 }
 
 // D45: optional behavioral signal captured alongside the swipe itself —
@@ -152,6 +153,7 @@ export async function setCurrentMood(tagId: string | null) {
     actor.kind === "user" ? { userId: actor.userId } : { sessionId: actor.sessionId };
   await prisma.preference.update({ where, data: { currentMoodTagId: tagId } });
   revalidatePath("/");
+  revalidatePath("/swipe");
 }
 
 export async function getMoreCards(excludeBookIds: string[], limit = 20) {

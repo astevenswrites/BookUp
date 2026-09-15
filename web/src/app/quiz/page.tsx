@@ -11,9 +11,11 @@ export default async function QuizPage() {
   const actor = await getActor();
   const preference = hasIdentity(actor) ? await getPreferenceForActor(actor) : null;
 
-  // Already has a preference — nothing to do here, back to swiping.
+  // Already has a preference — nothing to do here, back to the dashboard.
   if (preference) redirect("/");
 
   const tags = await getTagsByCategory();
-  return <Quiz tags={tags} redirectTo="/" />;
+  // D61: straight into the deck on completion, not the dashboard — finishing
+  // the quiz should feel like arriving somewhere, not another menu.
+  return <Quiz tags={tags} redirectTo="/swipe" />;
 }

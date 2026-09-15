@@ -11,6 +11,9 @@ const DOT_COLOR: Record<string, string> = {
 // D40: "Why this one" — surfaces the actual tag overlaps that scored the
 // top card, so the matching algorithm (D25) isn't a black box. Desktop
 // only (see SwipeDeck) — there's no room for a side rail on mobile.
+// `sticky` so it floats alongside the card as the page scrolls (the card
+// can now grow taller than the viewport when "More details" is expanded —
+// see the swipe-card clipping fix — without the rail scrolling out of view).
 export function MatchReasonsRail({
   reasons,
   moodLabels,
@@ -22,7 +25,7 @@ export function MatchReasonsRail({
   const vibe = THEME_CONFIG[vibeFamily];
 
   return (
-    <aside className="hidden w-[300px] flex-none pt-12 lg:block">
+    <aside className="sticky top-8 hidden w-[300px] flex-none self-start pt-12 lg:block">
       <div className="rounded-2xl border border-card-border bg-card/80 p-5 backdrop-blur-sm">
         <p className="mb-3.5 text-xs font-medium uppercase tracking-[0.12em] text-muted">
           Why this one

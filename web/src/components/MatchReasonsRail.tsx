@@ -5,6 +5,7 @@ const DOT_COLOR: Record<string, string> = {
   mood: "#234a63",
   trope: "#5b2a86",
   genre: "#4a3f33",
+  collaborative: "#1f7a5c",
 };
 
 // D40: "Why this one" — surfaces the actual tag overlaps that scored the

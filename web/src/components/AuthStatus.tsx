@@ -16,6 +16,18 @@ export async function AuthStatus() {
       >
         Profile
       </Link>
+      <Link
+        href="/blind-date"
+        className="rounded-full border border-card-border bg-card/90 px-3 py-1.5 font-medium text-foreground/70 shadow-sm backdrop-blur-sm hover:border-accent"
+      >
+        Blind date
+      </Link>
+      <Link
+        href="/trending"
+        className="rounded-full border border-card-border bg-card/90 px-3 py-1.5 font-medium text-foreground/70 shadow-sm backdrop-blur-sm hover:border-accent"
+      >
+        Trending
+      </Link>
       {user ? (
         <>
           <Link

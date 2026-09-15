@@ -62,11 +62,13 @@ export default async function Home() {
   }
 
   const excludeBookIds = await getSwipedBookIds(actor);
-  const deck = await getDeckForPreference(preference, excludeBookIds, 30);
+  const { books: deck, tagWeights, collaborativeBoosts } = await getDeckForPreference(
+    actor,
+    preference,
+    excludeBookIds,
+    30
+  );
   const { mood: moods } = await getTagsByCategory();
-  const likedTagIds = preference.tags
-    .filter(({ tag }) => tag.category !== "content_warning")
-    .map(({ tagId }) => tagId);
 
   return (
     <div className="flex flex-1 flex-col pt-16">
@@ -76,7 +78,8 @@ export default async function Home() {
         initialDeck={deck}
         remainingToday={remainingToday}
         displayMode={preference.displayMode}
-        likedTagIds={likedTagIds}
+        tagWeights={tagWeights}
+        collaborativeBoosts={collaborativeBoosts}
         currentMoodTagId={preference.currentMoodTagId}
         isAnonymous={actor.kind === "session"}
       />

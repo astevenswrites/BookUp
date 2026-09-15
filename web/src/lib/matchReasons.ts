@@ -16,29 +16,37 @@ export const CATEGORY_WEIGHT: Record<string, number> = {
 // mood weight above.
 export const CURRENT_MOOD_BOOST = 6;
 
-export type MatchReason = { label: string; category: TagCategory; weight: number };
+export type MatchReason = { label: string; category: TagCategory | "collaborative"; weight: number };
 
-// D40: "Why this one" rail — the actual tags that scored this book, so the
-// matching algorithm isn't a black box. Mirrors scoreBook's tag-overlap
-// logic exactly (content warnings never shown here — they're hard-filtered
-// before a book is ever a candidate, D24, not a "match reason").
+// D40/D45/D46: "Why this one" rail — the actual signals that scored this
+// book, so the matching algorithm isn't a black box. `tagWeights` is the
+// combined explicit (quiz) + implicit (behavioral history) weight per tag,
+// exactly what scoreBook itself summed — a positive weight here is a real
+// contributor to the ranking, not just an explicit quiz pick anymore.
+// (Content warnings never shown here — hard-filtered before a book is ever
+// a candidate, D24, not a "match reason".)
 export function getMatchReasons(
   book: BookWithTags,
-  likedTagIds: Set<string>,
-  currentMoodTagId: string | null
+  tagWeights: Map<string, number>,
+  currentMoodTagId: string | null,
+  collaborativeBoost = 0
 ): MatchReason[] {
   const reasons: MatchReason[] = [];
   for (const { tag } of book.tags) {
     if (tag.category === "content_warning") continue;
+    const weight = tagWeights.get(tag.id) ?? 0;
     if (currentMoodTagId && tag.id === currentMoodTagId) {
-      reasons.push({
-        label: tag.label,
-        category: tag.category,
-        weight: (CATEGORY_WEIGHT[tag.category] ?? 1) + CURRENT_MOOD_BOOST,
-      });
-    } else if (likedTagIds.has(tag.id)) {
-      reasons.push({ label: tag.label, category: tag.category, weight: CATEGORY_WEIGHT[tag.category] ?? 1 });
+      reasons.push({ label: tag.label, category: tag.category, weight: weight + CURRENT_MOOD_BOOST });
+    } else if (weight > 0) {
+      reasons.push({ label: tag.label, category: tag.category, weight: Math.round(weight * 10) / 10 });
     }
+  }
+  if (collaborativeBoost > 0) {
+    reasons.push({
+      label: "readers with similar taste",
+      category: "collaborative",
+      weight: Math.round(collaborativeBoost * 10) / 10,
+    });
   }
   return reasons.sort((a, b) => b.weight - a.weight);
 }

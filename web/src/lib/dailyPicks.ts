@@ -46,7 +46,11 @@ export async function getTodaysPicks(actor: Actor, preference: PreferenceWithTag
   ]);
   const exclude = [...new Set([...alreadySwiped, ...alreadyPicked.map((p) => p.bookId)])];
 
-  const picks = await getDeckForPreference(preference, exclude, TODAYS_PICKS_COUNT);
+  // D47: Today's Picks stays pure exploit — a small, fully-curated daily
+  // set (D35) shouldn't have the swipe deck's exploration mixed in.
+  const { books: picks } = await getDeckForPreference(actor, preference, exclude, TODAYS_PICKS_COUNT, {
+    explore: false,
+  });
   if (picks.length === 0) return [];
 
   await prisma.dailyPick.createMany({

@@ -4,6 +4,7 @@ import { prisma } from "@/lib/prisma";
 import { getOrCreateActor, actorWhere } from "@/lib/actor";
 import { setDemoTheme } from "@/lib/session";
 import { getDeckForPreference } from "@/lib/matching";
+import { getTangentialPick, getCommunityPick } from "@/lib/blindDate";
 import { getPreferenceForActor } from "@/lib/preferences";
 import { getSwipedBookIds } from "@/lib/limits";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
@@ -68,10 +69,26 @@ export async function submitQuiz(formData: FormData) {
   revalidatePath("/");
 }
 
-export async function swipeBook(bookId: string, direction: "left" | "right") {
+// D45: optional behavioral signal captured alongside the swipe itself —
+// dwellMs (time-to-decision) and viewedDetails (blurb/content-warning
+// expand before deciding) feed getImplicitTagWeights' confidence
+// multiplier. Both are best-effort; omit either rather than guess.
+export async function swipeBook(
+  bookId: string,
+  direction: "left" | "right",
+  meta?: { dwellMs?: number; viewedDetails?: boolean }
+) {
   const actor = await getOrCreateActor();
 
-  await prisma.swipe.create({ data: { bookId, direction, ...actorWhere(actor) } });
+  await prisma.swipe.create({
+    data: {
+      bookId,
+      direction,
+      dwellMs: meta?.dwellMs,
+      viewedDetails: meta?.viewedDetails ?? false,
+      ...actorWhere(actor),
+    },
+  });
 
   if (direction === "right") {
     const existing = await prisma.tBREntry.findFirst({
@@ -114,22 +131,53 @@ export async function setCurrentMood(tagId: string | null) {
 export async function getMoreCards(excludeBookIds: string[], limit = 20) {
   const actor = await getOrCreateActor();
   const preference = await getPreferenceForActor(actor);
-  if (!preference) return [];
+  if (!preference) return { books: [], tagWeights: {}, collaborativeBoosts: {} };
 
   const alreadySwiped = await getSwipedBookIds(actor);
   const exclude = [...new Set([...excludeBookIds, ...alreadySwiped])];
 
-  return getDeckForPreference(preference, exclude, limit);
+  return getDeckForPreference(actor, preference, exclude, limit);
+}
+
+// --- Blind Date (D48: two separate entry points) ---
+
+export async function getBlindDateSurprise() {
+  const actor = await getOrCreateActor();
+  const preference = await getPreferenceForActor(actor);
+  if (!preference) return null;
+  const excludeBookIds = await getSwipedBookIds(actor);
+  return getTangentialPick(actor, preference, excludeBookIds);
+}
+
+export async function getBlindDateCommunityPick() {
+  const actor = await getOrCreateActor();
+  const preference = await getPreferenceForActor(actor);
+  if (!preference) return { status: "insufficient_data" as const };
+  const excludeBookIds = await getSwipedBookIds(actor);
+  return getCommunityPick(actor, preference, excludeBookIds);
 }
 
 // --- TBR shelf management (D36: statuses + the 21-day "still interested?" re-prompt) ---
 
+// D45: stamps startedAt/finishedAt the first time an entry transitions into
+// `reading` / `finished`|`dnf` — the reading-completion signal the research
+// doc calls highest-quality. Fetches first rather than a blind updateMany
+// so a later re-transition (e.g. finished -> reading again) never clobbers
+// an already-set timestamp.
 export async function updateTbrStatus(entryId: string, status: TbrStatus) {
   const actor = await getOrCreateActor();
-  await prisma.tBREntry.updateMany({
+  const entry = await prisma.tBREntry.findFirst({
     where: { id: entryId, ...actorWhere(actor) },
-    data: { status },
   });
+  if (!entry) return;
+
+  const data: { status: TbrStatus; startedAt?: Date; finishedAt?: Date } = { status };
+  if (status === TbrStatus.reading && !entry.startedAt) data.startedAt = new Date();
+  if ((status === TbrStatus.finished || status === TbrStatus.dnf) && !entry.finishedAt) {
+    data.finishedAt = new Date();
+  }
+
+  await prisma.tBREntry.update({ where: { id: entryId }, data });
   revalidatePath("/tbr");
 }
 

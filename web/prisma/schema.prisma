@@ -117,6 +117,13 @@ model Swipe {
   direction SwipeDirection
   createdAt DateTime       @default(now())
 
+  // D45: behavioral signal capture — ms the card sat on top of the stack
+  // before the decision, and whether the detail view was expanded first.
+  // Both feed getImplicitTagWeights' confidence multiplier; neither is
+  // required (older rows / instrumentation gaps are just null/false).
+  dwellMs       Int?
+  viewedDetails Boolean @default(false)
+
   // D3: anonymous-first — either userId or sessionId is set, never both null
   userId    String?
   sessionId String?
@@ -135,6 +142,13 @@ model TBREntry {
   status    TbrStatus @default(to_read) // D4
   addedAt   DateTime  @default(now())
   updatedAt DateTime  @updatedAt
+
+  // D45: stamped once on the first transition into `reading` / into
+  // `finished` or `dnf` (never overwritten on a later unrelated update,
+  // unlike `updatedAt`) — the reading-outcome signal the research doc calls
+  // the highest-quality one available, previously uncapturable at all.
+  startedAt  DateTime?
+  finishedAt DateTime?
 
   // D3: anonymous-first, same pattern as Swipe
   userId    String?

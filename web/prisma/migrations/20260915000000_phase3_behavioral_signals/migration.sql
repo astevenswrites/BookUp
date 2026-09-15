@@ -1,0 +1,7 @@
+-- AlterTable
+ALTER TABLE "Swipe" ADD COLUMN "dwellMs" INTEGER;
+ALTER TABLE "Swipe" ADD COLUMN "viewedDetails" BOOLEAN NOT NULL DEFAULT false;
+
+-- AlterTable
+ALTER TABLE "TBREntry" ADD COLUMN "startedAt" TIMESTAMP(3);
+ALTER TABLE "TBREntry" ADD COLUMN "finishedAt" TIMESTAMP(3);

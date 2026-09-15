@@ -9,9 +9,11 @@ import type { DisplayMode } from "@/generated/prisma/enums";
 export function BookCard({
   book,
   displayMode = "cover_first",
+  onDetailsOpen,
 }: {
   book: BookWithTags;
   displayMode?: DisplayMode;
+  onDetailsOpen?: () => void;
 }) {
   const tags = groupTags(book);
   const highlightTags = [...tags.mood, ...tags.trope].slice(0, 4);
@@ -88,6 +90,7 @@ export function BookCard({
           heatLevel={book.heatLevel}
           pacing={book.pacing}
           contentWarnings={tags.content_warning}
+          onOpen={onDetailsOpen}
         />
       </div>
     </article>

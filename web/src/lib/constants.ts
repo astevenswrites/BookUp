@@ -12,3 +12,9 @@ export const DAILY_SWIPE_CAP = 35;
 // See DECISIONS.md D42 for why this replaces "anonymous users get the full
 // daily cap" (D22/D28's original stance).
 export const ANONYMOUS_PREVIEW_SWIPE_CAP = 5;
+
+// D47: the main swipe deck is ~80% high-confidence matches, ~20% real but
+// less-likely ones (interleaved, not clumped) so the deck doesn't calcify
+// into a filter bubble. Today's Picks deliberately does NOT use this —
+// D35 designed it as a small, fully-curated daily set.
+export const EXPLORE_RATIO = 0.2;

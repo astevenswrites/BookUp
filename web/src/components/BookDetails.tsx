@@ -4,6 +4,8 @@ import { useState } from "react";
 
 // Tap-to-reveal detail view: full synopsis, page count, heat/pacing, and content
 // warnings. Deliberately not shown on the card face — see DECISIONS.md D9/D10.
+// D45: onOpen fires once on first expand — the "did they read the details
+// before swiping" signal, bubbled up to SwipeDeck for the next swipeBook call.
 export function BookDetails({
   blurb,
   pageCount,
@@ -11,6 +13,7 @@ export function BookDetails({
   heatLevel,
   pacing,
   contentWarnings,
+  onOpen,
 }: {
   blurb: string;
   pageCount: number;
@@ -18,6 +21,7 @@ export function BookDetails({
   heatLevel: string;
   pacing: string;
   contentWarnings: string[];
+  onOpen?: () => void;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -25,7 +29,12 @@ export function BookDetails({
     <div className="mt-3 border-t border-card-border pt-3">
       <button
         type="button"
-        onClick={() => setOpen((v) => !v)}
+        onClick={() => {
+          setOpen((v) => {
+            if (!v) onOpen?.();
+            return !v;
+          });
+        }}
         className="text-sm font-medium text-accent hover:underline"
         aria-expanded={open}
       >

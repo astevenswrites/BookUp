@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { motion, useMotionValue, useTransform } from "motion/react";
 import { BookCard } from "@/components/BookCard";
@@ -20,14 +20,16 @@ export function SwipeDeck({
   initialDeck,
   remainingToday,
   displayMode = "cover_first",
-  likedTagIds,
+  tagWeights: initialTagWeights,
+  collaborativeBoosts: initialCollaborativeBoosts,
   currentMoodTagId,
   isAnonymous = false,
 }: {
   initialDeck: BookWithTags[];
   remainingToday: number;
   displayMode?: DisplayMode;
-  likedTagIds: string[];
+  tagWeights: Record<string, number>;
+  collaborativeBoosts: Record<string, number>;
   currentMoodTagId: string | null;
   isAnonymous?: boolean;
 }) {
@@ -38,11 +40,33 @@ export function SwipeDeck({
   const [tbrCount, setTbrCount] = useState(0);
   const [, startTransition] = useTransition();
 
+  // D45/D46: refreshed after every refill (see commitSwipe) so the "why
+  // this one" rail reflects the reader's latest swipes within the same
+  // session, not just what was known at page load.
+  const [tagWeights, setTagWeights] = useState(initialTagWeights);
+  const [collaborativeBoosts, setCollaborativeBoosts] = useState(initialCollaborativeBoosts);
+
   const topCard = deck[0];
-  const likedTagIdSet = useMemo(() => new Set(likedTagIds), [likedTagIds]);
+
+  // D45: dwell time + "opened details before deciding" for the card
+  // currently on top — reset whenever a new card takes the top slot. The
+  // real timestamp is only ever set inside the effect (not at render time,
+  // per react-hooks/purity) — the 0 initializer is never read since the
+  // effect runs before any swipe is possible.
+  const cardShownAt = useRef(0);
+  const viewedDetailsForTop = useRef(false);
+  useEffect(() => {
+    cardShownAt.current = Date.now();
+    viewedDetailsForTop.current = false;
+  }, [topCard?.id]);
+
+  const tagWeightMap = useMemo(() => new Map(Object.entries(tagWeights)), [tagWeights]);
   const matchReasons = useMemo(
-    () => (topCard ? getMatchReasons(topCard, likedTagIdSet, currentMoodTagId) : []),
-    [topCard, likedTagIdSet, currentMoodTagId]
+    () =>
+      topCard
+        ? getMatchReasons(topCard, tagWeightMap, currentMoodTagId, collaborativeBoosts[topCard.id] ?? 0)
+        : [],
+    [topCard, tagWeightMap, currentMoodTagId, collaborativeBoosts]
   );
   const topCardMoodLabels = useMemo(
     () =>
@@ -53,19 +77,27 @@ export function SwipeDeck({
   );
 
   function commitSwipe(bookId: string, direction: "left" | "right") {
+    // commitSwipe only ever runs from click/drag-end event handlers below,
+    // never during render.
+    // eslint-disable-next-line react-hooks/purity
+    const dwellMs = Date.now() - cardShownAt.current;
+    const meta = { dwellMs, viewedDetails: viewedDetailsForTop.current };
+
     setDeck((prev) => prev.slice(1));
     setRemaining((prev) => prev - 1);
     if (direction === "right") setTbrCount((n) => n + 1);
 
     startTransition(async () => {
-      await swipeBook(bookId, direction);
+      await swipeBook(bookId, direction, meta);
     });
 
     if (deck.length - 1 <= LOW_DECK_REFILL_AT) {
       startFetchMore(async () => {
         const more = await getMoreCards(seenIds);
-        setSeenIds((prev) => [...prev, ...more.map((b) => b.id)]);
-        setDeck((prev) => [...prev, ...more]);
+        setSeenIds((prev) => [...prev, ...more.books.map((b) => b.id)]);
+        setDeck((prev) => [...prev, ...more.books]);
+        setTagWeights((prev) => ({ ...prev, ...more.tagWeights }));
+        setCollaborativeBoosts((prev) => ({ ...prev, ...more.collaborativeBoosts }));
       });
     }
   }
@@ -122,6 +154,7 @@ export function SwipeDeck({
                   stackDepth={arr.length - 1 - i}
                   displayMode={displayMode}
                   onSwipe={(direction) => commitSwipe(book.id, direction)}
+                  onDetailsOpen={isTop ? () => { viewedDetailsForTop.current = true; } : undefined}
                 />
               );
             })}
@@ -158,12 +191,14 @@ function SwipeCard({
   stackDepth,
   displayMode,
   onSwipe,
+  onDetailsOpen,
 }: {
   book: BookWithTags;
   isTop: boolean;
   stackDepth: number;
   displayMode: DisplayMode;
   onSwipe: (direction: "left" | "right") => void;
+  onDetailsOpen?: () => void;
 }) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-200, 200], [-12, 12]);
@@ -205,7 +240,7 @@ function SwipeCard({
           </motion.div>
         </>
       )}
-      <BookCard book={book} displayMode={displayMode} />
+      <BookCard book={book} displayMode={displayMode} onDetailsOpen={onDetailsOpen} />
     </motion.div>
   );
 }

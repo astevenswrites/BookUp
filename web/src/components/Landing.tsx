@@ -3,7 +3,9 @@ import { LandingMoodDemo } from "@/components/LandingMoodDemo";
 import { HomepageQRCode } from "@/components/HomepageQRCode";
 import { DAILY_SWIPE_CAP } from "@/lib/constants";
 import { getDemoTheme } from "@/lib/session";
-import { DEFAULT_VIBE_THEME } from "@/lib/theme";
+import { getActor, hasIdentity } from "@/lib/actor";
+import { getPreferenceForActor, getPreferenceMoodLabels } from "@/lib/preferences";
+import { DEFAULT_VIBE_THEME, deriveVibeTheme } from "@/lib/theme";
 
 const PLANS = [
   {
@@ -50,8 +52,20 @@ const STEPS = [
 // D41: marketing landing page — pricing is static copy only (no billing
 // exists yet, that's Phase 5); "Start the vibe check" is the only real path
 // into the product for a first-time visitor.
+// D64: an anonymous session that's already taken the quiz can land here too
+// now (D62 — Landing shows for anyone not signed in, preference or not), so
+// this can no longer assume "no preference yet" the way it could pre-D62.
+// When a preference exists, the mood picker has to drive the SAME
+// themeOverride the real post-quiz ThemeSwitcher pill uses — that pill is
+// already rendered globally for this exact actor (layout.tsx's `preference
+// && <ThemeSwitcher>` doesn't check sign-in status), so two independent
+// theme pickers were showing at once, and only one of them worked.
 export async function Landing() {
-  const initialTheme = (await getDemoTheme()) ?? DEFAULT_VIBE_THEME;
+  const actor = await getActor();
+  const preference = hasIdentity(actor) ? await getPreferenceForActor(actor) : null;
+  const initialTheme = preference
+    ? deriveVibeTheme(getPreferenceMoodLabels(preference), preference.themeOverride) ?? DEFAULT_VIBE_THEME
+    : (await getDemoTheme()) ?? DEFAULT_VIBE_THEME;
 
   return (
     <div className="mx-auto w-full max-w-6xl px-4 pb-16 pt-20 sm:px-8">
@@ -91,7 +105,7 @@ export async function Landing() {
           </p>
         </div>
 
-        <LandingMoodDemo initialTheme={initialTheme} />
+        <LandingMoodDemo initialTheme={initialTheme} persistent={!!preference} />
       </div>
 
       <div className="mt-16 grid grid-cols-1 gap-4 sm:grid-cols-2 sm:gap-6">

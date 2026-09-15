@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { setDemoThemeOverride } from "@/app/actions";
+import { setDemoThemeOverride, setThemeOverride } from "@/app/actions";
 import { THEME_CONFIG } from "@/lib/theme";
 import type { VibeTheme } from "@/generated/prisma/enums";
 
@@ -23,13 +23,26 @@ const CAPTIONS: Record<VibeTheme, string> = {
 // state here is just for instant click feedback — the real global
 // VibeBackground/.vibe-dark (layout.tsx) picks up the persisted value a
 // moment later via the Server Action's revalidatePath.
-export function LandingMoodDemo({ initialTheme }: { initialTheme: VibeTheme }) {
+// D64: `persistent` is true when the current actor already has a
+// Preference (D62 made Landing reachable for anonymous sessions that have
+// already taken the quiz, not just first-time visitors). In that case
+// layout.tsx's theme always derives from the real preference, never the
+// demo cookie — clicking a mood here has to write to that SAME
+// `themeOverride` field (via `setThemeOverride`, the exact action the real
+// `ThemeSwitcher` pill already uses) or it has no visible effect at all.
+export function LandingMoodDemo({
+  initialTheme,
+  persistent = false,
+}: {
+  initialTheme: VibeTheme;
+  persistent?: boolean;
+}) {
   const [mood, setMood] = useState<VibeTheme>(initialTheme);
   const [isPending, startTransition] = useTransition();
 
   function pick(theme: VibeTheme) {
     setMood(theme);
-    startTransition(() => setDemoThemeOverride(theme));
+    startTransition(() => (persistent ? setThemeOverride(theme) : setDemoThemeOverride(theme)));
   }
 
   return (

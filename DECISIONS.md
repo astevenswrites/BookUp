@@ -479,4 +479,13 @@ sections get their own D-numbers as they land.
 
 ---
 
+### D64. Landing's mood demo was silently a no-op for anonymous sessions with a preference
+- **Symptom:** on the Landing page, clicking a mood in "pick a feeling, watch the page change" did nothing — the vibe stayed locked to one theme regardless of which pill was clicked.
+- **Why:** `layout.tsx`'s theme choice was `preference ? deriveVibeTheme(...) : demoTheme`, which was airtight *before* D62 — Landing only ever rendered for a visitor with no preference at all, so the demo cookie was always the right (only) source. D62 made Landing reachable by any anonymous session regardless of preference, so an anonymous visitor who's already taken the quiz now sees Landing **and** has a preference — and the layout keeps deriving the theme from that preference, ignoring the demo cookie entirely no matter what gets clicked. Confirmed this only shows up locally where leftover test data (a `Preference` row from earlier sessions) satisfies the trigger condition — a clean production session without one wouldn't hit it yet, but would as soon as any real anonymous visitor took the quiz and came back to `/`.
+- **The actual root cause once traced further:** that same actor already has the real, working post-quiz `ThemeSwitcher` pill rendered globally (`layout.tsx`'s `{preference && <ThemeSwitcher>}` was never gated on sign-in status) — so two theme pickers were on screen at once, and only one of them could possibly have any effect.
+- **Fix:** `Landing.tsx` now fetches the actor's preference itself and computes the correct *current* theme from it when one exists (instead of always reading the demo cookie), and `LandingMoodDemo` takes a new `persistent` prop — when true, clicking a mood calls `setThemeOverride` (the same Server Action the real `ThemeSwitcher` pill uses) instead of `setDemoThemeOverride`. One consistent mechanism instead of two competing ones; the demo cookie path is now only used for a genuinely first-time, no-preference visitor.
+- **Verified live:** in a session with an existing preference, clicked "Cozy" and confirmed the full page background, text colors, *and* the `ThemeSwitcher` pill's own label all updated together immediately, then reloaded fresh to confirm it persisted.
+
+---
+
 *(Later phases append their own sections here as we build them.)*

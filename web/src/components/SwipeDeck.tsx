@@ -400,6 +400,11 @@ function SwipeCard({
       // (D53: the deck's "there's more behind this" cue is now the
       // content-free StackEdges slivers rendered alongside this card, not
       // additional real cards — see StackEdges above for why.)
+      // zIndex must beat StackEdges' own (0 to MAX_STACK_EDGES-1) explicitly
+      // — a positioned element with z-index:auto (the default, if this were
+      // left unset) still paints BEHIND any sibling that has a real,
+      // non-auto z-index, even a small positive one. Without this, the top
+      // card rendered visually behind its own stack-edge slivers.
       className="relative w-full rounded-2xl"
       style={{
         x,
@@ -408,6 +413,7 @@ function SwipeCard({
         rotateY: rotateYMv,
         transformPerspective: 1400,
         transformOrigin: "50% 88%",
+        zIndex: MAX_STACK_EDGES + 1,
       }}
       drag={!exitDirection && "x"}
       dragConstraints={{ left: 0, right: 0 }}

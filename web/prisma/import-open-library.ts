@@ -301,7 +301,28 @@ async function resolveAuthorNames(works: SelectedWork[]): Promise<Map<string, st
 
 // --- Pass 4: edition enrichment (editions dump) ---------------------------
 
-type EditionInfo = { isbn: string; coverId: number; pageCount: number; publishedYear: number };
+// D69: `title` is the edition's OWN title, not the work's — used in place
+// of the work's canonical title in assembly. A work's own title is often
+// its *original publication language* title even when a well-known English
+// translation exists (e.g. the work behind "The Prince of Mist" is titled
+// "El Príncipe de la Niebla" — that's not a mismatched edition, it's simply
+// the original Spanish title of the work itself), so falling back to the
+// work's title for an English-edition book was reliably wrong, not
+// occasionally wrong. Every EditionInfo that exists has already passed the
+// explicit-English check below (no `explicitEnglish` field needed here —
+// there's nothing to compare, every candidate cleared the same bar).
+type EditionInfo = {
+  isbn: string;
+  coverId: number;
+  pageCount: number;
+  publishedYear: number;
+  title?: string;
+};
+
+function isBetterEdition(candidate: EditionInfo, existing: EditionInfo | undefined): boolean {
+  if (!existing) return true;
+  return candidate.coverId > existing.coverId;
+}
 
 async function enrichWithEditions(workKeys: Set<string>): Promise<Map<string, EditionInfo>> {
   console.log("\n=== Pass 4: edition enrichment (editions dump) ===");
@@ -317,6 +338,7 @@ async function enrichWithEditions(workKeys: Set<string>): Promise<Map<string, Ed
     if (!record || record.type !== "/type/edition") return;
 
     const json = record.json as {
+      title?: string;
       works?: { key?: string }[];
       isbn_13?: string[];
       isbn_10?: string[];
@@ -332,17 +354,29 @@ async function enrichWithEditions(workKeys: Set<string>): Promise<Map<string, Ed
     const coverId = json.covers?.[0];
     if (!isbn || !coverId || coverId <= 0) return;
 
-    const isEnglish = !json.languages || json.languages.some((l) => l.key === "/languages/eng");
-    if (!isEnglish) return;
-
-    const existing = found.get(workKey);
-    if (existing && existing.coverId >= coverId) return; // keep the better one already found
+    // D69 correction: "no language declared" is NOT a safe stand-in for
+    // English — caught live, a Polish edition with no `languages` field at
+    // all slipped through on the first version of this filter (which only
+    // rejected a *declared* non-English language). Requiring an explicit
+    // declaration costs some yield (plenty of genuinely-English editions
+    // just don't have this field populated either), but the reported bug
+    // was specifically about seeing non-English titles, so correctness
+    // wins over yield here.
+    const explicitEnglish = json.languages?.some((l) => l.key === "/languages/eng") ?? false;
+    if (!explicitEnglish) return;
 
     const yearMatch = json.publish_date?.match(/\d{4}/);
     const publishedYear = yearMatch ? parseInt(yearMatch[0], 10) : 2000;
     const pageCount = json.number_of_pages && json.number_of_pages > 0 ? json.number_of_pages : 320;
 
-    found.set(workKey, { isbn, coverId, pageCount, publishedYear });
+    const candidate: EditionInfo = {
+      isbn,
+      coverId,
+      pageCount,
+      publishedYear,
+      title: json.title,
+    };
+    if (isBetterEdition(candidate, found.get(workKey))) found.set(workKey, candidate);
   });
   console.log(`Found editions for ${found.size.toLocaleString()} / ${workKeys.size.toLocaleString()} works.`);
   return found;
@@ -395,6 +429,7 @@ async function main() {
   const vocab = await loadExistingVocab();
 
   let usedWorkCover = 0;
+  let usedEditionTitle = 0;
   const books: RealCatalogBook[] = [];
   for (const work of selectedWorks) {
     const edition = editions.get(work.key);
@@ -413,8 +448,13 @@ async function main() {
     const coverId = work.workCoverId ?? edition.coverId;
     if (work.workCoverId) usedWorkCover++;
 
+    // D69: the matched (English) edition's own title, not the work's —
+    // see the EditionInfo comment for why the work's title is often wrong.
+    const title = edition.title?.trim() || work.title;
+    if (edition.title?.trim()) usedEditionTitle++;
+
     books.push({
-      title: work.title,
+      title,
       author,
       hookLine: deriveHookLine(work.description),
       blurb,
@@ -443,6 +483,7 @@ async function main() {
   console.log(`Books with >=1 trope tag: ${withTrope} / ${books.length}`);
   console.log(`Books with >=1 mood tag: ${withMood} / ${books.length}`);
   console.log(`Used the work-level cover (over the edition's) for: ${usedWorkCover} / ${books.length}`);
+  console.log(`Used the edition's own title (over the work's): ${usedEditionTitle} / ${books.length}`);
 }
 
 main().catch((e) => {

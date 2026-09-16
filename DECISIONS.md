@@ -532,4 +532,13 @@ sections get their own D-numbers as they land.
 
 ---
 
+### D69. Non-English titles: work title vs. edition title, and a language-filter gap
+- **User-reported symptom:** lots of imported titles weren't in English.
+- **Root cause #1 — wrong field entirely, not a filter miss:** `import-open-library.ts` used the *work* record's own `title` unconditionally for the final book title. A work's title is its canonical/original-publication-language title, even when a well-known English translation exists — e.g. the work behind "The Prince of Mist" is titled "El Príncipe de la Niebla" in Open Library's data, because that's literally the original Spanish title Zafón published under. That's not a mismatched edition slipping through a filter; it's simply which language the work itself was first published in. Fixed by using the matched *edition's own* `title` field in assembly instead (`edition.title ?? work.title`) — since that edition was independently confirmed to be English (see below), its own title field is the correct English one.
+- **Root cause #2 — a real filter gap, caught by testing, not by inspection:** the original language check (`!json.languages || hasEnglish`) treated "no language declared" as equivalent to English. Spot-checking a smoke-test run surfaced a Polish Stephen King edition ("Ostatni bastion Barta Dawesa") that had no `languages` field at all — undeclared, not declared-and-wrong, so the old filter let it through. Tightened to require an *explicit* `/languages/eng` declaration to accept an edition at all, no exceptions for missing metadata.
+- **Accepted tradeoff:** the stricter filter measurably reduces yield (a partial-dump smoke test went from 908 to 670 matched editions at the same scan depth — roughly a quarter fewer) since plenty of genuinely-English editions simply don't have `languages` populated either. Correctness was judged more important than maximizing count here, directly per the reported bug.
+- **Verified:** re-ran the smoke test after the fix — all 24 Stephen King titles in the sample came back correctly in English (the Polish edition no longer selected), and a full scan of the smoke-test output for titles with more than 2 non-ASCII characters returned zero matches.
+
+---
+
 *(Later phases append their own sections here as we build them.)*

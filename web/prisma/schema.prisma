@@ -72,6 +72,11 @@ model Book {
   pageCount   Int
   publishedYear Int
   createdAt   DateTime @default(now())
+  // D66: true for real-imported books whose heatLevel/pacing are placeholder
+  // defaults and whose trope/mood tags are a low-recall best-effort guess —
+  // what makes "needs human review" findable in Prisma Studio. Synthetic
+  // catalog rows stay false; they were already deliberately authored.
+  needsReview Boolean @default(false)
 
   tags      BookTag[]
   swipes    Swipe[]

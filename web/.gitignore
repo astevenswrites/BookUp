@@ -43,6 +43,11 @@ next-env.d.ts
 
 /src/generated/prisma
 
+# D66: scratch checkpoint for prisma/import-open-library.ts (a resumability
+# aid for a one-time manual import, not a fixture) — prisma/seed-data/
+# real-catalog.json is the actual committed output, this is not.
+/prisma/.import-checkpoint
+
 
 # prisma skills got installed 3x as symlinks (.agents/.claude/.windsurf all point to the
 # same content); Windows git can't store symlinks so each resolves to a full copy — keep

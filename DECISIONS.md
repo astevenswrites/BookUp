@@ -522,4 +522,14 @@ sections get their own D-numbers as they land.
 
 ---
 
+### D68. Cover quality: source-resolution ceiling, better edition/cover selection, and a real-catalog-exposed `/review` bug
+- **User-reported symptom:** most imported covers looked low quality. Checked directly rather than guessing — measured the actual pixel dimensions of several imported cover files: ~300-500px on the long edge. That's Open Library's Covers API "L" (Large) size, the *largest tier it offers* — there's no bigger size to request instead. Confirmed via `BookCard.tsx` that our own rendering does no extra downscaling (`h-full w-full object-cover` on whatever `coverUrl` points to) — the softness on a high-DPI screen is a real ceiling of this free data source, not a bug in how we display it.
+- **What was fixable — edition/cover selection wasn't picking the best available option:** `import-open-library.ts`'s edition-enrichment pass (D66) took the *first* edition encountered in the (arbitrarily-ordered) editions dump with an ISBN + cover + English-ish language, rather than comparing candidates. Two changes:
+  1. **Pass 4 (editions) now keeps the highest-cover-id match** among all qualifying editions for a work, instead of stopping at the first — requires scanning the full editions dump every run (no early exit once every key has *some* answer), since a better one could appear later in the stream.
+  2. **New pass 2b, `attachWorkCovers`:** a second, targeted scan of the works dump for the already-selected work keys, capturing the work record's own `covers` field when present — often a publisher-submitted "canonical" cover, preferred over an edition-derived one in final assembly (`work.workCoverId ?? edition.coverId`).
+- **A second, unrelated bug found while investigating:** the user also noticed `/review` (the design-QA grid, "for reviewing the card design across variety") showing an entire page of nothing but Romantasy. Root cause: `lib/books.ts`'s `getBooks()` defaulted to `take: 60, orderBy: { createdAt: "desc" }` — harmless with one small synthetic seed batch, but with the real import's 2,469 rows split across two `createMany` batches (each batch's rows sharing one `now()` timestamp), "most recent 60" could land entirely inside a single batch. Where that batch's slice fell in the fixture's genre-bucketed array order happened to be almost all Romantasy. Fixed to genuinely random-sample across the whole table (`ORDER BY RANDOM()` via `$queryRaw`, then a normal `findMany` for the typed/related data) — `getBooks()` is used only by `/review`, so this couldn't affect the real product's own matching logic (D65's `getDeckForPreference`), which never called it.
+- **Verification pending** re-running the import with both cover-selection improvements — will re-check dimensions/quality and reload once done.
+
+---
+
 *(Later phases append their own sections here as we build them.)*

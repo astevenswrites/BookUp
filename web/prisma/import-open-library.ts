@@ -149,6 +149,13 @@ type SelectedWork = {
   subjects: string[];
   genre: string;
   popularity: number;
+  // D68: the work record's own `covers` field, when present — often a
+  // publisher-submitted "canonical" cover, sometimes nicer than whichever
+  // edition happens to turn up first in the (arbitrarily-ordered) editions
+  // dump. Filled in by attachWorkCovers, a separate pass over the works
+  // dump run only after works are already selected (keeps this out of the
+  // main selection pass, which doesn't need it).
+  workCoverId?: number;
 };
 
 type RealCatalogBook = {
@@ -244,6 +251,34 @@ async function selectWorks(popularity: Map<string, number>): Promise<SelectedWor
   return selected;
 }
 
+// --- Pass 2b: work-level cover ids (works dump, re-scanned) ---------------
+
+// D68: a second, targeted scan of the works dump for ONLY the already-
+// selected keys — cheaper to reason about than folding this into the
+// selection pass above (which doesn't otherwise need `covers` at all), at
+// the cost of streaming the works dump a second time. Mutates `works` in
+// place.
+async function attachWorkCovers(works: SelectedWork[]): Promise<void> {
+  console.log("\n=== Pass 2b: work-level covers (works dump, second scan) ===");
+  const byKey = new Map(works.map((w) => [w.key, w]));
+  let attached = 0;
+
+  await streamDumpLines("ol_dump_works_latest.txt.gz", (line) => {
+    if (attached >= byKey.size) return;
+    const record = parseDumpRecord(line);
+    if (!record || record.type !== "/type/work") return;
+    const work = byKey.get(record.key);
+    if (!work) return;
+
+    const coverId = (record.json as { covers?: number[] }).covers?.[0];
+    if (coverId && coverId > 0) {
+      work.workCoverId = coverId;
+      attached++;
+    }
+  });
+  console.log(`Attached a work-level cover for ${attached.toLocaleString()} / ${works.length} selected works.`);
+}
+
 // --- Pass 3: resolve author names (authors dump) -------------------------
 
 async function resolveAuthorNames(works: SelectedWork[]): Promise<Map<string, string>> {
@@ -272,8 +307,12 @@ async function enrichWithEditions(workKeys: Set<string>): Promise<Map<string, Ed
   console.log("\n=== Pass 4: edition enrichment (editions dump) ===");
   const found = new Map<string, EditionInfo>();
 
+  // D68: no early-exit once every key has SOME candidate — we want the best
+  // (highest cover id, usually the most recent/nicest scan) among however
+  // many editions a work has, not whichever happens to appear first in the
+  // dump's arbitrary order. That means scanning the full editions dump
+  // every run; there's no way to know a later line won't beat what we have.
   await streamDumpLines("ol_dump_editions_latest.txt.gz", (line) => {
-    if (found.size >= workKeys.size) return;
     const record = parseDumpRecord(line);
     if (!record || record.type !== "/type/edition") return;
 
@@ -287,7 +326,7 @@ async function enrichWithEditions(workKeys: Set<string>): Promise<Map<string, Ed
       languages?: { key?: string }[];
     };
     const workKey = json.works?.[0]?.key;
-    if (!workKey || !workKeys.has(workKey) || found.has(workKey)) return;
+    if (!workKey || !workKeys.has(workKey)) return;
 
     const isbn = json.isbn_13?.[0] ?? json.isbn_10?.[0];
     const coverId = json.covers?.[0];
@@ -295,6 +334,9 @@ async function enrichWithEditions(workKeys: Set<string>): Promise<Map<string, Ed
 
     const isEnglish = !json.languages || json.languages.some((l) => l.key === "/languages/eng");
     if (!isEnglish) return;
+
+    const existing = found.get(workKey);
+    if (existing && existing.coverId >= coverId) return; // keep the better one already found
 
     const yearMatch = json.publish_date?.match(/\d{4}/);
     const publishedYear = yearMatch ? parseInt(yearMatch[0], 10) : 2000;
@@ -344,6 +386,7 @@ async function main() {
     console.log(`Checkpointed ${selectedWorks.length} selected works to ${WORKS_CHECKPOINT_PATH}`);
   }
 
+  await attachWorkCovers(selectedWorks);
   const authorNames = await resolveAuthorNames(selectedWorks);
   const workKeys = new Set(selectedWorks.map((w) => w.key));
   const editions = await enrichWithEditions(workKeys);
@@ -351,6 +394,7 @@ async function main() {
   console.log("\n=== Pass 5: tag inference + assembly ===");
   const vocab = await loadExistingVocab();
 
+  let usedWorkCover = 0;
   const books: RealCatalogBook[] = [];
   for (const work of selectedWorks) {
     const edition = editions.get(work.key);
@@ -364,13 +408,18 @@ async function main() {
         ? `${work.description.slice(0, MAX_BLURB_LENGTH)}...`
         : work.description;
 
+    // D68: prefer the work-level cover (often a publisher-submitted
+    // "canonical" cover) over the arbitrary edition's, when one exists.
+    const coverId = work.workCoverId ?? edition.coverId;
+    if (work.workCoverId) usedWorkCover++;
+
     books.push({
       title: work.title,
       author,
       hookLine: deriveHookLine(work.description),
       blurb,
       compTitle: null,
-      coverUrl: `https://covers.openlibrary.org/b/id/${edition.coverId}-L.jpg`,
+      coverUrl: `https://covers.openlibrary.org/b/id/${coverId}-L.jpg`,
       heatLevel: "none",
       pacing: "medium",
       pageCount: edition.pageCount,
@@ -393,6 +442,7 @@ async function main() {
   const withMood = books.filter((b) => b.moods.length > 0).length;
   console.log(`Books with >=1 trope tag: ${withTrope} / ${books.length}`);
   console.log(`Books with >=1 mood tag: ${withMood} / ${books.length}`);
+  console.log(`Used the work-level cover (over the edition's) for: ${usedWorkCover} / ${books.length}`);
 }
 
 main().catch((e) => {

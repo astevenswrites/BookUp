@@ -1,0 +1,1 @@
+ALTER TABLE "TBREntry" ADD COLUMN "fromOnboardingImport" BOOLEAN NOT NULL DEFAULT false;

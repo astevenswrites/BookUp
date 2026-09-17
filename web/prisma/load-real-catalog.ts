@@ -14,7 +14,7 @@ import "dotenv/config";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { join } from "node:path";
-import { PrismaClient, HeatLevel, Pacing, TagCategory } from "../src/generated/prisma/client";
+import { PrismaClient, Prisma, HeatLevel, Pacing, TagCategory } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
@@ -39,6 +39,7 @@ type RealCatalogBook = {
   moods: string[];
   contentWarnings: string[];
   needsReview: boolean;
+  featured?: boolean;
 };
 
 function chunk<T>(items: T[], size: number): T[][] {
@@ -51,10 +52,63 @@ async function main() {
   const allBooks: RealCatalogBook[] = JSON.parse(readFileSync(FIXTURE_PATH, "utf-8"));
 
   console.log("Checking for already-loaded books...");
-  const existing = await prisma.book.findMany({ select: { title: true, author: true } });
+  const existing = await prisma.book.findMany({ select: { title: true, author: true, coverUrl: true, featured: true } });
   const existingKeys = new Set(existing.map((b) => `${b.title}::${b.author}`));
+  const existingCoverByKey = new Map(existing.map((b) => [`${b.title}::${b.author}`, b.coverUrl]));
+  const existingFeaturedByKey = new Map(existing.map((b) => [`${b.title}::${b.author}`, b.featured]));
   const books = allBooks.filter((b) => !existingKeys.has(`${b.title}::${b.author}`));
   console.log(`${allBooks.length} in fixture, ${books.length} new (${allBooks.length - books.length} already loaded).`);
+
+  // D73: same "curatorial, not content" exception as featured above —
+  // backfill-covers-itunes.ts can replace an already-loaded book's cover
+  // with a better one found later. Only touch rows whose fixture cover
+  // actually differs from what's stored, batched to keep each query small.
+  const coverUpdates = allBooks.filter((b) => {
+    const key = `${b.title}::${b.author}`;
+    return existingKeys.has(key) && existingCoverByKey.get(key) !== b.coverUrl;
+  });
+  if (coverUpdates.length > 0) {
+    const CHUNK = 300;
+    for (let i = 0; i < coverUpdates.length; i += CHUNK) {
+      const chunk = coverUpdates.slice(i, i + CHUNK);
+      await prisma.$executeRaw`
+        UPDATE "Book" AS b SET "coverUrl" = v.cover
+        FROM (VALUES ${Prisma.join(
+          chunk.map((c) => Prisma.sql`(${c.title}::text, ${c.author}::text, ${c.coverUrl}::text)`),
+        )}) AS v(title, author, cover)
+        WHERE b.title = v.title AND b.author = v.author
+      `;
+    }
+    console.log(`Synced coverUrl onto ${coverUpdates.length} already-loaded books.`);
+  }
+
+  // D70/D83: `featured` can change on a re-run of curate-featured.ts even
+  // for books that were already loaded (additive-only doesn't mean
+  // immutable — this one column is the exception, since it's purely
+  // curatorial, not content). Bring already-loaded rows in line with the
+  // fixture's current picks in BOTH directions — a book that lost its spot
+  // needs `featured` set back to false, not just left stuck at true from a
+  // previous run, since this only ever set it to true before. Freshly-
+  // inserted rows below already get the right value at insert time.
+  const featuredUpdates = allBooks.filter((b) => {
+    const key = `${b.title}::${b.author}`;
+    return existingKeys.has(key) && Boolean(b.featured) !== existingFeaturedByKey.get(key);
+  });
+  if (featuredUpdates.length > 0) {
+    const CHUNK = 300;
+    for (let i = 0; i < featuredUpdates.length; i += CHUNK) {
+      const batch = featuredUpdates.slice(i, i + CHUNK);
+      await prisma.$executeRaw`
+        UPDATE "Book" AS b SET featured = v.featured
+        FROM (VALUES ${Prisma.join(
+          batch.map((c) => Prisma.sql`(${c.title}::text, ${c.author}::text, ${Boolean(c.featured)}::boolean)`),
+        )}) AS v(title, author, featured)
+        WHERE b.title = v.title AND b.author = v.author
+      `;
+    }
+    console.log(`Synced featured flag onto ${featuredUpdates.length} already-loaded books.`);
+  }
+
   if (books.length === 0) return;
 
   console.log("Loading tags...");
@@ -91,6 +145,7 @@ async function main() {
     pageCount: book.pageCount,
     publishedYear: book.publishedYear,
     needsReview: book.needsReview,
+    featured: book.featured ?? false,
   }));
 
   for (const [i, batch] of chunk(bookRows, BATCH_SIZE).entries()) {

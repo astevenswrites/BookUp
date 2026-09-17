@@ -33,12 +33,13 @@ import { createGunzip } from "node:zlib";
 import { Readable } from "node:stream";
 import { PrismaClient, TagCategory } from "../src/generated/prisma/client";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { toIsbn13 } from "../src/lib/isbn";
 
-const USER_AGENT = "BookUp-CatalogImport/1.0"; // no personal contact info, per the user's call
+export const USER_AGENT = "BookUp-CatalogImport/1.0"; // no personal contact info, per the user's call
 const DUMP_BASE = "https://openlibrary.org/data";
 const TARGET_PER_GENRE = 210; // ~210 * 12 genres ≈ 2,500
 const CANDIDATE_CAP_PER_GENRE = 500; // bounded memory during the works pass
-const MAX_BLURB_LENGTH = 1600;
+export const MAX_BLURB_LENGTH = 1600;
 
 const CHECKPOINT_DIR = join(__dirname, ".import-checkpoint");
 const WORKS_CHECKPOINT_PATH = join(CHECKPOINT_DIR, "selected-works.json");
@@ -106,11 +107,83 @@ const GENRE_KEYWORDS: Record<string, string[]> = {
   Horror: ["horror fiction", "horror stories", "horror tales", "ghost stories", "occult fiction"],
   Contemporary: ["contemporary fiction", "chick lit"],
   "Historical Fiction": ["historical fiction"],
-  "Young Adult": ["young adult fiction", "juvenile fiction"],
+  // D71: "juvenile fiction" used to be in this list. Open Library's
+  // crowd-sourced cataloging applies that subject to essentially anything
+  // aimed at a reader under 18 — it swept in picture books, early readers,
+  // and middle-grade series (Diary of a Wimpy Kid, Dog Man, Percy Jackson)
+  // right alongside genuine YA. "young adult fiction" alone is a much more
+  // targeted signal for the actual YA audience BookUp wants.
+  "Young Adult": ["young adult fiction"],
 };
 const COZY_MYSTERY_KEYWORDS = ["cozy mystery", "cozy mysteries"];
 
-function detectGenre(subjects: string[]): string | null {
+// D71: books for a much younger audience than BookUp's — checked before
+// genre bucketing so they're excluded regardless of which genre keyword
+// their (noisy) subjects happen to also match. Two independent signals:
+// (1) subjects that specifically mean "picture book / early reader / board
+// book," which practically never co-occur with genuine YA/adult subjects,
+// and (2) known children's/middle-grade franchise names, since those
+// series' own subject tagging is inconsistent (a Goosebumps volume can be
+// tagged just "horror fiction" with nothing else that flags it as juvenile).
+// Deliberately excludes broader-sounding markers like "toy and movable
+// books," "bedtime stories," "nursery rhymes," and "stories in rhyme" —
+// verified by direct inspection that these get attached to well-known
+// adult/YA works (The Hobbit, Harry Potter, Kiss Kiss) whenever some
+// unrelated pop-up/lullaby/rhyming edition shares the work record, since
+// Open Library aggregates subjects across every edition of a work. Only
+// keywords with no observed false-positive contamination are listed here.
+const JUVENILE_EXCLUSION_SUBJECTS = [
+  "picture books",
+  "picture book",
+  "board books",
+  "board book",
+  "easy readers",
+  "beginning readers",
+  "concept books",
+  "alphabet books",
+  "counting books",
+];
+const JUVENILE_EXCLUSION_TITLE_SUBSTRINGS = [
+  "diary of a wimpy kid",
+  "dork diaries",
+  "dear dork",
+  "big nate",
+  "dog man",
+  "geronimo stilton",
+  "thea stilton",
+  "series of unfortunate events",
+  "baby-sitters club",
+  "baby-sitter's club",
+  "elephant and piggie",
+  "elephant & piggie",
+  "amelia bedelia",
+  "goosebumps",
+  "percy jackson",
+  "captain underpants",
+  "boxcar children",
+  "hardy boys",
+  "magic tree house",
+];
+// D75 follow-up: title-substring matching missed every Rick Riordan MG
+// series except the one literally named "Percy Jackson" — Heroes of
+// Olympus (The Mark of Athena, The Son of Neptune, ...), Kane Chronicles,
+// Magnus Chase, and the 39 Clues co-writing credit are all the same
+// 8-12-year-old audience under a different series title. Caught when one
+// (The Mark of Athena) surfaced as an algorithmic "Super Match" for an
+// adult account (D75) — an author is entirely children's-book-only often
+// enough that a title/subject check can't be relied on to catch every
+// series name by itself.
+const JUVENILE_EXCLUSION_AUTHORS = ["rick riordan"];
+
+export function isLikelyChildrensBook(title: string, subjects: string[], author?: string): boolean {
+  const lowerTitle = title.toLowerCase();
+  if (JUVENILE_EXCLUSION_TITLE_SUBSTRINGS.some((s) => lowerTitle.includes(s))) return true;
+  if (author && JUVENILE_EXCLUSION_AUTHORS.includes(author.toLowerCase())) return true;
+  const lowerSubjects = subjects.map((s) => s.toLowerCase());
+  return JUVENILE_EXCLUSION_SUBJECTS.some((kw) => lowerSubjects.some((s) => s.includes(kw)));
+}
+
+export function detectGenre(subjects: string[]): string | null {
   const lower = subjects.map((s) => s.toLowerCase());
   const hasAny = (keywords: string[]) => keywords.some((kw) => lower.some((s) => s.includes(kw)));
 
@@ -125,7 +198,7 @@ function detectGenre(subjects: string[]): string | null {
   return null;
 }
 
-function extractDescription(raw: unknown): string | null {
+export function extractDescription(raw: unknown): string | null {
   if (typeof raw === "string") return raw.trim() || null;
   if (raw && typeof raw === "object" && "value" in raw) {
     const value = (raw as { value?: unknown }).value;
@@ -134,7 +207,7 @@ function extractDescription(raw: unknown): string | null {
   return null;
 }
 
-function deriveHookLine(description: string): string {
+export function deriveHookLine(description: string): string {
   const firstSentence = description.split(/(?<=[.!?])\s+/)[0] ?? description;
   return firstSentence.length > 140 ? `${firstSentence.slice(0, 137)}...` : firstSentence;
 }
@@ -158,7 +231,7 @@ type SelectedWork = {
   workCoverId?: number;
 };
 
-type RealCatalogBook = {
+export type RealCatalogBook = {
   title: string;
   author: string;
   hookLine: string;
@@ -174,6 +247,7 @@ type RealCatalogBook = {
   moods: string[];
   contentWarnings: never[];
   needsReview: true;
+  featured?: boolean;
 };
 
 // --- Pass 1: popularity (ratings dump) -----------------------------------
@@ -216,6 +290,8 @@ async function selectWorks(popularity: Map<string, number>): Promise<SelectedWor
 
     const description = extractDescription(json.description);
     if (!description || description.length < 40) return;
+
+    if (isLikelyChildrensBook(json.title, json.subjects)) return;
 
     const genre = detectGenre(json.subjects);
     if (!genre) return;
@@ -350,7 +426,11 @@ async function enrichWithEditions(workKeys: Set<string>): Promise<Map<string, Ed
     const workKey = json.works?.[0]?.key;
     if (!workKey || !workKeys.has(workKey)) return;
 
-    const isbn = json.isbn_13?.[0] ?? json.isbn_10?.[0];
+    // D84: normalize to ISBN-13 rather than taking whichever format this
+    // edition happened to expose first — backfill-isbns.ts and the CSV
+    // importer both need every stored ISBN in one consistent format to do
+    // an exact-match join.
+    const isbn = (json.isbn_13?.[0] ? toIsbn13(json.isbn_13[0]) : null) ?? (json.isbn_10?.[0] ? toIsbn13(json.isbn_10[0]) : null);
     const coverId = json.covers?.[0];
     if (!isbn || !coverId || coverId <= 0) return;
 
@@ -384,7 +464,7 @@ async function enrichWithEditions(workKeys: Set<string>): Promise<Map<string, Ed
 
 // --- Tag inference (in-memory) --------------------------------------------
 
-async function loadExistingVocab(): Promise<{ tropes: string[]; moods: string[] }> {
+export async function loadExistingVocab(): Promise<{ tropes: string[]; moods: string[] }> {
   const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
   const prisma = new PrismaClient({ adapter });
   try {
@@ -398,7 +478,7 @@ async function loadExistingVocab(): Promise<{ tropes: string[]; moods: string[] 
   }
 }
 
-function matchVocab(subjects: string[], vocab: string[]): string[] {
+export function matchVocab(subjects: string[], vocab: string[]): string[] {
   const lowerSubjects = subjects.map((s) => s.toLowerCase());
   const matched = vocab.filter((label) => lowerSubjects.some((s) => s.includes(label.toLowerCase())));
   return [...new Set(matched)];
@@ -437,6 +517,17 @@ async function main() {
 
     const author = work.authorKeys.map((k) => authorNames.get(k)).find(Boolean);
     if (!author) continue;
+
+    // D83: the title/subjects-only check at Pass 2 (isLikelyChildrensBook
+    // call in selectWorks) runs before author names are ever resolved —
+    // resolveAuthorNames doesn't run until after selection completes, so
+    // JUVENILE_EXCLUSION_AUTHORS structurally could never fire there. This
+    // is the first point in the pipeline a resolved author string exists,
+    // so it's the first point that check can actually do anything — kept
+    // as a second check rather than moving the whole filter here, since
+    // the Pass 2 title/subjects check still usefully narrows the pool
+    // before the far more expensive editions-dump pass runs.
+    if (isLikelyChildrensBook(work.title, work.subjects, author)) continue;
 
     const blurb =
       work.description.length > MAX_BLURB_LENGTH
@@ -486,7 +577,13 @@ async function main() {
   console.log(`Used the edition's own title (over the work's): ${usedEditionTitle} / ${books.length}`);
 }
 
-main().catch((e) => {
-  console.error(e);
-  process.exit(1);
-});
+// Guarded: this module is also imported for its helpers (detectGenre,
+// matchVocab, etc.) by other one-off scripts, e.g. import-indie-picks.ts.
+// Without this guard, importing it anywhere would kick off the full ~12GB
+// bulk pipeline as an unwanted side effect of the import statement itself.
+if (require.main === module) {
+  main().catch((e) => {
+    console.error(e);
+    process.exit(1);
+  });
+}

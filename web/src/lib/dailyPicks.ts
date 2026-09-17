@@ -1,7 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { actorWhere, type Actor } from "@/lib/actor";
 import { getDeckForPreference } from "@/lib/matching";
-import { getSwipedBookIds } from "@/lib/limits";
+import { getExcludedBookIds } from "@/lib/limits";
 import type { PreferenceWithTags } from "@/lib/preferences";
 
 // D35: 5 picks/day, resetting at the actor's own local midnight rather than
@@ -41,7 +41,7 @@ export async function getTodaysPicks(actor: Actor, preference: PreferenceWithTag
   }
 
   const [alreadySwiped, alreadyPicked] = await Promise.all([
-    getSwipedBookIds(actor),
+    getExcludedBookIds(actor),
     prisma.dailyPick.findMany({ where: actorWhere(actor), select: { bookId: true } }),
   ]);
   const exclude = [...new Set([...alreadySwiped, ...alreadyPicked.map((p) => p.bookId)])];

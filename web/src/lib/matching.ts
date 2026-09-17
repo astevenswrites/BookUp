@@ -150,7 +150,13 @@ export async function getImplicitTagWeights(actor: Actor): Promise<ImplicitTagWe
   }
 
   const entries = await prisma.tBREntry.findMany({
-    where: actorWhere(actor),
+    // D83: excludes onboarding-imported "already read" entries (D81) —
+    // those carry no real preference judgment (marking an author's whole
+    // backlist as read isn't the same as liking any of it), but status:
+    // finished is otherwise this function's single strongest, undecayed
+    // signal. Letting those through could override what the reader just
+    // told the quiz with books they may not have even enjoyed.
+    where: { ...actorWhere(actor), fromOnboardingImport: false },
     select: {
       status: true,
       startedAt: true,
@@ -201,8 +207,13 @@ export async function getCollaborativeBoosts(
 ): Promise<Map<string, number>> {
   if (actor.kind !== "user" || candidateBookIds.length === 0) return new Map();
 
+  // D83: same reasoning as getImplicitTagWeights above — an onboarding-
+  // imported "already read" entry (D81) isn't a real taste signal (bulk-
+  // selecting an author's whole backlist isn't the same as liking any of
+  // it), so it shouldn't count toward "who reads like me" overlap, nor
+  // toward "similar readers finished this" boosts for others.
   const myEntries = await prisma.tBREntry.findMany({
-    where: { userId: actor.userId },
+    where: { userId: actor.userId, fromOnboardingImport: false },
     select: { bookId: true },
   });
   const myBookIds = myEntries.map((e) => e.bookId);
@@ -210,7 +221,7 @@ export async function getCollaborativeBoosts(
 
   // Other signed-in readers who share at least one TBR/finished book with us.
   const overlapping = await prisma.tBREntry.findMany({
-    where: { bookId: { in: myBookIds }, userId: { not: actor.userId } },
+    where: { bookId: { in: myBookIds }, userId: { not: actor.userId }, fromOnboardingImport: false },
     select: { userId: true },
   });
   const overlapCount = new Map<string, number>();
@@ -225,7 +236,7 @@ export async function getCollaborativeBoosts(
   if (similarUserIds.length === 0) return new Map();
 
   const theirEntries = await prisma.tBREntry.findMany({
-    where: { userId: { in: similarUserIds }, bookId: { in: candidateBookIds } },
+    where: { userId: { in: similarUserIds }, bookId: { in: candidateBookIds }, fromOnboardingImport: false },
     select: { bookId: true, status: true },
   });
 

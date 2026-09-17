@@ -25,7 +25,7 @@ export default async function TbrPage() {
   const sections = [...grouped.entries()].sort(([a], [b]) => a.localeCompare(b));
 
   return (
-    <div className="flex-1 px-4 py-10 sm:px-8">
+    <div className="flex-1 px-4 pb-10 pt-20 sm:px-8">
       <header className="mx-auto mb-8 max-w-6xl">
         <h1 className="font-serif text-3xl text-on-vibe">Your shelf</h1>
         <p className="mt-1 text-sm text-on-vibe-muted">

@@ -67,6 +67,14 @@ model Book {
   blurb       String // longer synopsis, shown in the tap-to-expand detail view
   compTitle   String? // D7: free-text "if you liked X..." hook, not a structured relation yet
   coverUrl    String // D6: always a URL/path, placeholder SVG for now
+  // D82: null for the synthetic catalog (no real ISBN exists) and for
+  // real-imported books until the backfill (prisma/backfill-isbns.ts) runs
+  // — the original import (D66) actually required a real ISBN to accept an
+  // edition at all (see EditionInfo in import-open-library.ts), it just
+  // never made it into the persisted schema. Existing for CSV-import
+  // matching precision (D82/Goodreads-StoryGraph import) — an exact ISBN
+  // match beats fuzzy title/author matching whenever both sides have one.
+  isbn        String?
   heatLevel   HeatLevel // D2: scalar, not a tag
   pacing      Pacing    // D2: scalar, not a tag
   pageCount   Int
@@ -77,11 +85,19 @@ model Book {
   // what makes "needs human review" findable in Prisma Studio. Synthetic
   // catalog rows stay false; they were already deliberately authored.
   needsReview Boolean @default(false)
+  // D70: purely curatorial "worth showcasing" flag for /review ("Peek at
+  // the deck") — NOT a rating or popularity score (see D67: no
+  // ratings/reviews in this app, ever). Set by a one-off curation script
+  // from signals that never touch the schema themselves (Open Library
+  // popularity used only to rank at curation time, a hand-picked indie/
+  // small-press list), same way an editor picks a "staff pick" shelf.
+  featured    Boolean @default(false)
 
   tags      BookTag[]
   swipes    Swipe[]
   tbrEntries TBREntry[]
   dailyPicks DailyPick[]
+  weeklyPicks WeeklyPick[]
 }
 
 model Tag {
@@ -115,6 +131,7 @@ model User {
   swipes     Swipe[]
   tbrEntries TBREntry[]
   dailyPicks DailyPick[]
+  weeklyPicks WeeklyPick[]
 }
 
 model Swipe {
@@ -155,6 +172,15 @@ model TBREntry {
   startedAt  DateTime?
   finishedAt DateTime?
 
+  // D83: set only by the "already read" onboarding flow (markBooksAsRead,
+  // lib/alreadyRead.ts) — a book marked this way never went through a real
+  // swipe or reading-progress judgment, so it must never feed
+  // getImplicitTagWeights (matching.ts) as a preference signal the way an
+  // organically-finished book does. It still counts fully for exclusion
+  // (getExcludedBookIds doesn't check this flag) — only the *preference
+  // weighting* is skipped, not the "don't show me this again" purpose.
+  fromOnboardingImport Boolean @default(false)
+
   // D3: anonymous-first, same pattern as Swipe
   userId    String?
   sessionId String?
@@ -179,6 +205,16 @@ model Preference {
   timezone          String? // D35: IANA tz name, set client-side; null = fall back to UTC for the Today's Picks reset
   createdAt         DateTime          @default(now())
   updatedAt         DateTime          @updatedAt
+
+  // D79: streak tracking (Phase 4) — consecutive local calendar days with
+  // at least one swipe. `lastActiveDate` reuses the same "YYYY-MM-DD in the
+  // actor's own local timezone" shape as DailyPick.pickDate/WeeklyPick.weekKey
+  // (see localDateString, dailyPicks.ts) rather than a UTC timestamp, so a
+  // streak doesn't break just because someone swipes late at night in their
+  // own timezone.
+  currentStreak  Int     @default(0)
+  longestStreak  Int     @default(0)
+  lastActiveDate String?
 
   // D3-style anonymous-first pattern; D22 — sessionId is set lazily on first quiz submit
   userId    String? @unique
@@ -212,6 +248,30 @@ model DailyPick {
   @@unique([bookId, pickDate, userId, sessionId])
   @@index([userId, pickDate])
   @@index([sessionId, pickDate])
+}
+
+// D75: Phase 3's two roadmap loose ends ("Super Match" + a weekly algorithmic
+// drop) turned out to be one selection, not two — both just want "this
+// week's best-scoring unseen books," at N=1 vs N=10. One model, one query;
+// `rank` (0 = the Super Match, 1+ = the rest of the drop) is what a
+// createMany batch can't otherwise guarantee, since every row in one
+// INSERT shares the same `createdAt`.
+model WeeklyPick {
+  id        String   @id @default(cuid())
+  weekKey   String // ISO week, e.g. "2026-W38", in the actor's own local timezone
+  rank      Int
+  createdAt DateTime @default(now())
+
+  userId    String?
+  sessionId String?
+
+  bookId String
+  book   Book   @relation(fields: [bookId], references: [id], onDelete: Cascade)
+  user   User?  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([bookId, weekKey, userId, sessionId])
+  @@index([userId, weekKey])
+  @@index([sessionId, weekKey])
 }
 
 model PreferenceTag {

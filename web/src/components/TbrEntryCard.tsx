@@ -2,6 +2,7 @@
 
 import { useTransition } from "react";
 import { BookCard } from "@/components/BookCard";
+import { ShareButton } from "@/components/ShareButton";
 import { updateTbrStatus, removeTbrEntry, keepTbrEntry } from "@/app/actions";
 import { isStale, daysSince } from "@/lib/tbr";
 import type { BookWithTags } from "@/lib/books";
@@ -77,6 +78,7 @@ export function TbrEntryCard({
         >
           Remove
         </button>
+        <ShareButton bookId={entry.book.id} title={entry.book.title} />
       </div>
     </div>
   );

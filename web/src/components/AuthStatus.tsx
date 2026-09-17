@@ -19,7 +19,7 @@ export async function AuthStatus() {
     "whitespace-nowrap rounded-full border border-card-border bg-card/90 px-3 py-1.5 font-medium text-foreground/70 shadow-sm backdrop-blur-sm hover:border-accent";
 
   return (
-    <div className="fixed left-4 right-4 top-4 z-10 flex flex-wrap items-center gap-2 text-xs">
+    <div className="fixed left-4 right-4 top-6 z-10 flex flex-wrap items-center gap-2 text-xs">
       <Link href="/" className={pillClass}>
         Home
       </Link>

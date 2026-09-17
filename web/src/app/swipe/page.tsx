@@ -8,7 +8,7 @@ import { getDeckForPreference } from "@/lib/matching";
 import {
   ANONYMOUS_PREVIEW_SWIPE_CAP,
   DAILY_SWIPE_CAP,
-  getSwipedBookIds,
+  getExcludedBookIds,
   getTbrCount,
   getTodaySwipeCount,
   getTotalSwipeCount,
@@ -60,7 +60,7 @@ export default async function SwipePage() {
     }
   }
 
-  const excludeBookIds = await getSwipedBookIds(actor);
+  const excludeBookIds = await getExcludedBookIds(actor);
   const { books: deck, tagWeights, collaborativeBoosts } = await getDeckForPreference(
     actor,
     preference,

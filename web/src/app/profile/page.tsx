@@ -84,7 +84,7 @@ export default async function ProfilePage({
   const moods = getPreferenceMoodLabels(preference);
 
   return (
-    <div className="flex-1 px-4 py-10 sm:px-8">
+    <div className="flex-1 px-4 pb-10 pt-20 sm:px-8">
       <div className="mx-auto flex max-w-2xl flex-col gap-8">
         <header>
           <h1 className="font-serif text-3xl text-on-vibe">Your profile</h1>

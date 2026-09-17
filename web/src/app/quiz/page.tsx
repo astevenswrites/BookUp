@@ -18,7 +18,10 @@ export default async function QuizPage() {
   if (preference) redirect(actor.kind === "user" ? "/" : "/swipe");
 
   const tags = await getTagsByCategory();
-  // D61: straight into the deck on completion, not the dashboard — finishing
-  // the quiz should feel like arriving somewhere, not another menu.
-  return <Quiz tags={tags} redirectTo="/swipe" />;
+  // D61: finishing the quiz should feel like arriving somewhere, not
+  // another menu — still true, but D81 inserts one more real step first:
+  // a chance to mark books already read elsewhere so they don't waste
+  // swipes. already-read/page.tsx itself sends both "Skip" and "Continue"
+  // on to /swipe, so the deck is still where this always ends up.
+  return <Quiz tags={tags} redirectTo="/already-read" />;
 }

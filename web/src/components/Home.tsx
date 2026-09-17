@@ -14,6 +14,7 @@ import type { TagOption } from "@/lib/tags";
 const LINKS: { href: string; title: string; body: string }[] = [
   { href: "/tbr", title: "Your shelf", body: "Everything you've matched with, sorted by vibe." },
   { href: "/today", title: "Today's picks", body: "A fresh, hand-matched set every day." },
+  { href: "/weekly", title: "This week's picks", body: "Your Super Match, plus a bigger weekly drop." },
   { href: "/blind-date", title: "Blind date", body: "One surprise pick — algorithmic or community." },
   { href: "/trending", title: "Trending", body: "What every reader's adding right now." },
   { href: "/profile", title: "Profile", body: "Your vibe, your stats, retake the quiz." },
@@ -24,11 +25,13 @@ export function Home({
   currentMoodTagId,
   tbrCount,
   remainingToday,
+  streak,
 }: {
   moods: TagOption[];
   currentMoodTagId: string | null;
   tbrCount: number;
   remainingToday: number;
+  streak: number;
 }) {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-16 sm:px-8">
@@ -40,6 +43,14 @@ export function Home({
         <p className="mt-2 text-sm text-on-vibe-muted">
           {tbrCount} book{tbrCount === 1 ? "" : "s"} on your shelf · {remainingToday} swipe
           {remainingToday === 1 ? "" : "s"} left today
+          {streak > 0 && (
+            <>
+              {" "}
+              · <span className="text-on-vibe-accent">
+                🔥 {streak}-day streak
+              </span>
+            </>
+          )}
         </p>
       </header>
 

@@ -6,10 +6,15 @@ import { setDemoTheme } from "@/lib/session";
 import { getDeckForPreference } from "@/lib/matching";
 import { getTangentialPick, getCommunityPick } from "@/lib/blindDate";
 import { getPreferenceForActor } from "@/lib/preferences";
-import { getSwipedBookIds } from "@/lib/limits";
+import { getExcludedBookIds } from "@/lib/limits";
 import { createServerSupabaseClient } from "@/lib/supabase/server";
 import { completeSignIn } from "@/lib/auth";
 import { getSiteOrigin } from "@/lib/site";
+import { isPasswordPwned } from "@/lib/pwnedPassword";
+import { recordSwipeActivity } from "@/lib/streaks";
+import { markBooksAsRead, getBooksByAuthors } from "@/lib/alreadyRead";
+import { matchImportedBooks } from "@/lib/importMatching";
+import { parseImportRows, type ImportFormat } from "@/lib/importParsing";
 import { HeatLevel, Pacing, ReadingFrequency, DisplayMode, VibeTheme, TbrStatus } from "@/generated/prisma/enums";
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
@@ -71,6 +76,31 @@ export async function submitQuiz(formData: FormData) {
   revalidatePath("/swipe");
 }
 
+// D81: onboarding step right after the quiz — mark books already read
+// elsewhere (Goodreads, etc.) so they stop surfacing in the deck. See
+// lib/alreadyRead.ts for why this never creates a Swipe row.
+export async function submitAlreadyRead(bookIds: string[]) {
+  const actor = await getOrCreateActor();
+  await markBooksAsRead(actor, bookIds);
+}
+
+// D81 follow-up: phase 2 of the author-first already-read flow — fetch
+// every book by whichever authors the reader just said they've read.
+export async function getBooksForAuthors(authors: string[]) {
+  const actor = await getOrCreateActor();
+  return getBooksByAuthors(actor, authors);
+}
+
+// D82: CSV import (Goodreads/StoryGraph) — the client parses the file
+// (papaparse) and sends plain row objects here; matching against the
+// catalog needs the actor (for exclusion) and Prisma, neither available
+// client-side.
+export async function importReadingHistory(format: ImportFormat, rows: Record<string, string>[]) {
+  const actor = await getOrCreateActor();
+  const parsed = parseImportRows(format, rows);
+  return matchImportedBooks(actor, parsed);
+}
+
 // D45: optional behavioral signal captured alongside the swipe itself —
 // dwellMs (time-to-decision) and viewedDetails (blurb/content-warning
 // expand before deciding) feed getImplicitTagWeights' confidence
@@ -82,15 +112,21 @@ export async function swipeBook(
 ) {
   const actor = await getOrCreateActor();
 
-  await prisma.swipe.create({
-    data: {
-      bookId,
-      direction,
-      dwellMs: meta?.dwellMs,
-      viewedDetails: meta?.viewedDetails ?? false,
-      ...actorWhere(actor),
-    },
-  });
+  // Independent writes (different tables, no data dependency) — run
+  // concurrently rather than paying two sequential round-trips on the
+  // app's hottest path.
+  await Promise.all([
+    prisma.swipe.create({
+      data: {
+        bookId,
+        direction,
+        dwellMs: meta?.dwellMs,
+        viewedDetails: meta?.viewedDetails ?? false,
+        ...actorWhere(actor),
+      },
+    }),
+    recordSwipeActivity(actor),
+  ]);
 
   if (direction === "right") {
     const existing = await prisma.tBREntry.findFirst({
@@ -161,7 +197,7 @@ export async function getMoreCards(excludeBookIds: string[], limit = 20) {
   const preference = await getPreferenceForActor(actor);
   if (!preference) return { books: [], tagWeights: {}, collaborativeBoosts: {} };
 
-  const alreadySwiped = await getSwipedBookIds(actor);
+  const alreadySwiped = await getExcludedBookIds(actor);
   const exclude = [...new Set([...excludeBookIds, ...alreadySwiped])];
 
   return getDeckForPreference(actor, preference, exclude, limit);
@@ -173,7 +209,7 @@ export async function getBlindDateSurprise() {
   const actor = await getOrCreateActor();
   const preference = await getPreferenceForActor(actor);
   if (!preference) return null;
-  const excludeBookIds = await getSwipedBookIds(actor);
+  const excludeBookIds = await getExcludedBookIds(actor);
   return getTangentialPick(actor, preference, excludeBookIds);
 }
 
@@ -181,7 +217,7 @@ export async function getBlindDateCommunityPick() {
   const actor = await getOrCreateActor();
   const preference = await getPreferenceForActor(actor);
   if (!preference) return { status: "insufficient_data" as const };
-  const excludeBookIds = await getSwipedBookIds(actor);
+  const excludeBookIds = await getExcludedBookIds(actor);
   return getCommunityPick(actor, preference, excludeBookIds);
 }
 
@@ -258,6 +294,16 @@ function authErrorRedirect(message: string): never {
 export async function signUpWithPassword(formData: FormData) {
   const email = String(formData.get("email") ?? "");
   const password = String(formData.get("password") ?? "");
+
+  // D78: equivalent to Supabase's Pro-only "leaked password protection,"
+  // via HaveIBeenPwned's free k-anonymity API — checked before Supabase
+  // Auth ever sees the password, not as a replacement for its own rules.
+  if (await isPasswordPwned(password)) {
+    authErrorRedirect(
+      "That password has appeared in a known data breach. Please choose a different one."
+    );
+  }
+
   const supabase = await createServerSupabaseClient();
   // D57: not header-derived — see lib/site.ts for why the raw Origin header
   // isn't trustworthy input for a link Supabase emails out.

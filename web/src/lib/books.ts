@@ -1,4 +1,6 @@
+import "server-only";
 import { prisma } from "@/lib/prisma";
+import { Prisma } from "@/generated/prisma/client";
 
 export type BookWithTags = Awaited<ReturnType<typeof getBooks>>[number];
 
@@ -11,14 +13,38 @@ export type BookWithTags = Awaited<ReturnType<typeof getBooks>>[number];
 // slice fell in the fixture's genre-bucketed array order, was almost all
 // Romantasy. Random sampling across the whole table is what the page
 // actually wants, not recency.
+//
+// D70: biased toward `featured` books (a curated "worth showcasing" flag,
+// not a rating — see D67) so the page leads with well-known/recently-
+// popular and hand-picked indie titles, then fills the rest randomly across
+// the whole catalog for variety.
 export async function getBooks(limit = 60) {
-  const randomRows = await prisma.$queryRaw<
-    { id: string }[]
-  >`SELECT id FROM "Book" ORDER BY RANDOM() LIMIT ${limit}`;
-  return prisma.book.findMany({
-    where: { id: { in: randomRows.map((r) => r.id) } },
+  const featuredTarget = Math.min(24, limit);
+  const featuredRows = await prisma.$queryRaw<{ id: string }[]>`
+    SELECT id FROM "Book" WHERE "featured" = true ORDER BY RANDOM() LIMIT ${featuredTarget}
+  `;
+
+  const remaining = limit - featuredRows.length;
+  const exclude =
+    featuredRows.length > 0
+      ? Prisma.sql`WHERE id NOT IN (${Prisma.join(featuredRows.map((r) => r.id))})`
+      : Prisma.empty;
+  const randomRows =
+    remaining > 0
+      ? await prisma.$queryRaw<{ id: string }[]>`
+          SELECT id FROM "Book" ${exclude} ORDER BY RANDOM() LIMIT ${remaining}
+        `
+      : [];
+
+  const ids = [...featuredRows, ...randomRows].map((r) => r.id);
+  const books = await prisma.book.findMany({
+    where: { id: { in: ids } },
     include: { tags: { include: { tag: true } } },
   });
+
+  // Keep the featured-first ordering findMany doesn't guarantee.
+  const byId = new Map(books.map((b) => [b.id, b]));
+  return ids.map((id) => byId.get(id)!).filter(Boolean);
 }
 
 // groupTags lives in lib/bookTags.ts — pure, no Prisma import, safe for

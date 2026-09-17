@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 
 // Tap-to-reveal detail view: full synopsis, page count, heat/pacing, and content
 // warnings. Deliberately not shown on the card face — see DECISIONS.md D9/D10.
@@ -14,6 +15,7 @@ export function BookDetails({
   pacing,
   contentWarnings,
   onOpen,
+  locked,
 }: {
   blurb: string;
   pageCount: number;
@@ -22,8 +24,28 @@ export function BookDetails({
   pacing: string;
   contentWarnings: string[];
   onOpen?: () => void;
+  // D74: /review ("Peek at the deck") is a signed-out preview — the full
+  // blurb/heat/pacing/content-warning breakdown is a reason to actually
+  // take the quiz and swipe, not something to give away for free here.
+  // Shows the same affordance shape (so the card layout doesn't jump
+  // between preview and real use) but as a link into onboarding instead
+  // of an expand toggle.
+  locked?: boolean;
 }) {
   const [open, setOpen] = useState(false);
+
+  if (locked) {
+    return (
+      <div className="mt-3 border-t border-card-border pt-3">
+        <Link
+          href="/quiz"
+          className="text-sm font-medium text-muted hover:text-accent hover:underline"
+        >
+          🔒 More details after the quiz
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="mt-3 border-t border-card-border pt-3">

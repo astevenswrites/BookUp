@@ -14,6 +14,7 @@ export function BookCard({
   displayMode = "cover_first",
   onDetailsOpen,
   sheen,
+  detailsLocked,
 }: {
   book: BookWithTags;
   displayMode?: DisplayMode;
@@ -26,6 +27,8 @@ export function BookCard({
   // without ever passing this, which is an acceptable trade for keeping
   // the sheen's positioning logic co-located with the cover it lights.
   sheen?: { x: MotionValue<number>; y: MotionValue<number> };
+  // D74: signed-out preview (/review) — see BookDetails' `locked` prop.
+  detailsLocked?: boolean;
 }) {
   const tags = groupTags(book);
   const highlightTags = [...tags.mood, ...tags.trope].slice(0, 4);
@@ -43,8 +46,12 @@ export function BookCard({
 
   return (
     <article className="flex w-full max-w-sm flex-col overflow-hidden rounded-2xl border border-card-border bg-card shadow-sm">
-      {/* 1. Cover — dominant, full-bleed (or tap-to-reveal in vibe-first mode, D31) */}
-      <div className="relative aspect-[2/3] w-full bg-foreground/5">
+      {/* 1. Cover — dominant, full-bleed (or tap-to-reveal in vibe-first mode, D31).
+          `overflow-hidden` here (not just on the outer <article>) is load-bearing:
+          without it on THIS box, a percentage-sized <img> child lets its own
+          natural aspect ratio leak into this container's height despite
+          `aspect-[2/3]` being declared — see DECISIONS.md D74 follow-up. */}
+      <div className="relative aspect-[2/3] w-full overflow-hidden bg-foreground/5">
         {displayMode === "vibe_first" ? (
           <CoverReveal src={book.coverUrl} alt={`Cover of ${book.title}`} />
         ) : (
@@ -52,7 +59,7 @@ export function BookCard({
           <img
             src={book.coverUrl}
             alt={`Cover of ${book.title}`}
-            className="h-full w-full object-cover"
+            className="h-full w-full object-contain"
           />
         )}
         {sheen && (
@@ -121,6 +128,7 @@ export function BookCard({
           pacing={book.pacing}
           contentWarnings={tags.content_warning}
           onOpen={onDetailsOpen}
+          locked={detailsLocked}
         />
       </div>
     </article>

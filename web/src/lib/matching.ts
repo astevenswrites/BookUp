@@ -429,7 +429,7 @@ export async function getDeckForPreference(
   preference: PreferenceWithTags,
   excludeBookIds: string[],
   limit: number,
-  options: { explore?: boolean } = {}
+  options: { explore?: boolean; genreTagId?: string } = {}
 ): Promise<DeckResult> {
   const avoidTagIds = preference.tags
     .filter(({ tag }) => tag.category === "content_warning")
@@ -441,6 +441,11 @@ export async function getDeckForPreference(
       ...(avoidTagIds.length
         ? { tags: { none: { tagId: { in: avoidTagIds } } } }
         : {}),
+      // D86: scopes the candidate pool to a single genre (reading challenges,
+      // lib/challenges.ts) without touching the scoring below at all — the
+      // regular /swipe deck never passes this, so its own behavior is
+      // unaffected.
+      ...(options.genreTagId ? { tags: { some: { tagId: options.genreTagId } } } : {}),
     },
     include: { tags: { include: { tag: true } } },
     take: 300, // cap the scoring pool; plenty of headroom over the current catalog size

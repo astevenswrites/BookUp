@@ -71,13 +71,13 @@ These are defaults chosen to minimize cost/complexity for a solo-founder-style b
 
 **Exit criteria:** two users with different quiz answers get visibly different, well-differentiated decks, and matches improve measurably after ~20–30 swipes. **Met** — this is genuinely working today.
 
-## Phase 4 — Retention Loops & Notifications — 🚧 In progress, 2 of 5 done
+## Phase 4 — Retention Loops & Notifications — 🚧 In progress, 3 of 5 done
 
 **Goal:** habitual daily/weekly use.
 
 - [x] Streak tracking (consecutive days swiped) with a 🔥 count on the home dashboard. Not built: milestone rewards — no economy/premium system yet for a reward to plug into. (D79)
-- [ ] Seasonal/genre reading challenges.
-- [ ] Notification strategy: max 1/day, state-aware copy ("this has been on your TBR for 3 days..."), user-controllable frequency — explicitly avoiding the notification fatigue the research flags as the top uninstall driver. The biggest lift left in this phase — needs real new infrastructure (an email service at minimum; web push needs a service worker), nothing like this exists yet.
+- [x] Seasonal/genre reading challenges — discovery-first (personalized, genre-scoped picks via `/challenges`, a home-page teaser), with actually-finishing-them as a secondary, lighter-weight encouragement layered on top. Cross-user leaderboards stay a Phase 6 item. (D86)
+- [ ] Notification strategy: max 1/day, state-aware copy ("this has been on your TBR for 3 days..."), user-controllable frequency — explicitly avoiding the notification fatigue the research flags as the top uninstall driver. **Structure only so far, not functional** (D86) — schema (`notificationFrequency`, `NotificationLog`) and the decision logic (what to notify about, once-per-window cap) exist and are tested, but there's no email/push provider, no cron trigger, and no `/profile` toggle yet. The remaining lift is entirely about real delivery — needs an actual email service at minimum (web push needs a service worker too), and this app's first `/api` route to be triggered on a schedule.
 - [x] Social share cards ("I just matched with ___") sized for general link-preview sharing (1200×630 — works across X/Discord/iMessage/etc.) — doubles as acquisition channel. A dedicated vertical Stories-format variant is a possible follow-up, not built. (D80)
 - ~~Buddy-read / shared-shelf feature (lightweight — compare TBRs with a friend).~~ Redirected, 2026-09-16 (see "Social features: partner, don't compete" under Ongoing Threads) — not building a competing reading-group feature in-house. Scope this down when picked up: a light "others who matched with this book" surface, not a full buddy-read/shared-shelf system.
 
@@ -130,4 +130,4 @@ Landing page already shows real Free/Premium pricing tiers (D41) — that's mark
 
 ## Suggested Immediate Next Step
 
-Phases 0-2 are done and Phase 3 is essentially done (two minor items open — Super Match, a cadenced/pushed weekly drop). The real gap is **Phase 4 (retention loops & notifications)** — nothing there is built yet: no streaks, no notification strategy, no share cards, no buddy-read. That's also the natural next phase per the original plan, and this app doesn't yet give anyone a reason to come back on day 3 who hasn't already formed the habit on their own. Monetization (Phase 5) is a reasonable alternative next step if revenue timing matters more than retention right now — the pricing UI already exists, it just isn't wired to real billing.
+Phases 0-3 are done. **Phase 4 (retention loops & notifications) is 3 of 5 done** — streak tracking, social share cards, and seasonal/genre reading challenges are all live (D79/D80/D86). The buddy-read item is redirected, not built in-house (see "Social features: partner, don't compete" above). What's left: the notification strategy, whose structure (schema + decision logic) is already in place (D86) but isn't wired to real delivery yet — the remaining lift is an actual email/push provider and a scheduled trigger (this app's first `/api` route). Monetization (Phase 5) is a reasonable alternative next step if revenue timing matters more than retention right now — the pricing UI already exists, it just isn't wired to real billing.

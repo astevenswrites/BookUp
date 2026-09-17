@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { MoodQuickSelect } from "@/components/MoodQuickSelect";
 import type { TagOption } from "@/lib/tags";
+import type { Challenge } from "@/lib/challenges";
 
 // D61: the signed-in landing spot. Previously `/` was the swipe deck itself
 // (D27/D41) with every other feature (profile, blind date, trending, the
@@ -26,12 +27,14 @@ export function Home({
   tbrCount,
   remainingToday,
   streak,
+  activeChallenge,
 }: {
   moods: TagOption[];
   currentMoodTagId: string | null;
   tbrCount: number;
   remainingToday: number;
   streak: number;
+  activeChallenge: Challenge | null;
 }) {
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-16 sm:px-8">
@@ -53,6 +56,23 @@ export function Home({
           )}
         </p>
       </header>
+
+      {/* D86: the primary discovery hook for a seasonal challenge — deliberately
+          framed as "come discover these," not a progress readout. Only shown
+          when a challenge is currently active. */}
+      {activeChallenge && (
+        <Link
+          href="/challenges"
+          className="rounded-2xl border border-accent/40 bg-accent/10 p-4 text-center hover:border-accent"
+        >
+          <p className="font-serif text-lg text-on-vibe">
+            {activeChallenge.emoji} {activeChallenge.label} is here
+          </p>
+          <p className="mt-1 text-sm text-on-vibe-muted">
+            Discover {activeChallenge.genreLabel} books picked for you →
+          </p>
+        </Link>
+      )}
 
       <MoodQuickSelect moods={moods} currentMoodTagId={currentMoodTagId} />
 

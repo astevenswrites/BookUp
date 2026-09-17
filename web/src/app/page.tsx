@@ -6,6 +6,8 @@ import { getPreferenceForActor } from "@/lib/preferences";
 import { getTagsByCategory } from "@/lib/tags";
 import { DAILY_SWIPE_CAP, getTbrCount, getTodaySwipeCount } from "@/lib/limits";
 import { displayedStreak } from "@/lib/streaks";
+import { getActiveChallenges } from "@/lib/challenges";
+import { localDateString } from "@/lib/dailyPicks";
 
 // D62: `/` depends only on sign-in status now, not on whether a preference
 // exists — a real account always gets the dashboard (or, if signed up but
@@ -48,6 +50,7 @@ export default async function HomePage() {
   ]);
   const remainingToday = Math.max(0, DAILY_SWIPE_CAP - swipedToday);
   const streak = displayedStreak(preference.currentStreak, preference.lastActiveDate, preference.timezone);
+  const activeChallenge = getActiveChallenges(localDateString(preference.timezone))[0] ?? null;
 
   return (
     <Home
@@ -56,6 +59,7 @@ export default async function HomePage() {
       tbrCount={tbrCount}
       remainingToday={remainingToday}
       streak={streak}
+      activeChallenge={activeChallenge}
     />
   );
 }

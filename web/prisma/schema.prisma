@@ -52,6 +52,22 @@ enum DisplayMode {
   vibe_first
 }
 
+// D86: structure-only for now, per the user's explicit call — no email/push
+// provider, no cron trigger, nothing actually sends yet. `off` is the
+// default so this is inert until a real delivery mechanism exists and the
+// user decides to expose a toggle for it.
+enum NotificationFrequency {
+  off
+  daily
+  weekly
+}
+
+// D86: mirrors NotificationCandidate["kind"] in lib/notifications.ts.
+enum NotificationKind {
+  tbr_reminder
+  weekly_drop_ready
+}
+
 enum VibeTheme {
   cozy
   dark
@@ -132,6 +148,7 @@ model User {
   tbrEntries TBREntry[]
   dailyPicks DailyPick[]
   weeklyPicks WeeklyPick[]
+  notificationLogs NotificationLog[]
 }
 
 model Swipe {
@@ -216,6 +233,12 @@ model Preference {
   longestStreak  Int     @default(0)
   lastActiveDate String?
 
+  // D86: structure-prep only — no delivery mechanism exists yet, and there's
+  // no UI to change this from `off` yet either. Exists now so the decision
+  // logic (lib/notifications.ts) can be built and tested against a real
+  // schema before a real provider is wired up later.
+  notificationFrequency NotificationFrequency @default(off)
+
   // D3-style anonymous-first pattern; D22 — sessionId is set lazily on first quiz submit
   userId    String? @unique
   sessionId String? @unique
@@ -272,6 +295,31 @@ model WeeklyPick {
   @@unique([bookId, weekKey, userId, sessionId])
   @@index([userId, weekKey])
   @@index([sessionId, weekKey])
+}
+
+// D86: structure-prep only, nothing writes here yet outside of a throwaway
+// test script — no cron/dispatcher exists to actually send anything (see
+// LoggingNotificationChannel in lib/notifications/dispatch.ts). Exists now
+// so getNotificationCandidate's "already notified in this frequency
+// window" check can be built and tested against a real table, rather than
+// requiring a second migration once real delivery exists.
+model NotificationLog {
+  id     String           @id @default(cuid())
+  kind   NotificationKind
+  sentAt DateTime         @default(now())
+  // The actor's local calendar day (daily) or ISO week (weekly) at send
+  // time, e.g. "2026-09-17" or "2026-W38" — same precomputed-local-key
+  // convention as DailyPick.pickDate/WeeklyPick.weekKey, so "already
+  // notified in this window" is a plain string match instead of redoing
+  // timezone math against `sentAt` on every read.
+  windowKey String
+
+  userId    String?
+  sessionId String?
+  user      User?   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, windowKey])
+  @@index([sessionId, windowKey])
 }
 
 model PreferenceTag {

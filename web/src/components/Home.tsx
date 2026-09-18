@@ -2,6 +2,7 @@ import Link from "next/link";
 import { MoodQuickSelect } from "@/components/MoodQuickSelect";
 import type { TagOption } from "@/lib/tags";
 import type { Challenge } from "@/lib/challenges";
+import type { BookWithTags } from "@/lib/books";
 
 // D61: the signed-in landing spot. Previously `/` was the swipe deck itself
 // (D27/D41) with every other feature (profile, blind date, trending, the
@@ -12,14 +13,14 @@ import type { Challenge } from "@/lib/challenges";
 // more into the same header. Anonymous sessions skip this entirely — see
 // page.tsx's routing — the preview funnel (D42) still drops them straight
 // into `/swipe`.
-const LINKS: { href: string; title: string; body: string }[] = [
-  { href: "/tbr", title: "Your shelf", body: "Everything you've matched with, sorted by vibe." },
-  { href: "/today", title: "Today's picks", body: "A fresh, hand-matched set every day." },
-  { href: "/weekly", title: "This week's picks", body: "Your Super Match, plus a bigger weekly drop." },
-  { href: "/blind-date", title: "Blind date", body: "One surprise pick — algorithmic or community." },
-  { href: "/trending", title: "Trending", body: "What every reader's adding right now." },
-  { href: "/profile", title: "Profile", body: "Your vibe, your stats, retake the quiz." },
-];
+//
+// D87: each link can carry a small live preview of what's actually behind
+// it — a cover+title snippet, or a plain line of text — rather than the
+// same static blurb every card has always shown. `null`/absent means "no
+// data yet" (falls back to just the body text) or "deliberately no
+// preview" (Blind Date's whole point is a surprise; Profile has nothing
+// new to show that isn't already in the header/mood picker above).
+type LinkPreview = { kind: "cover"; coverUrl: string; title: string } | { kind: "text"; text: string };
 
 export function Home({
   moods,
@@ -28,6 +29,10 @@ export function Home({
   remainingToday,
   streak,
   activeChallenge,
+  todaysPick,
+  superMatch,
+  trendingPick,
+  oldestTbrTitle,
 }: {
   moods: TagOption[];
   currentMoodTagId: string | null;
@@ -35,7 +40,41 @@ export function Home({
   remainingToday: number;
   streak: number;
   activeChallenge: Challenge | null;
+  todaysPick: BookWithTags | null;
+  superMatch: BookWithTags | null;
+  trendingPick: BookWithTags | null;
+  oldestTbrTitle: string | null;
 }) {
+  const LINKS: { href: string; title: string; body: string; preview?: LinkPreview }[] = [
+    {
+      href: "/tbr",
+      title: "Your shelf",
+      body: "Everything you've matched with, sorted by vibe.",
+      preview: oldestTbrTitle ? { kind: "text", text: `Still waiting: ${oldestTbrTitle}` } : undefined,
+    },
+    {
+      href: "/today",
+      title: "Today's picks",
+      body: "A fresh, hand-matched set every day.",
+      preview: todaysPick ? { kind: "cover", coverUrl: todaysPick.coverUrl, title: todaysPick.title } : undefined,
+    },
+    {
+      href: "/weekly",
+      title: "This week's picks",
+      body: "Your Super Match, plus a bigger weekly drop.",
+      preview: superMatch ? { kind: "cover", coverUrl: superMatch.coverUrl, title: superMatch.title } : undefined,
+    },
+    // Deliberately no preview -- Blind Date's whole point is a surprise.
+    { href: "/blind-date", title: "Blind date", body: "One surprise pick — algorithmic or community." },
+    {
+      href: "/trending",
+      title: "Trending",
+      body: "What every reader's adding right now.",
+      preview: trendingPick ? { kind: "cover", coverUrl: trendingPick.coverUrl, title: trendingPick.title } : undefined,
+    },
+    // Deliberately no preview -- streak/mood already shown above.
+    { href: "/profile", title: "Profile", body: "Your vibe, your stats, retake the quiz." },
+  ];
   return (
     <div className="mx-auto flex w-full max-w-3xl flex-col gap-8 px-4 py-16 sm:px-8">
       <header className="text-center">
@@ -92,6 +131,20 @@ export function Home({
           >
             <p className="font-serif text-lg text-foreground">{link.title}</p>
             <p className="mt-1 text-sm text-muted">{link.body}</p>
+            {link.preview?.kind === "cover" && (
+              <div className="mt-3 flex items-center gap-2.5">
+                {/* eslint-disable-next-line @next/next/no-img-element -- a small fixed-size thumbnail, not worth next/image's overhead here */}
+                <img
+                  src={link.preview.coverUrl}
+                  alt=""
+                  className="h-14 w-10 flex-none rounded object-cover shadow-sm"
+                />
+                <p className="truncate text-sm font-medium text-foreground/80">{link.preview.title}</p>
+              </div>
+            )}
+            {link.preview?.kind === "text" && (
+              <p className="mt-3 truncate text-sm font-medium text-foreground/80">{link.preview.text}</p>
+            )}
           </Link>
         ))}
       </div>

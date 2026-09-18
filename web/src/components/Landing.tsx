@@ -31,6 +31,20 @@ const PLANS = [
   },
 ];
 
+// D87: illustrative only, no live data -- an anonymous visitor has no
+// Preference yet, and D24/D50 already established that content-warning
+// filtering isn't a per-feature opt-in, so showing real book data here
+// (which would need to skip that filtering) isn't on the table. Same
+// static-copy posture as PLANS above.
+const RETENTION_FEATURES = [
+  { emoji: "🔥", title: "Streaks", body: "Come back daily and watch your streak build." },
+  { emoji: "⭐", title: "Weekly Super Match", body: "One standout pick, hand-picked for your taste, every week." },
+  { emoji: "🎃", title: "Seasonal challenges", body: "Genre-themed discovery pushes, tied to what's in season." },
+  { emoji: "📈", title: "Trending", body: "See what every reader's adding right now." },
+  { emoji: "🔀", title: "Blind date", body: "One surprise pick when you don't want to choose." },
+  { emoji: "📤", title: "Share your matches", body: "Turn a great match into a shareable card." },
+];
+
 const STEPS = [
   {
     num: "01",
@@ -157,6 +171,25 @@ export async function Landing() {
             <p className="text-sm leading-relaxed text-on-vibe-muted">{step.body}</p>
           </div>
         ))}
+      </div>
+
+      <div className="mt-16">
+        <p className="mb-6 text-center font-serif text-2xl text-on-vibe">
+          Then it keeps getting better
+        </p>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {RETENTION_FEATURES.map((feature) => (
+            <div
+              key={feature.title}
+              className="rounded-2xl border border-card-border bg-card/75 p-5 backdrop-blur-sm"
+            >
+              <p className="font-serif text-lg text-foreground">
+                {feature.emoji} {feature.title}
+              </p>
+              <p className="mt-1 text-sm leading-relaxed text-muted">{feature.body}</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <HomepageQRCode />

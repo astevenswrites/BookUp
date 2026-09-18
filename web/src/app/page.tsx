@@ -4,10 +4,14 @@ import { Home } from "@/components/Home";
 import { getActor } from "@/lib/actor";
 import { getPreferenceForActor } from "@/lib/preferences";
 import { getTagsByCategory } from "@/lib/tags";
-import { DAILY_SWIPE_CAP, getTbrCount, getTodaySwipeCount } from "@/lib/limits";
+import { DAILY_SWIPE_CAP, getExcludedBookIds, getTbrCount, getTodaySwipeCount } from "@/lib/limits";
 import { displayedStreak } from "@/lib/streaks";
 import { getActiveChallenges } from "@/lib/challenges";
-import { localDateString } from "@/lib/dailyPicks";
+import { getTodaysPicks, localDateString } from "@/lib/dailyPicks";
+import { getWeeklyDrop, SUPER_MATCH_RANK } from "@/lib/weeklyPicks";
+import { getTrendingBooks } from "@/lib/trending";
+import { prisma } from "@/lib/prisma";
+import { actorWhere } from "@/lib/actor";
 
 // D62: `/` depends only on sign-in status now, not on whether a preference
 // exists — a real account always gets the dashboard (or, if signed up but
@@ -44,13 +48,23 @@ export default async function HomePage() {
   }
 
   const { mood: moods } = await getTagsByCategory();
-  const [tbrCount, swipedToday] = await Promise.all([
+  const excludeBookIds = await getExcludedBookIds(actor);
+  const [tbrCount, swipedToday, todaysPicks, weeklyDrop, trending, oldestTbrEntry] = await Promise.all([
     getTbrCount(actor),
     getTodaySwipeCount(actor),
+    getTodaysPicks(actor, preference),
+    getWeeklyDrop(actor, preference),
+    getTrendingBooks(actor, preference, excludeBookIds, 1),
+    prisma.tBREntry.findFirst({
+      where: { ...actorWhere(actor), status: "to_read" },
+      orderBy: { updatedAt: "asc" },
+      select: { book: { select: { title: true } } },
+    }),
   ]);
   const remainingToday = Math.max(0, DAILY_SWIPE_CAP - swipedToday);
   const streak = displayedStreak(preference.currentStreak, preference.lastActiveDate, preference.timezone);
   const activeChallenge = getActiveChallenges(localDateString(preference.timezone))[0] ?? null;
+  const superMatch = weeklyDrop.find((p) => p.rank === SUPER_MATCH_RANK)?.book ?? null;
 
   return (
     <Home
@@ -60,6 +74,10 @@ export default async function HomePage() {
       remainingToday={remainingToday}
       streak={streak}
       activeChallenge={activeChallenge}
+      todaysPick={todaysPicks[0] ?? null}
+      superMatch={superMatch}
+      trendingPick={trending[0] ?? null}
+      oldestTbrTitle={oldestTbrEntry?.book.title ?? null}
     />
   );
 }

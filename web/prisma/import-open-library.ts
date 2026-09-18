@@ -97,12 +97,20 @@ function parseDumpRecord(line: string): { type: string; key: string; json: Recor
 // library-cataloging phrases, not our vocabulary. Romantasy/Cozy Mystery
 // are special-cased below since they rarely appear as their own subject
 // heading; everything else is a first-match-wins scan.
+// D88: bare single-word entries removed from these lists (previously
+// "fantasy" under Fantasy, "thriller" under Thriller) — confirmed directly
+// that Open Library's cross-edition subject aggregation (same contamination
+// pattern as D71) attaches a bare, contextless "fantasy" subject to *1984*,
+// which combined with "man-woman relationships" tripped the Romantasy
+// combinator rule below. A single common word carries far less signal than
+// a multi-word phrase and is much likelier to be noise from an unrelated
+// edition sharing the work record.
 const GENRE_KEYWORDS: Record<string, string[]> = {
   Romance: ["love stories", "romance fiction", "man-woman relationships"],
-  Fantasy: ["fantasy fiction", "fantasy", "magic fiction", "wizards", "dragons", "imaginary wars and battles"],
+  Fantasy: ["fantasy fiction", "magic fiction", "wizards", "dragons", "imaginary wars and battles"],
   "Sci-Fi": ["science fiction", "space opera", "life on other planets"],
   Mystery: ["detective and mystery stories", "mystery fiction", "mystery and detective stories", "whodunit"],
-  Thriller: ["suspense fiction", "thrillers (fiction)", "thriller", "spy stories"],
+  Thriller: ["suspense fiction", "thrillers (fiction)", "spy stories"],
   "Literary Fiction": ["literary fiction", "psychological fiction", "domestic fiction"],
   Horror: ["horror fiction", "horror stories", "horror tales", "ghost stories", "occult fiction"],
   Contemporary: ["contemporary fiction", "chick lit"],
